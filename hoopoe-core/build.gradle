@@ -1,0 +1,20 @@
+apply plugin: 'java'
+
+dependencies {
+    compile 'org.javassist:javassist:3.20.0-GA'
+    compile 'org.slf4j:slf4j-api:1.7.21'
+    compile project(':hoopoe-api')
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'com.ea.agentloader:ea-agent-loader:1.0.0'
+
+
+    provided 'org.projectlombok:lombok:1.14.8'
+
+}
+
+jar {
+    manifest {
+        attributes('Premain-Class' : 'Agent')
+    }
+}

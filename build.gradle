@@ -1,0 +1,21 @@
+group 'hoopoe-profiler'
+version '0.1.0-SNAPSHOT'
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+
+    configurations {
+        provided
+        compile.extendsFrom provided
+    }
+
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked"
+            sourceCompatibility = 1.7
+        }
+    }
+
+}
