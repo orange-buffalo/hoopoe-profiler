@@ -1,4 +1,4 @@
-apply plugin: 'java'
+apply plugin: HoopoeAssemblyPlugin
 
 dependencies {
     compile 'org.javassist:javassist:3.20.0-GA'

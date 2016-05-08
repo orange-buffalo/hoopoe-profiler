@@ -1,0 +1,6 @@
+apply plugin: HoopoeDependencyPlugin
+
+dependencies {
+
+    compile project(path: ':hoopoe-core', configuration: 'hoopoe')
+}
