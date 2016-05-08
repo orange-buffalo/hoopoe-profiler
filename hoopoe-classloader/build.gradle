@@ -1,0 +1,8 @@
+apply plugin: 'java'
+
+dependencies {
+    provided 'org.projectlombok:lombok:1.14.8'
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'commons-io:commons-io:2.5'
+}

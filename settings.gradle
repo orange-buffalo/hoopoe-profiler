@@ -1,1 +1,1 @@
-include 'hoopoe-api', 'hoopoe-core'
+include 'hoopoe-api', 'hoopoe-classloader', 'hoopoe-core'
