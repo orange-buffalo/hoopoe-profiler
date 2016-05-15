@@ -1,6 +1,6 @@
 package hoopoe.test.core.supplements;
 
-import hoopoe.test.core.AbstractHoopoeProfilerTest;
+import hoopoe.test.core.AbstractProfilerTest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class HoopoeTestClassLoader extends ClassLoader {
             Set<Class<?>> guineaPigClasses = reflections.getSubTypesOf(Object.class);
             guineaPigClasses.size();
             ClassPool classPool = new ClassPool();
-            classPool.appendClassPath(new LoaderClassPath(AbstractHoopoeProfilerTest.class.getClassLoader()));
+            classPool.appendClassPath(new LoaderClassPath(AbstractProfilerTest.class.getClassLoader()));
             for (Class guineaPigClass : guineaPigClasses) {
                 CtClass ctClass = classPool.get(guineaPigClass.getCanonicalName());
                 classesData.put(guineaPigClass.getCanonicalName(), ctClass.toBytecode());

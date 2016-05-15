@@ -27,6 +27,11 @@ public class HoopoeTestAgent {
     }
 
     public static void unload() {
-        instrumentation.removeTransformer(classFileTransformer);
+        if (instrumentation != null && classFileTransformer != null) {
+            instrumentation.removeTransformer(classFileTransformer);
+        }
+
+        classFileTransformer = null;
+        instrumentation = null;
     }
 }

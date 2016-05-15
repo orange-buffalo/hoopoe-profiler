@@ -15,5 +15,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'com.ea.agentloader:ea-agent-loader:1.0.0'
     testCompile 'org.reflections:reflections:0.9.10'
+    testCompile 'com.tngtech.java:junit-dataprovider:1.10.0'
 
 }
