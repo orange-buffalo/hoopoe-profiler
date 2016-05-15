@@ -9,7 +9,7 @@ public class HoopoeAgent {
     }
 
     public static void premain(String args, Instrumentation instrumentation) {
-        HoopoeProfiler.init(args, instrumentation);
+        //HoopoeProfiler.init(args, instrumentation);
     }
 
 }

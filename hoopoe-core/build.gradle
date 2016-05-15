@@ -4,16 +4,16 @@ dependencies {
     compile 'org.javassist:javassist:3.20.0-GA'
     compile 'org.slf4j:slf4j-api:1.7.21'
     compile project(':hoopoe-api')
+    compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'commons-io:commons-io:2.5'
+
+    runtime 'ch.qos.logback:logback-classic:1.1.7'
+
 
     provided 'org.projectlombok:lombok:1.14.8'
 
     testCompile 'junit:junit:4.12'
     testCompile 'com.ea.agentloader:ea-agent-loader:1.0.0'
+    testCompile 'org.reflections:reflections:0.9.10'
 
-}
-
-jar {
-    manifest {
-        attributes('Premain-Class': 'Agent')
-    }
 }

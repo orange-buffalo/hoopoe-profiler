@@ -4,3 +4,9 @@ dependencies {
 
     compile project(path: ':hoopoe-core', configuration: 'hoopoe')
 }
+
+jar {
+    manifest {
+        attributes('Premain-Class': 'Agent')
+    }
+}

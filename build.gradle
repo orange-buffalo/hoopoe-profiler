@@ -14,7 +14,7 @@ allprojects {
 
     gradle.projectsEvaluated {
         tasks.withType(JavaCompile) {
-            options.compilerArgs << "-Xlint:unchecked"
+            options.compilerArgs << "-nowarn"
             sourceCompatibility = 1.8
         }
     }

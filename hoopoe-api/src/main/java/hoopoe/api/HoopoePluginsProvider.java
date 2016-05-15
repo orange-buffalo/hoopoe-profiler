@@ -1,7 +1,9 @@
 package hoopoe.api;
 
+import java.util.Collection;
+
 public interface HoopoePluginsProvider {
 
-    HoopoePlugin loadPlugin(String id);
+    Collection<HoopoePlugin> loadPlugins(HoopoeConfigurator configurator);
 
 }
