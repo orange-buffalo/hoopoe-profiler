@@ -1,14 +1,19 @@
 package hoopoe.test.core;
 
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
+import hoopoe.api.HoopoeTraceNode;
 import hoopoe.test.core.supplements.HoopoeTestAgent;
 import hoopoe.test.core.supplements.HoopoeTestClassLoader;
+import hoopoe.test.core.supplements.HoopoeTestConfiguration;
+import hoopoe.test.core.supplements.ProfilerTestItem;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
-import lombok.Setter;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public abstract class AbstractProfilerTest {
 
@@ -23,15 +28,26 @@ public abstract class AbstractProfilerTest {
             throw new IllegalStateException(e);
         }
 
-        HoopoeTestAgent.load();
+        ConcurrentMap<String, HoopoeTraceNode> capturedData = new ConcurrentHashMap<>();
+        Mockito.doAnswer(
+                invocation -> {
+                    Object[] arguments = invocation.getArguments();
+                    Thread thread = (Thread) arguments[0];
+                    HoopoeTraceNode node = (HoopoeTraceNode) arguments[1];
+                    capturedData.putIfAbsent(thread.getName(), node);
+                    return null;
+                })
+                .when(HoopoeTestConfiguration.createStorageMock())
+                .consumeThreadTraceResults(Mockito.any(), Mockito.any());
+
+        HoopoeTestAgent.load("hoopoe.configuration.class=" + HoopoeTestConfiguration.class.getCanonicalName());
 
         try {
-            String threadName = "testThread" + System.nanoTime();
-
             Class instrumentedClass = classLoader.loadClass(testItem.getEntryPointClass().getCanonicalName());
             testItem.setInstrumentedClass(instrumentedClass);
             testItem.prepareTest();
 
+            String threadName = "testThread" + System.nanoTime();
             AtomicReference<Exception> exceptionReference = new AtomicReference();
             Thread thread = new Thread(() -> {
                 try {
@@ -43,11 +59,14 @@ public abstract class AbstractProfilerTest {
             }, threadName);
             thread.start();
             thread.join();
+            HoopoeTestAgent.unload();
 
             Exception exception = exceptionReference.get();
             if (exception != null) {
                 throw exception;
             }
+
+            testItem.assertCapturedData(threadName, capturedData);
         }
         catch (Exception e) {
             throw new IllegalStateException(e);
@@ -63,28 +82,6 @@ public abstract class AbstractProfilerTest {
             data[i][0] = items[i];
         }
         return data;
-    }
-
-    protected static abstract class ProfilerTestItem {
-        private String description;
-
-        @Setter
-        protected Class instrumentedClass;
-
-        public ProfilerTestItem(String description) {
-            this.description = description;
-        }
-
-        @Override
-        public String toString() {
-            return description;
-        }
-
-        protected abstract Class getEntryPointClass();
-
-        public abstract void prepareTest() throws Exception;
-
-        public abstract void executeTest() throws Exception;
     }
 
 }

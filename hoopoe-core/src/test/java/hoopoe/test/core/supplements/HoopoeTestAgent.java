@@ -11,8 +11,8 @@ public class HoopoeTestAgent {
     private static Instrumentation instrumentation;
     private static ClassFileTransformer classFileTransformer;
 
-    public static void load() {
-        AgentLoader.loadAgentClass(HoopoeTestAgent.class.getName(), null);
+    public static void load(String args) {
+        AgentLoader.loadAgentClass(HoopoeTestAgent.class.getName(), args);
     }
 
     public static void agentmain(String args, Instrumentation instrumentation)

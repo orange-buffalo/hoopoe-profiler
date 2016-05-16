@@ -10,10 +10,13 @@ public class HoopoeTraceNode {
     @Getter
     private HoopoeTraceNode parent;
 
+    @Getter
     private String className;
 
+    @Getter
     private String methodSignature;
 
+    @Getter
     private Collection<HoopoeTraceNode> children = new ArrayList<>();
 
 
