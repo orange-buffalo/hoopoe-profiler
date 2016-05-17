@@ -5,11 +5,16 @@ import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import hoopoe.api.HoopoeTraceNode;
 import hoopoe.test.core.guineapigs.ApprenticeGuineaPig;
 import hoopoe.test.core.guineapigs.BaseGuineaPig;
+import hoopoe.test.core.guineapigs.RunnableGuineaPig;
 import hoopoe.test.core.supplements.MethodEntryTestItemDelegate;
+import hoopoe.test.core.supplements.ProfilerTestItem;
 import hoopoe.test.core.supplements.SingleThreadProfilerTestItem;
+import java.util.Map;
 import lombok.experimental.Delegate;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.core.IsEqual.equalTo;
 import org.junit.runner.RunWith;
 
 @RunWith(DataProviderRunner.class)
@@ -197,6 +202,32 @@ public class ProfilerTest extends AbstractProfilerTest {
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
                         assertTraceNode(traceNode, BaseGuineaPig.class, ".methodWithException()", 0);
+                    }
+                },
+
+                new ProfilerTestItem("Child thread") {
+                    @Delegate
+                    MethodEntryTestItemDelegate delegate =
+                            new MethodEntryTestItemDelegate(BaseGuineaPig.class, "startNewThread", this);
+
+                    @Override
+                    public void assertCapturedData(String originalThreadName,
+                                                   Map<String, HoopoeTraceNode> capturedData) {
+                        assertThat(capturedData.size(), equalTo(2));
+
+                        HoopoeTraceNode mainThreadNode = capturedData.get(originalThreadName);
+                        assertThat(mainThreadNode, notNullValue());
+                        assertTraceNode(mainThreadNode, BaseGuineaPig.class, ".startNewThread()", 1);
+
+                        HoopoeTraceNode nextNode = mainThreadNode.getChildren().get(0);
+                        assertTraceNode(nextNode, RunnableGuineaPig.class, "()", 0);
+
+                        HoopoeTraceNode childThreadNode = capturedData.get("RunnableGuineaPig");
+                        assertThat(mainThreadNode, notNullValue());
+                        assertTraceNode(childThreadNode, RunnableGuineaPig.class, ".run()", 1);
+
+                        nextNode = childThreadNode.getChildren().get(0);
+                        assertTraceNode(nextNode, RunnableGuineaPig.class, ".innerMethod()", 0);
                     }
                 }
         );

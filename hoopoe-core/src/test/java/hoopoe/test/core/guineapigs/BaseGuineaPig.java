@@ -61,4 +61,11 @@ public class BaseGuineaPig {
         throw new IllegalStateException();
     }
 
+    public void startNewThread() throws InterruptedException {
+        Thread thread = new Thread(new RunnableGuineaPig());
+        thread.setName("RunnableGuineaPig");
+        thread.start();
+        thread.join();
+    }
+
 }
