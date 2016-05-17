@@ -1,7 +1,7 @@
 package hoopoe.api;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import lombok.Getter;
 import lombok.experimental.Builder;
 
@@ -17,7 +17,7 @@ public class HoopoeTraceNode {
     private String methodSignature;
 
     @Getter
-    private Collection<HoopoeTraceNode> children = new ArrayList<>();
+    private List<HoopoeTraceNode> children = new ArrayList<>();
 
 
     private long startTime;

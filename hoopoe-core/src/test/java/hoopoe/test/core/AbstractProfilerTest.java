@@ -66,6 +66,8 @@ public abstract class AbstractProfilerTest {
                 throw exception;
             }
 
+            // all captured executions in this thread are preparations and should be ignored during assertion
+            capturedData.remove(Thread.currentThread().getName());
             testItem.assertCapturedData(threadName, capturedData);
         }
         catch (Exception e) {

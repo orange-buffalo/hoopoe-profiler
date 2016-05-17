@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.ProtectionDomain;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +27,6 @@ import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtField;
-import javassist.CtMethod;
 import javassist.LoaderClassPath;
 import javassist.Modifier;
 import lombok.extern.slf4j.Slf4j;
@@ -157,16 +157,20 @@ public class InstrumentationHelper {
             if (!isLockedForInterception(ctClass)) {
                 log.debug("modifying {}", canonicalClassName);
 
-                for (CtMethod ctMethod : ctClass.getDeclaredMethods()) {
+                Collection<CtBehavior> behaviors = new ArrayList<>();
+                behaviors.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
+                behaviors.addAll(Arrays.asList(ctClass.getDeclaredConstructors()));
+
+                for (CtBehavior behavior : behaviors) {
                     try {
-                        if (!isLockedForInterception(ctMethod)) {
-                            String methodName = ctMethod.getLongName();
-                            ctMethod.insertBefore(String.format(BEFORE_METHOD_CALL, canonicalClassName, methodName));
-                            ctMethod.insertAfter(AFTER_METHOD_CALL, true);
+                        if (!isLockedForInterception(behavior)) {
+                            String methodName = behavior.getLongName();
+                            behavior.insertBefore(String.format(BEFORE_METHOD_CALL, canonicalClassName, methodName));
+                            behavior.insertAfter(AFTER_METHOD_CALL, true);
                         }
                     }
                     catch (CannotCompileException e) {
-                        log.warn("cannot change body of {}: {}", ctMethod.getLongName(), e.getReason());
+                        log.warn("cannot change body of {}: {}", behavior.getLongName(), e.getReason());
                     }
                 }
                 byte[] modifiedClassBytes = ctClass.toBytecode();
