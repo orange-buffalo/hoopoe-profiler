@@ -9,7 +9,6 @@ import hoopoe.test.core.supplements.ProfilerTestItem;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicReference;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
 import org.junit.Test;
@@ -48,23 +47,17 @@ public abstract class AbstractProfilerTest {
             testItem.prepareTest();
 
             String threadName = "testThread" + System.nanoTime();
-            AtomicReference<Exception> exceptionReference = new AtomicReference();
             Thread thread = new Thread(() -> {
                 try {
                     testItem.executeTest();
                 }
                 catch (Exception e) {
-                    exceptionReference.set(e);
+                    throw new IllegalStateException(e);
                 }
             }, threadName);
             thread.start();
             thread.join();
             HoopoeTestAgent.unload();
-
-            Exception exception = exceptionReference.get();
-            if (exception != null) {
-                throw exception;
-            }
 
             // all captured executions in this thread are preparations and should be ignored during assertion
             capturedData.remove(Thread.currentThread().getName());

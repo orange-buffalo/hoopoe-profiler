@@ -140,6 +140,64 @@ public class ProfilerTest extends AbstractProfilerTest {
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
                     }
+                },
+
+                new SingleThreadProfilerTestItem("Method with call tree") {
+                    @Delegate
+                    MethodEntryTestItemDelegate delegate =
+                            new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithCallTree", this);
+
+                    @Override
+                    protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
+                        assertTraceNode(traceNode, BaseGuineaPig.class, ".methodWithCallTree()", 4);
+                        long leavesDuration = 0;
+
+                        HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
+                        assertTraceNode(nextNode, BaseGuineaPig.class, ".emptyMethod()", 0);
+                        assertThat(nextNode.getDurationInNanoSeconds(),
+                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        leavesDuration += nextNode.getDurationInNanoSeconds();
+
+                        nextNode = traceNode.getChildren().get(1);
+                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, "(java.lang.String)", 0);
+                        assertThat(nextNode.getDurationInNanoSeconds(),
+                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+
+                        nextNode = traceNode.getChildren().get(2);
+                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, ".someSimpleMethod()", 0);
+                        assertThat(nextNode.getDurationInNanoSeconds(),
+                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        leavesDuration += nextNode.getDurationInNanoSeconds();
+
+                        nextNode = traceNode.getChildren().get(3);
+                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, ".callBack(hoopoe.test.core.guineapigs.BaseGuineaPig)", 1);
+                        assertThat(nextNode.getDurationInNanoSeconds(),
+                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+
+                        HoopoeTraceNode callbackNode = nextNode.getChildren().get(0);
+                        assertTraceNode(callbackNode, BaseGuineaPig.class, ".methodWithOneInnerCall()", 1);
+                        assertThat(callbackNode.getDurationInNanoSeconds(),
+                                lessThanOrEqualTo(nextNode.getDurationInNanoSeconds()));
+
+                        nextNode = callbackNode.getChildren().get(0);
+                        assertTraceNode(nextNode, BaseGuineaPig.class, ".simpleMethod()", 0);
+                        assertThat(nextNode.getDurationInNanoSeconds(),
+                                lessThanOrEqualTo(callbackNode.getDurationInNanoSeconds()));
+                        leavesDuration += nextNode.getDurationInNanoSeconds();
+
+                        assertThat(leavesDuration, lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                    }
+                },
+
+                new SingleThreadProfilerTestItem("Method with exception") {
+                    @Delegate
+                    MethodEntryTestItemDelegate delegate =
+                            new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithException", this);
+
+                    @Override
+                    protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
+                        assertTraceNode(traceNode, BaseGuineaPig.class, ".methodWithException()", 0);
+                    }
                 }
         );
     }

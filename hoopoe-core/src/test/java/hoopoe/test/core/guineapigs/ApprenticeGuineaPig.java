@@ -15,4 +15,8 @@ public class ApprenticeGuineaPig {
         return s;
     }
 
+    public void callBack(BaseGuineaPig base) {
+        base.methodWithOneInnerCall();
+    }
+
 }

@@ -49,4 +49,16 @@ public class BaseGuineaPig {
         new ApprenticeGuineaPig();
     }
 
+    public void methodWithCallTree() {
+        emptyMethod();
+        ApprenticeGuineaPig apprenticeGuineaPig = new ApprenticeGuineaPig("tada");
+        apprenticeGuineaPig.someSimpleMethod();
+        apprenticeGuineaPig.callBack(this);
+    }
+
+    public void methodWithException() {
+        int i = 42;
+        throw new IllegalStateException();
+    }
+
 }
