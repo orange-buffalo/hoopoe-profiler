@@ -1,25 +1,34 @@
 package hoopoe.test.core.supplements;
 
 import hoopoe.api.HoopoeConfiguration;
+import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfilerStorage;
-import org.mockito.Mockito;
+import lombok.Getter;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class HoopoeTestConfiguration implements HoopoeConfiguration {
 
+    @Mock
+    @Getter
     private static HoopoeProfilerStorage storageMock;
 
-    public HoopoeTestConfiguration() {
-        MockitoAnnotations.initMocks(this);
-    }
+    @Mock
+    @Getter
+    private static HoopoePluginsProvider pluginsProviderMock;
 
     @Override
     public HoopoeProfilerStorage createProfilerStorage() {
         return storageMock;
     }
 
-    public static HoopoeProfilerStorage createStorageMock() {
-        storageMock = Mockito.mock(HoopoeProfilerStorage.class);
-        return storageMock;
+    @Override
+    public HoopoePluginsProvider createPluginsProvider() {
+        return pluginsProviderMock;
     }
+
+    public static void resetMocks() {
+        MockitoAnnotations.initMocks(new HoopoeTestConfiguration());
+    }
+
 }

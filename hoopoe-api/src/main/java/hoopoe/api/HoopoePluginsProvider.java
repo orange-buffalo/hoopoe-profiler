@@ -1,5 +1,9 @@
 package hoopoe.api;
 
-public interface HoopoePluginsProvider {
+import java.util.Collection;
+
+public interface HoopoePluginsProvider extends HoopoeProfilerSupplement {
+
+    Collection<HoopoePlugin> createPlugins();
 
 }

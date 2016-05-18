@@ -1,6 +1,8 @@
 package hoopoe.core;
 
 import hoopoe.api.HoopoeConfiguration;
+import hoopoe.api.HoopoePlugin;
+import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfiler;
 import hoopoe.api.HoopoeProfilerStorage;
 import hoopoe.api.HoopoeTraceNode;
@@ -10,7 +12,10 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j(topic = "hoopoe.profiler")
@@ -29,12 +34,19 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     private HoopoeConfiguration configuration;
 
+    private Map<String, HoopoePlugin> plugins;
+
     public HoopoeProfilerImpl(String rawArgs, Instrumentation instrumentation) {
         log.info("starting profiler");
 
         ConfigurationHelper configurationHelper = new ConfigurationHelper();
         configuration = configurationHelper.getConfiguration(rawArgs);
         storage = configuration.createProfilerStorage();
+
+        HoopoePluginsProvider pluginsProvider = configuration.createPluginsProvider();
+        pluginsProvider.setupProfiler(this);
+        plugins = pluginsProvider.createPlugins().stream()
+                .collect(Collectors.toMap(HoopoePlugin::getId, Function.identity()));
 
         Collection<Pattern> excludedClassesPatterns = prepareExcludedClassesPatterns();
         InstrumentationHelper instrumentationHelper = new InstrumentationHelper(excludedClassesPatterns);
@@ -72,6 +84,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         excludedClassesPatterns.add(Pattern.compile("sun\\..*"));
         excludedClassesPatterns.add(Pattern.compile("java\\.lang\\.reflect\\..*"));
         excludedClassesPatterns.add(Pattern.compile("org\\.mockito\\..*"));
+        excludedClassesPatterns.add(Pattern.compile("org\\.hamcrest\\..*"));
 //        excludedClassesPatterns.add(Pattern.compile("java\\.lang\\..*"));
 //        excludedClassesPatterns.add(Pattern.compile("java\\.io\\..*"));
 //        excludedClassesPatterns.add(Pattern.compile("java\\.util\\..*"));

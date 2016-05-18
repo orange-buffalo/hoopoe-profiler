@@ -4,4 +4,6 @@ public interface HoopoeConfiguration {
 
     HoopoeProfilerStorage createProfilerStorage();
 
+    HoopoePluginsProvider createPluginsProvider();
+
 }

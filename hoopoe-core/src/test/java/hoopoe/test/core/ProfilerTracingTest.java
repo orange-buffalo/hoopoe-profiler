@@ -2,23 +2,31 @@ package hoopoe.test.core;
 
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 import hoopoe.api.HoopoeTraceNode;
 import hoopoe.test.core.guineapigs.ApprenticeGuineaPig;
 import hoopoe.test.core.guineapigs.BaseGuineaPig;
 import hoopoe.test.core.guineapigs.RunnableGuineaPig;
+import hoopoe.test.core.supplements.HoopoeTestAgent;
+import hoopoe.test.core.supplements.HoopoeTestClassLoader;
+import hoopoe.test.core.supplements.HoopoeTestConfiguration;
 import hoopoe.test.core.supplements.MethodEntryTestItemDelegate;
 import hoopoe.test.core.supplements.ProfilerTestItem;
 import hoopoe.test.core.supplements.SingleThreadProfilerTestItem;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import lombok.experimental.Delegate;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.core.IsEqual.equalTo;
+import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 
 @RunWith(DataProviderRunner.class)
-public class ProfilerTest extends AbstractProfilerTest {
+public class ProfilerTracingTest extends AbstractProfilerTest {
 
     @DataProvider
     public static Object[][] dataForProfilingTest() {
@@ -231,6 +239,53 @@ public class ProfilerTest extends AbstractProfilerTest {
                     }
                 }
         );
+    }
+
+    @Test
+    @UseDataProvider("dataForProfilingTest")
+    public void testProfiling(ProfilerTestItem testItem) throws Exception {
+        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader();
+
+        ConcurrentMap<String, HoopoeTraceNode> capturedData = new ConcurrentHashMap<>();
+        Mockito.doAnswer(
+                invocation -> {
+                    Object[] arguments = invocation.getArguments();
+                    Thread thread = (Thread) arguments[0];
+                    HoopoeTraceNode node = (HoopoeTraceNode) arguments[1];
+                    capturedData.putIfAbsent(thread.getName(), node);
+                    return null;
+                })
+                .when(HoopoeTestConfiguration.getStorageMock())
+                .consumeThreadTraceResults(Mockito.any(), Mockito.any());
+
+        HoopoeTestAgent.load("hoopoe.configuration.class=" + HoopoeTestConfiguration.class.getCanonicalName());
+
+        try {
+            Class instrumentedClass = classLoader.loadClass(testItem.getEntryPointClass().getCanonicalName());
+            testItem.setInstrumentedClass(instrumentedClass);
+            testItem.prepareTest();
+
+            String threadName = "testThread" + System.nanoTime();
+            Thread thread = new Thread(() -> {
+                try {
+                    testItem.executeTest();
+                }
+                catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            }, threadName);
+            thread.start();
+            thread.join();
+            // unload as soon as possible to not capture more than we test
+            HoopoeTestAgent.unload();
+
+            // all captured executions in this thread are preparations and should be ignored during assertion
+            capturedData.remove(Thread.currentThread().getName());
+            testItem.assertCapturedData(threadName, capturedData);
+        }
+        finally {
+            HoopoeTestAgent.unload();
+        }
     }
 
 }
