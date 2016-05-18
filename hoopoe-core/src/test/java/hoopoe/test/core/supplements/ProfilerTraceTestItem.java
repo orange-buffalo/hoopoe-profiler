@@ -7,7 +7,7 @@ import lombok.Setter;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public abstract class ProfilerTestItem {
+public abstract class ProfilerTraceTestItem {
 
     private String description;
 
@@ -15,7 +15,7 @@ public abstract class ProfilerTestItem {
     @Getter
     protected Class instrumentedClass;
 
-    public ProfilerTestItem(String description) {
+    public ProfilerTraceTestItem(String description) {
         this.description = description;
     }
 
@@ -36,7 +36,7 @@ public abstract class ProfilerTestItem {
     protected void assertTraceNode(HoopoeTraceNode traceNode, Class clazz, String methodSignature, int childrenCount) {
         String className = clazz.getCanonicalName();
         assertThat(traceNode.getClassName(), equalTo(className));
-        assertThat(traceNode.getMethodSignature(), equalTo(className + methodSignature));
+        assertThat(traceNode.getMethodSignature(), equalTo(methodSignature));
         assertThat(traceNode.getChildren().size(), equalTo(childrenCount));
     }
 }

@@ -1,5 +1,6 @@
 package hoopoe.core.supplements;
 
+import hoopoe.api.HoopoePlugin;
 import hoopoe.core.HoopoeProfilerImpl;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,11 +16,13 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
@@ -29,8 +32,10 @@ import javassist.CtClass;
 import javassist.CtField;
 import javassist.LoaderClassPath;
 import javassist.Modifier;
+import javassist.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j(topic = "hoopoe.profiler")
 public class InstrumentationHelper {
@@ -50,8 +55,12 @@ public class InstrumentationHelper {
 
     private ConcurrentMap<ClassLoader, ClassPool> classPools = new ConcurrentHashMap<>();
 
-    public InstrumentationHelper(Collection<Pattern> excludedClassesPatterns) {
+    private Collection<HoopoePlugin> plugins;
+
+    public InstrumentationHelper(Collection<Pattern> excludedClassesPatterns,
+                                 Collection<HoopoePlugin> plugins) {
         this.excludedClassesPatterns = excludedClassesPatterns;
+        this.plugins = plugins;
     }
 
     public ClassFileTransformer createClassFileTransformer(HoopoeProfilerImpl profiler,
@@ -157,6 +166,8 @@ public class InstrumentationHelper {
             if (!isLockedForInterception(ctClass)) {
                 log.debug("modifying {}", canonicalClassName);
 
+                Collection<String> superclasses = getSuperclasses(ctClass);
+
                 Collection<CtBehavior> behaviors = new ArrayList<>();
                 behaviors.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
                 behaviors.addAll(Arrays.asList(ctClass.getDeclaredConstructors()));
@@ -164,7 +175,13 @@ public class InstrumentationHelper {
                 for (CtBehavior behavior : behaviors) {
                     try {
                         if (!isLockedForInterception(behavior)) {
-                            String methodName = behavior.getLongName();
+                            String methodName = getMethodName(ctClass, behavior.getLongName());
+
+                            List<String> supportedPlugins = plugins.stream()
+                                    .filter(hoopoePlugin -> hoopoePlugin.supports(ctClass.getName(), superclasses, methodName))
+                                    .map(HoopoePlugin::getId)
+                                    .collect(Collectors.toList());
+
                             behavior.insertBefore(String.format(BEFORE_METHOD_CALL, canonicalClassName, methodName));
                             behavior.insertAfter(AFTER_METHOD_CALL, true);
                         }
@@ -214,9 +231,36 @@ public class InstrumentationHelper {
         return ctClass.isFrozen() || ctClass.isAnnotation() || ctClass.isPrimitive() || ctClass.isInterface();
     }
 
+    private Collection<String> getSuperclasses(CtClass ctClass) throws NotFoundException {
+        Collection<String> superclasses = Arrays.stream(ctClass.getInterfaces())
+                .map(CtClass::getName)
+                .collect(Collectors.toSet());
+        CtClass superclass = ctClass.getSuperclass();
+        if (superclass != null) {
+            superclasses.add(superclass.getName());
+            superclasses.addAll(getSuperclasses(superclass));
+        }
+        return superclasses;
+    }
+
     private boolean isLockedForInterception(CtBehavior ctBehavior) {
         int modifiers = ctBehavior.getModifiers();
         return Modifier.isAbstract(modifiers) || Modifier.isNative(modifiers);
+    }
+
+    /**
+     * for constructors longMethodName is: canonical class name + "([params])"
+     * for methods longMethodName is: canonical class name + ".methodName([params])"
+     * normalize both to "[methodName][simpleClassName]([parameters])"
+     */
+    private String getMethodName(CtClass ctClass, String longMethodName) {
+        String shortMethodName = longMethodName.replace(ctClass.getName(), StringUtils.EMPTY);
+        if (shortMethodName.startsWith(".")) {
+            return shortMethodName.substring(1, shortMethodName.length());
+        }
+        else {
+            return ctClass.getSimpleName() + shortMethodName;
+        }
     }
 
 }

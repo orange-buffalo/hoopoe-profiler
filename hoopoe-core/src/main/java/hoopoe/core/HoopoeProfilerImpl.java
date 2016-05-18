@@ -49,7 +49,8 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
                 .collect(Collectors.toMap(HoopoePlugin::getId, Function.identity()));
 
         Collection<Pattern> excludedClassesPatterns = prepareExcludedClassesPatterns();
-        InstrumentationHelper instrumentationHelper = new InstrumentationHelper(excludedClassesPatterns);
+        InstrumentationHelper instrumentationHelper =
+                new InstrumentationHelper(excludedClassesPatterns, plugins.values());
         classFileTransformer = instrumentationHelper.createClassFileTransformer(this, instrumentation);
 
         instance = this;

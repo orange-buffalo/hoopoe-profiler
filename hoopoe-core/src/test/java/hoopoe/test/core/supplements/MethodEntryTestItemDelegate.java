@@ -7,10 +7,10 @@ public class MethodEntryTestItemDelegate {
     private Object object;
     private Method method;
     private Class entryPointClass;
-    private ProfilerTestItem owner;
+    private ProfilerTraceTestItem owner;
     private String methodName;
 
-    public MethodEntryTestItemDelegate(Class entryPointClass, String methodName, ProfilerTestItem owner) {
+    public MethodEntryTestItemDelegate(Class entryPointClass, String methodName, ProfilerTraceTestItem owner) {
         this.entryPointClass = entryPointClass;
         this.methodName = methodName;
         this.owner = owner;

@@ -5,9 +5,9 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public abstract class SingleThreadProfilerTestItem extends ProfilerTestItem {
+public abstract class SingleThreadProfilerTraceTestItem extends ProfilerTraceTestItem {
 
-    public SingleThreadProfilerTestItem(String description) {
+    public SingleThreadProfilerTraceTestItem(String description) {
         super(description);
     }
 

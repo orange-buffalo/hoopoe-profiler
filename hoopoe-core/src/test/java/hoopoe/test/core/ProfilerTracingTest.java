@@ -7,12 +7,11 @@ import hoopoe.api.HoopoeTraceNode;
 import hoopoe.test.core.guineapigs.ApprenticeGuineaPig;
 import hoopoe.test.core.guineapigs.BaseGuineaPig;
 import hoopoe.test.core.guineapigs.RunnableGuineaPig;
-import hoopoe.test.core.supplements.HoopoeTestAgent;
 import hoopoe.test.core.supplements.HoopoeTestClassLoader;
 import hoopoe.test.core.supplements.HoopoeTestConfiguration;
 import hoopoe.test.core.supplements.MethodEntryTestItemDelegate;
-import hoopoe.test.core.supplements.ProfilerTestItem;
-import hoopoe.test.core.supplements.SingleThreadProfilerTestItem;
+import hoopoe.test.core.supplements.ProfilerTraceTestItem;
+import hoopoe.test.core.supplements.SingleThreadProfilerTraceTestItem;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -31,7 +30,7 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
     @DataProvider
     public static Object[][] dataForProfilingTest() {
         return transform(
-                new SingleThreadProfilerTestItem("Simple method with no other calls") {
+                new SingleThreadProfilerTraceTestItem("Simple method with no other calls") {
 
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
@@ -39,161 +38,161 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
 
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
-                        assertTraceNode(traceNode, BaseGuineaPig.class, ".simpleMethod()", 0);
+                        assertTraceNode(traceNode, BaseGuineaPig.class, "simpleMethod()", 0);
                     }
                 },
 
-                new SingleThreadProfilerTestItem("Empty method") {
+                new SingleThreadProfilerTraceTestItem("Empty method") {
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "emptyMethod", this);
 
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
-                        assertTraceNode(traceNode, BaseGuineaPig.class, ".emptyMethod()", 0);
+                        assertTraceNode(traceNode, BaseGuineaPig.class, "emptyMethod()", 0);
                     }
                 },
 
-                new SingleThreadProfilerTestItem("Method with one call") {
+                new SingleThreadProfilerTraceTestItem("Method with one call") {
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithOneInnerCall", this);
 
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
-                        assertTraceNode(traceNode, BaseGuineaPig.class, ".methodWithOneInnerCall()", 1);
+                        assertTraceNode(traceNode, BaseGuineaPig.class, "methodWithOneInnerCall()", 1);
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
-                        assertTraceNode(nextNode, BaseGuineaPig.class, ".simpleMethod()", 0);
+                        assertTraceNode(nextNode, BaseGuineaPig.class, "simpleMethod()", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
                     }
                 },
 
-                new SingleThreadProfilerTestItem("Method with two calls") {
+                new SingleThreadProfilerTraceTestItem("Method with two calls") {
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithTwoInnerCalls", this);
 
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
-                        assertTraceNode(traceNode, BaseGuineaPig.class, ".methodWithTwoInnerCalls()", 2);
+                        assertTraceNode(traceNode, BaseGuineaPig.class, "methodWithTwoInnerCalls()", 2);
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
-                        assertTraceNode(nextNode, BaseGuineaPig.class, ".simpleMethod()", 0);
+                        assertTraceNode(nextNode, BaseGuineaPig.class, "simpleMethod()", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
 
                         nextNode = traceNode.getChildren().get(1);
-                        assertTraceNode(nextNode, BaseGuineaPig.class, ".emptyMethod()", 0);
+                        assertTraceNode(nextNode, BaseGuineaPig.class, "emptyMethod()", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
                     }
                 },
 
-                new SingleThreadProfilerTestItem("Private method call") {
+                new SingleThreadProfilerTraceTestItem("Private method call") {
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "callsPrivateMethod", this);
 
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
-                        assertTraceNode(traceNode, BaseGuineaPig.class, ".callsPrivateMethod()", 1);
+                        assertTraceNode(traceNode, BaseGuineaPig.class, "callsPrivateMethod()", 1);
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
-                        assertTraceNode(nextNode, BaseGuineaPig.class, ".privateMethod()", 0);
+                        assertTraceNode(nextNode, BaseGuineaPig.class, "privateMethod()", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
                     }
                 },
 
-                new SingleThreadProfilerTestItem("Static method call") {
+                new SingleThreadProfilerTraceTestItem("Static method call") {
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "callsStaticMethod", this);
 
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
-                        assertTraceNode(traceNode, BaseGuineaPig.class, ".callsStaticMethod()", 1);
+                        assertTraceNode(traceNode, BaseGuineaPig.class, "callsStaticMethod()", 1);
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
-                        assertTraceNode(nextNode, BaseGuineaPig.class, ".staticMethod()", 0);
+                        assertTraceNode(nextNode, BaseGuineaPig.class, "staticMethod()", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
                     }
                 },
 
-                new SingleThreadProfilerTestItem("Method with params call") {
+                new SingleThreadProfilerTraceTestItem("Method with params call") {
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "callsMethodWithParams", this);
 
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
-                        assertTraceNode(traceNode, BaseGuineaPig.class, ".callsMethodWithParams()", 1);
+                        assertTraceNode(traceNode, BaseGuineaPig.class, "callsMethodWithParams()", 1);
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
-                        assertTraceNode(nextNode, BaseGuineaPig.class, ".methodWithParams(int)", 0);
+                        assertTraceNode(nextNode, BaseGuineaPig.class, "methodWithParams(int)", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
                     }
                 },
 
-                new SingleThreadProfilerTestItem("Method with constructor call") {
+                new SingleThreadProfilerTraceTestItem("Method with constructor call") {
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithConstructorCall", this);
 
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
-                        assertTraceNode(traceNode, BaseGuineaPig.class, ".methodWithConstructorCall()", 1);
+                        assertTraceNode(traceNode, BaseGuineaPig.class, "methodWithConstructorCall()", 1);
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
-                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, "()", 0);
+                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, "ApprenticeGuineaPig()", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
                     }
                 },
 
-                new SingleThreadProfilerTestItem("Method with call tree") {
+                new SingleThreadProfilerTraceTestItem("Method with call tree") {
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithCallTree", this);
 
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
-                        assertTraceNode(traceNode, BaseGuineaPig.class, ".methodWithCallTree()", 4);
+                        assertTraceNode(traceNode, BaseGuineaPig.class, "methodWithCallTree()", 4);
                         long leavesDuration = 0;
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
-                        assertTraceNode(nextNode, BaseGuineaPig.class, ".emptyMethod()", 0);
+                        assertTraceNode(nextNode, BaseGuineaPig.class, "emptyMethod()", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
                         leavesDuration += nextNode.getDurationInNanoSeconds();
 
                         nextNode = traceNode.getChildren().get(1);
-                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, "(java.lang.String)", 0);
+                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, "ApprenticeGuineaPig(java.lang.String)", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
 
                         nextNode = traceNode.getChildren().get(2);
-                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, ".someSimpleMethod()", 0);
+                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, "someSimpleMethod()", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
                         leavesDuration += nextNode.getDurationInNanoSeconds();
 
                         nextNode = traceNode.getChildren().get(3);
-                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, ".callBack(hoopoe.test.core.guineapigs.BaseGuineaPig)", 1);
+                        assertTraceNode(nextNode, ApprenticeGuineaPig.class, "callBack(hoopoe.test.core.guineapigs.BaseGuineaPig)", 1);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
 
                         HoopoeTraceNode callbackNode = nextNode.getChildren().get(0);
-                        assertTraceNode(callbackNode, BaseGuineaPig.class, ".methodWithOneInnerCall()", 1);
+                        assertTraceNode(callbackNode, BaseGuineaPig.class, "methodWithOneInnerCall()", 1);
                         assertThat(callbackNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(nextNode.getDurationInNanoSeconds()));
 
                         nextNode = callbackNode.getChildren().get(0);
-                        assertTraceNode(nextNode, BaseGuineaPig.class, ".simpleMethod()", 0);
+                        assertTraceNode(nextNode, BaseGuineaPig.class, "simpleMethod()", 0);
                         assertThat(nextNode.getDurationInNanoSeconds(),
                                 lessThanOrEqualTo(callbackNode.getDurationInNanoSeconds()));
                         leavesDuration += nextNode.getDurationInNanoSeconds();
@@ -202,18 +201,18 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
                     }
                 },
 
-                new SingleThreadProfilerTestItem("Method with exception") {
+                new SingleThreadProfilerTraceTestItem("Method with exception") {
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithException", this);
 
                     @Override
                     protected void assertCapturedTraceNode(HoopoeTraceNode traceNode) {
-                        assertTraceNode(traceNode, BaseGuineaPig.class, ".methodWithException()", 0);
+                        assertTraceNode(traceNode, BaseGuineaPig.class, "methodWithException()", 0);
                     }
                 },
 
-                new ProfilerTestItem("Child thread") {
+                new ProfilerTraceTestItem("Child thread") {
                     @Delegate
                     MethodEntryTestItemDelegate delegate =
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "startNewThread", this);
@@ -225,17 +224,17 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
 
                         HoopoeTraceNode mainThreadNode = capturedData.get(originalThreadName);
                         assertThat(mainThreadNode, notNullValue());
-                        assertTraceNode(mainThreadNode, BaseGuineaPig.class, ".startNewThread()", 1);
+                        assertTraceNode(mainThreadNode, BaseGuineaPig.class, "startNewThread()", 1);
 
                         HoopoeTraceNode nextNode = mainThreadNode.getChildren().get(0);
-                        assertTraceNode(nextNode, RunnableGuineaPig.class, "()", 0);
+                        assertTraceNode(nextNode, RunnableGuineaPig.class, "RunnableGuineaPig()", 0);
 
                         HoopoeTraceNode childThreadNode = capturedData.get("RunnableGuineaPig");
                         assertThat(mainThreadNode, notNullValue());
-                        assertTraceNode(childThreadNode, RunnableGuineaPig.class, ".run()", 1);
+                        assertTraceNode(childThreadNode, RunnableGuineaPig.class, "run()", 1);
 
                         nextNode = childThreadNode.getChildren().get(0);
-                        assertTraceNode(nextNode, RunnableGuineaPig.class, ".innerMethod()", 0);
+                        assertTraceNode(nextNode, RunnableGuineaPig.class, "innerMethod()", 0);
                     }
                 }
         );
@@ -243,7 +242,7 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
 
     @Test
     @UseDataProvider("dataForProfilingTest")
-    public void testProfiling(ProfilerTestItem testItem) throws Exception {
+    public void testProfiling(ProfilerTraceTestItem testItem) throws Exception {
         HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader();
 
         ConcurrentMap<String, HoopoeTraceNode> capturedData = new ConcurrentHashMap<>();
@@ -258,14 +257,12 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
                 .when(HoopoeTestConfiguration.getStorageMock())
                 .consumeThreadTraceResults(Mockito.any(), Mockito.any());
 
-        HoopoeTestAgent.load("hoopoe.configuration.class=" + HoopoeTestConfiguration.class.getCanonicalName());
-
-        try {
+        String threadName = "testThread" + System.nanoTime();
+        executeWithAgentLoaded(() -> {
             Class instrumentedClass = classLoader.loadClass(testItem.getEntryPointClass().getCanonicalName());
             testItem.setInstrumentedClass(instrumentedClass);
             testItem.prepareTest();
 
-            String threadName = "testThread" + System.nanoTime();
             Thread thread = new Thread(() -> {
                 try {
                     testItem.executeTest();
@@ -276,16 +273,11 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
             }, threadName);
             thread.start();
             thread.join();
-            // unload as soon as possible to not capture more than we test
-            HoopoeTestAgent.unload();
+        });
 
-            // all captured executions in this thread are preparations and should be ignored during assertion
-            capturedData.remove(Thread.currentThread().getName());
-            testItem.assertCapturedData(threadName, capturedData);
-        }
-        finally {
-            HoopoeTestAgent.unload();
-        }
+        // all captured executions in this thread are preparations and should be ignored during assertion
+        capturedData.remove(Thread.currentThread().getName());
+        testItem.assertCapturedData(threadName, capturedData);
     }
 
 }
