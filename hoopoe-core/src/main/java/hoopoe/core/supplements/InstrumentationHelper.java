@@ -44,7 +44,7 @@ public class InstrumentationHelper {
 
     private static final String BEFORE_METHOD_CALL = MessageFormat.format(
             "{0}.startProfilingMethod.invoke(" +
-                    "{0}.profiler, new java.lang.Object[] '{'\"%s\", \"%s\", $args'}');", BRIDGE_CLASS_NAME);
+                    "{0}.profiler, new java.lang.Object[] '{'\"%s\", %s, \"%s\", %s, $args'}');", BRIDGE_CLASS_NAME);
 
     private static final String AFTER_METHOD_CALL = MessageFormat.format(
             "{0}.finishProfilingMethod.invoke({0}.profiler, {0}.NO_ARGS);", BRIDGE_CLASS_NAME);
@@ -100,6 +100,9 @@ public class InstrumentationHelper {
 
         bridgeCtClass.addField(
                 CtField.make("public static final java.lang.Object[] NO_ARGS = new java.lang.Object[0];", bridgeCtClass));
+
+        bridgeCtClass.addField(
+                CtField.make("public static final java.lang.String[] NO_STRING_ARGS = new java.lang.String[0];", bridgeCtClass));
 
         hoopoeProfilerBridgeClassBytes = bridgeCtClass.toBytecode();
 
@@ -167,6 +170,7 @@ public class InstrumentationHelper {
                 log.debug("modifying {}", canonicalClassName);
 
                 Collection<String> superclasses = getSuperclasses(ctClass);
+                String superclassesParameter = getSuperclassesParameter(superclasses);
 
                 Collection<CtBehavior> behaviors = new ArrayList<>();
                 behaviors.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
@@ -175,14 +179,12 @@ public class InstrumentationHelper {
                 for (CtBehavior behavior : behaviors) {
                     try {
                         if (!isLockedForInterception(behavior)) {
-                            String methodName = getMethodName(ctClass, behavior.getLongName());
+                            String methodSignature = getMethodSignature(ctClass, behavior.getLongName());
 
-                            List<String> supportedPlugins = plugins.stream()
-                                    .filter(hoopoePlugin -> hoopoePlugin.supports(ctClass.getName(), superclasses, methodName))
-                                    .map(HoopoePlugin::getId)
-                                    .collect(Collectors.toList());
+                            String enabledPlugins = getEnabledPlugins(ctClass, superclasses, methodSignature);
 
-                            behavior.insertBefore(String.format(BEFORE_METHOD_CALL, canonicalClassName, methodName));
+                            behavior.insertBefore(String.format(
+                                    BEFORE_METHOD_CALL, canonicalClassName, superclassesParameter, methodSignature, enabledPlugins));
                             behavior.insertAfter(AFTER_METHOD_CALL, true);
                         }
                     }
@@ -243,6 +245,13 @@ public class InstrumentationHelper {
         return superclasses;
     }
 
+    private String getSuperclassesParameter(Collection<String> superclasses) {
+        Collection<String> wrappedClassNames = superclasses.stream()
+                .map(s -> "\"" + s + "\"")
+                .collect(Collectors.toSet());
+        return "new java.lang.String[] {" + StringUtils.join(wrappedClassNames, ",") + "}";
+    }
+
     private boolean isLockedForInterception(CtBehavior ctBehavior) {
         int modifiers = ctBehavior.getModifiers();
         return Modifier.isAbstract(modifiers) || Modifier.isNative(modifiers);
@@ -253,7 +262,7 @@ public class InstrumentationHelper {
      * for methods longMethodName is: canonical class name + ".methodName([params])"
      * normalize both to "[methodName][simpleClassName]([parameters])"
      */
-    private String getMethodName(CtClass ctClass, String longMethodName) {
+    private String getMethodSignature(CtClass ctClass, String longMethodName) {
         String shortMethodName = longMethodName.replace(ctClass.getName(), StringUtils.EMPTY);
         if (shortMethodName.startsWith(".")) {
             return shortMethodName.substring(1, shortMethodName.length());
@@ -261,6 +270,16 @@ public class InstrumentationHelper {
         else {
             return ctClass.getSimpleName() + shortMethodName;
         }
+    }
+
+    private String getEnabledPlugins(CtClass ctClass, Collection<String> superclasses, String methodSignature) {
+        List<String> supportedPlugins = plugins.stream()
+                .filter(hoopoePlugin -> hoopoePlugin.supports(ctClass.getName(), superclasses, methodSignature))
+                .map(hoopoePlugin -> "\"" + hoopoePlugin.getId() + "\"")
+                .collect(Collectors.toList());
+        return supportedPlugins.isEmpty()
+                ? BRIDGE_CLASS_NAME + ".NO_STRING_ARGS"
+                : "new java.lang.String[] {" + StringUtils.join(supportedPlugins, ",") + "}";
     }
 
 }
