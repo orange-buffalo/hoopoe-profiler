@@ -22,12 +22,17 @@ public class HoopoeProfiledInvocation {
     @Delegate
     private MethodInfo methodInfo;
 
+    @Getter
+    private int invocationsCount;
+
     public HoopoeProfiledInvocation(String className,
                                     String methodSignature,
                                     List<HoopoeProfiledInvocation> children,
                                     long totalTimeInNs,
                                     long ownTimeInNs,
+                                    int invocationsCount,
                                     Collection<HoopoeAttribute> attributes) {
+        this.invocationsCount = invocationsCount;
         this.methodInfo = new MethodInfo(className, methodSignature, attributes);
         this.children = new ArrayList<>(children);
         this.totalTimeInNs = totalTimeInNs;

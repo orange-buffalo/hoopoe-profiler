@@ -48,7 +48,7 @@ public class StorageTest {
         assertThat(actualSummary.getId(), notNullValue());
 
         HoopoeProfiledInvocation actualInvocation = storage.getProfiledInvocation(actualSummary.getId());
-        assertNotMergedProfiledCall(actualInvocation, root);
+        assertNotMergedInvocation(actualInvocation, root);
     }
 
     @Test
@@ -72,7 +72,7 @@ public class StorageTest {
         assertThat(actualSummary.getId(), notNullValue());
 
         HoopoeProfiledInvocation actualInvocation = storage.getProfiledInvocation(actualSummary.getId());
-        assertNotMergedProfiledCall(actualInvocation, root1);
+        assertNotMergedInvocation(actualInvocation, root1);
 
         actualSummary = actualSummariesIterator.next();
         assertThat(actualSummary.getThreadName(), equalTo(THREAD_NAME));
@@ -80,7 +80,7 @@ public class StorageTest {
         assertThat(actualSummary.getId(), notNullValue());
 
         actualInvocation = storage.getProfiledInvocation(actualSummary.getId());
-        assertNotMergedProfiledCall(actualInvocation, root2);
+        assertNotMergedInvocation(actualInvocation, root2);
     }
 
     @Test
@@ -96,17 +96,17 @@ public class StorageTest {
         setTimeInMs(n22, 150, 500);
 
         HoopoeProfiledInvocation actualRoot = executeAndGetInvocation(root);
-        assertNotMergedProfiledCall(actualRoot, root);
+        assertNotMergedInvocation(actualRoot, root);
 
         HoopoeProfiledInvocation actualN1 = actualRoot.getChildren().get(0);
-        assertNotMergedProfiledCall(actualN1, n1);
+        assertNotMergedInvocation(actualN1, n1);
 
         // remember, 2.2 is slower than 2.1 and should be in the list before
         HoopoeProfiledInvocation actualN22 = actualN1.getChildren().get(0);
-        assertNotMergedProfiledCall(actualN22, n22);
+        assertNotMergedInvocation(actualN22, n22);
 
         HoopoeProfiledInvocation actualN21 = actualN1.getChildren().get(1);
-        assertNotMergedProfiledCall(actualN21, n21);
+        assertNotMergedInvocation(actualN21, n21);
     }
 
     @Test
@@ -248,12 +248,97 @@ public class StorageTest {
         root.addAttribute(new HoopoeAttribute("sql", "query", true));
     }
 
-    private void assertNotMergedProfiledCall(HoopoeProfiledInvocation actualCall, HoopoeTraceNode initialNode) {
+    @Test
+    public void testBaseMergeCase() throws Exception {
+        // root (cr.mr) -> n1 (c1.m1) -> n2 (c.m) -> n3 (c3.m3)
+        //                            -> n4 (c.m)
+
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "cr", "mr");
+        setTimeInMs(root, 0, 500);
+
+        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c1", "m1");
+        setTimeInMs(n1, 10, 400);
+
+        HoopoeTraceNode n2 = new HoopoeTraceNode(n1, "c", "m");
+        setTimeInMs(n2, 20, 300);
+
+        HoopoeTraceNode n3 = new HoopoeTraceNode(n2, "c3", "m3");
+        setTimeInMs(n3, 30, 40);
+
+        HoopoeTraceNode n4 = new HoopoeTraceNode(n1, "c", "m");
+        setTimeInMs(n4, 320, 350);
+
+        HoopoeProfiledInvocation actualRoot = executeAndGetInvocation(root);
+        assertNotMergedInvocation(actualRoot, root);
+
+        HoopoeProfiledInvocation actualN1 = actualRoot.getChildren().get(0);
+        assertInvocation(actualN1, n1);
+        assertThat(actualN1.getChildren().size(), equalTo(1));
+        assertThat(actualN1.getInvocationsCount(), equalTo(1));
+
+        HoopoeProfiledInvocation actualMergedInvocation = actualN1.getChildren().get(0);
+        assertInvocation(actualMergedInvocation, n2);
+        assertThat(actualMergedInvocation.getChildren().size(), equalTo(1));
+        assertThat(actualMergedInvocation.getInvocationsCount(), equalTo(2));
+        assertThat(actualMergedInvocation.getTotalTimeInNs(), equalTo(msToNs((300 - 20) + (350 - 320))));
+        assertThat(actualMergedInvocation.getOwnTimeInNs(), equalTo(msToNs((300 - 20) + (350 - 320) - (40 - 30))));
+
+        HoopoeProfiledInvocation actualN3 = actualMergedInvocation.getChildren().get(0);
+        assertNotMergedInvocation(actualN3, n3);
+    }
+
+    @Test
+    public void testMergeSameMethodWithDifferentAttributes() throws Exception {
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "cr", "mr");
+        setTimeInMs(root, 0, 500);
+
+        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c", "m");
+        setTimeInMs(n1, 10, 300);
+        n1.addAttribute(new HoopoeAttribute("sql", "query1", true));
+
+        HoopoeTraceNode n2 = new HoopoeTraceNode(root, "c", "m");
+        setTimeInMs(n2, 320, 400);
+        n2.addAttribute(new HoopoeAttribute("sql", "query2", true));
+
+        HoopoeTraceNode n3 = new HoopoeTraceNode(root, "c", "m");
+        setTimeInMs(n3, 410, 412);
+
+        HoopoeProfiledInvocation actualRoot = executeAndGetInvocation(root);
+        assertNotMergedInvocation(actualRoot, root);
+
+        HoopoeProfiledInvocation actualN1 = actualRoot.getChildren().get(0);
+        assertNotMergedInvocation(actualN1, n1);
+
+        HoopoeProfiledInvocation actualN2 = actualRoot.getChildren().get(1);
+        assertNotMergedInvocation(actualN2, n2);
+
+        HoopoeProfiledInvocation actualN3 = actualRoot.getChildren().get(2);
+        assertNotMergedInvocation(actualN3, n3);
+    }
+
+    @Test
+    public void testNoSelfRecording() throws Exception {
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "c1", "m1");
+        Thread selfThread = new Thread("HoopoeStorageImpl.thread");
+        storage.consumeThreadTraceResults(selfThread, root);
+        storage.waitForProvisioning();
+
+        Collection<HoopoeProfiledInvocationSummary> actualSummaries = storage.getProfiledInvocationSummaries();
+        assertThat(actualSummaries, notNullValue());
+        assertThat(actualSummaries.size(), equalTo(0));
+    }
+
+    private void assertNotMergedInvocation(HoopoeProfiledInvocation actualCall, HoopoeTraceNode initialNode) {
+        assertInvocation(actualCall, initialNode);
+        assertThat(actualCall.getChildren().size(), equalTo(initialNode.getChildren().size()));
+        assertThat(actualCall.getInvocationsCount(), equalTo(1));
+    }
+
+    private void assertInvocation(HoopoeProfiledInvocation actualCall, HoopoeTraceNode initialNode) {
         assertThat(actualCall, notNullValue());
         assertThat(actualCall.getClassName(), equalTo(initialNode.getClassName()));
         assertThat(actualCall.getMethodSignature(), equalTo(initialNode.getMethodSignature()));
         assertThat(actualCall.getChildren(), notNullValue());
-        assertThat(actualCall.getChildren().size(), equalTo(initialNode.getChildren().size()));
     }
 
     private HoopoeProfiledInvocationSummary executeAndGetSummary(HoopoeTraceNode root) throws InterruptedException {

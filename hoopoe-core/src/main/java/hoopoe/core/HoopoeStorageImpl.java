@@ -18,20 +18,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
 public class HoopoeStorageImpl implements HoopoeProfilerStorage {
 
+    private static final String STORAGE_THREAD_NAME = "HoopoeStorageImpl.thread";
+
     private final Map<String, HoopoeProfiledInvocation> invocations =
             Collections.synchronizedMap(new HashMap<>());
+
     private final Collection<HoopoeProfiledInvocationSummary> invocationSummaries =
             Collections.synchronizedCollection(new ArrayList<>());
+
     private AtomicInteger invocationsIdGenerator = new AtomicInteger(0);
-    private ExecutorService executorService = Executors.newCachedThreadPool();
+
+    private ExecutorService executorService = Executors.newCachedThreadPool(
+            target -> new Thread(target, STORAGE_THREAD_NAME));
 
     @Override
     public void consumeThreadTraceResults(Thread thread, HoopoeTraceNode traceRoot) {
+        if (STORAGE_THREAD_NAME.equals(thread.getName())) {
+            return;
+        }
         LocalDateTime profiledOn = LocalDateTime.now();
         executorService.execute(() -> {
             processTraceResults(thread.getName(), profiledOn, traceRoot);
@@ -50,6 +60,15 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
         return invocations.get(id);
     }
 
+    /**
+     * A hook for tests only. Shutdowns the internal executor and waits for all submitted tasks to complete.
+     * It is illegal to call consumeThreadTraceResults after.
+     */
+    public void waitForProvisioning() throws InterruptedException {
+        executorService.shutdown();
+        executorService.awaitTermination(60, TimeUnit.SECONDS);
+    }
+
     private void processTraceResults(String threadName, LocalDateTime profiledOn, HoopoeTraceNode traceRoot) {
         HoopoeProfiledInvocation invocation = processTraceNode(traceRoot);
         String invocationId = String.valueOf(invocationsIdGenerator.incrementAndGet());
@@ -65,13 +84,7 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
     private List<HoopoeAttributeSummary> getAttributeSummaries(HoopoeProfiledInvocation invocation) {
         List<HoopoeAttributeSummary> attributeSummaries = new ArrayList<>();
         collectAttributeSummaries(invocation, attributeSummaries);
-        Collections.sort(attributeSummaries, (o1, o2) -> {
-            int result = o1.getName().compareTo(o2.getName());
-            if (result == 0 && o1.getDetails() != null && o2.getDetails() != null) {
-                result = o1.getDetails().compareTo(o2.getDetails());
-            }
-            return result;
-        });
+        Collections.sort(attributeSummaries, this::compareAttributes);
         return attributeSummaries;
     }
 
@@ -114,35 +127,33 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
 
     private HoopoeProfiledInvocation processTraceNode(HoopoeTraceNode node) {
         List<HoopoeTraceNode> nodeChildren = node.getChildren();
-        List<HoopoeProfiledInvocation> subInvocations = nodeChildren.stream()
+        List<HoopoeProfiledInvocation> children = new ArrayList<>(nodeChildren.stream()
                 .map(this::processTraceNode)
-                .sorted(this::compareInvocationsByTotalTime)
-                .collect(Collectors.toList());
+                .collect(Collectors.groupingBy(
+                        this::getMergeGroupingKey,
+                        Collectors.reducing(
+                                null,
+                                Function.identity(),
+                                this::mergeInvocations
+                        )
+                ))
+                .values());
+        Collections.sort(children, this::compareInvocationsByTotalTime);
 
-        long subInvocationsTimeInNs = subInvocations.stream()
+        long subInvocationsTimeInNs = children.stream()
                 .mapToLong(HoopoeProfiledInvocation::getTotalTimeInNs)
                 .sum();
         long totalTimeInNs = node.getDurationInNs();
 
-        HoopoeProfiledInvocation invocation = new HoopoeProfiledInvocation(
+        return new HoopoeProfiledInvocation(
                 node.getClassName(),
                 node.getMethodSignature(),
-                subInvocations,
+                children,
                 totalTimeInNs,
                 totalTimeInNs - subInvocationsTimeInNs,
+                1,
                 node.getAttributes()
         );
-
-        return invocation;
-    }
-
-    /**
-     * A hook for tests only. Shutdowns the internal executor and waits for all submitted tasks to complete.
-     * It is illegal to call consumeThreadTraceResults after.
-     */
-    public void waitForProvisioning() throws InterruptedException {
-        executorService.shutdown();
-        executorService.awaitTermination(60, TimeUnit.SECONDS);
     }
 
     /**
@@ -151,4 +162,49 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
     private int compareInvocationsByTotalTime(HoopoeProfiledInvocation o1, HoopoeProfiledInvocation o2) {
         return Long.compare(o2.getTotalTimeInNs(), o1.getTotalTimeInNs());
     }
+
+    /**
+     * Merge invocations with the same class, method and attributes
+     */
+    private String getMergeGroupingKey(HoopoeProfiledInvocation invocation) {
+        String attributesKey = "";
+        List<HoopoeAttribute> attributes = new ArrayList<>(invocation.getAttributes());
+        Collections.sort(attributes, this::compareAttributes);
+        for (HoopoeAttribute attribute : attributes) {
+            attributesKey += attribute.getName() + attribute.getDetails();
+        }
+        return invocation.getClassName() + invocation.getMethodSignature() + attributesKey;
+    }
+
+    private HoopoeProfiledInvocation mergeInvocations(HoopoeProfiledInvocation aggregated,
+                                                      HoopoeProfiledInvocation next) {
+        if (aggregated == null) {
+            return next;
+        }
+
+        List<HoopoeProfiledInvocation> children = new ArrayList<>(
+                aggregated.getChildren().size() + next.getChildren().size());
+        children.addAll(aggregated.getChildren());
+        children.addAll(next.getChildren());
+        Collections.sort(children, this::compareInvocationsByTotalTime);
+
+        return new HoopoeProfiledInvocation(
+                aggregated.getClassName(),
+                aggregated.getMethodSignature(),
+                children,
+                aggregated.getTotalTimeInNs() + next.getTotalTimeInNs(),
+                aggregated.getOwnTimeInNs() + next.getOwnTimeInNs(),
+                aggregated.getInvocationsCount() + next.getInvocationsCount(),
+                aggregated.getAttributes()
+        );
+    }
+
+    private int compareAttributes(HoopoeAttribute o1, HoopoeAttribute o2) {
+        int result = o1.getName().compareTo(o2.getName());
+        if (result == 0 && o1.getDetails() != null && o2.getDetails() != null) {
+            result = o1.getDetails().compareTo(o2.getDetails());
+        }
+        return result;
+    }
+
 }
