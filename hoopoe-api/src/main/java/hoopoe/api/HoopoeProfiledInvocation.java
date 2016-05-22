@@ -3,6 +3,7 @@ package hoopoe.api;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,6 +42,12 @@ public class HoopoeProfiledInvocation {
 
     public List<HoopoeProfiledInvocation> getChildren() {
         return new ArrayList<>(children);
+    }
+
+    public Stream<HoopoeProfiledInvocation> flattened() {
+        return Stream.concat(
+                Stream.of(this),
+                children.stream().flatMap(HoopoeProfiledInvocation::flattened));
     }
 
 }

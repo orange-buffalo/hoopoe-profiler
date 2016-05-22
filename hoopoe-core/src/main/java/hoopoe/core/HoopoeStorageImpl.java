@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 public class HoopoeStorageImpl implements HoopoeProfilerStorage {
 
     private static final String STORAGE_THREAD_NAME = "HoopoeStorageImpl.thread";
+    private static final long TRIM_THRESHOLD_IN_NS = 1_000_000;
 
     private final Map<String, HoopoeProfiledInvocation> invocations =
             Collections.synchronizedMap(new HashMap<>());
@@ -127,7 +128,8 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
 
     private HoopoeProfiledInvocation processTraceNode(HoopoeTraceNode node) {
         List<HoopoeTraceNode> nodeChildren = node.getChildren();
-        List<HoopoeProfiledInvocation> children = new ArrayList<>(nodeChildren.stream()
+
+        List<HoopoeProfiledInvocation> children = nodeChildren.stream()
                 .map(this::processTraceNode)
                 .collect(Collectors.groupingBy(
                         this::getMergeGroupingKey,
@@ -137,8 +139,11 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
                                 this::mergeInvocations
                         )
                 ))
-                .values());
-        Collections.sort(children, this::compareInvocationsByTotalTime);
+                .values()
+                .stream()
+                .filter(invocation -> invocation.getTotalTimeInNs() >= TRIM_THRESHOLD_IN_NS)
+                .sorted(this::compareInvocationsByTotalTime)
+                .collect(Collectors.toList());
 
         long subInvocationsTimeInNs = children.stream()
                 .mapToLong(HoopoeProfiledInvocation::getTotalTimeInNs)

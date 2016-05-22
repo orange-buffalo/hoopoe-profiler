@@ -34,7 +34,7 @@ public class StorageTest {
 
     @Test
     public void testSingleProfiledInvocation() throws Exception {
-        HoopoeTraceNode root = new HoopoeTraceNode(null, "c1", "m1");
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "cr", "mr");
         storage.consumeThreadTraceResults(thread, root);
         storage.waitForProvisioning();
 
@@ -85,15 +85,16 @@ public class StorageTest {
 
     @Test
     public void testMethodCallHierarchy() throws Exception {
-        HoopoeTraceNode root = new HoopoeTraceNode(null, "c1", "m1");
-        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c2", "m2");
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "cr", "mr");
+        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c1", "m1");
+        setTimeInMs(n1, 0, 1);
 
-        HoopoeTraceNode n21 = new HoopoeTraceNode(n1, "c3", "m3");
-        setTimeInMs(n21, 0, 100);
+        HoopoeTraceNode n2 = new HoopoeTraceNode(n1, "c2", "m2");
+        setTimeInMs(n2, 1, 100);
 
         // this child execution is slower, it should be the first in profiled results
-        HoopoeTraceNode n22 = new HoopoeTraceNode(n1, "c4", "m4");
-        setTimeInMs(n22, 150, 500);
+        HoopoeTraceNode n3 = new HoopoeTraceNode(n1, "c3", "m3");
+        setTimeInMs(n3, 150, 500);
 
         HoopoeProfiledInvocation actualRoot = executeAndGetInvocation(root);
         assertNotMergedInvocation(actualRoot, root);
@@ -102,25 +103,25 @@ public class StorageTest {
         assertNotMergedInvocation(actualN1, n1);
 
         // remember, 2.2 is slower than 2.1 and should be in the list before
-        HoopoeProfiledInvocation actualN22 = actualN1.getChildren().get(0);
-        assertNotMergedInvocation(actualN22, n22);
+        HoopoeProfiledInvocation actualN3 = actualN1.getChildren().get(0);
+        assertNotMergedInvocation(actualN3, n3);
 
-        HoopoeProfiledInvocation actualN21 = actualN1.getChildren().get(1);
-        assertNotMergedInvocation(actualN21, n21);
+        HoopoeProfiledInvocation actualN2 = actualN1.getChildren().get(1);
+        assertNotMergedInvocation(actualN2, n2);
     }
 
     @Test
     public void testTimeCalculations() throws Exception {
-        HoopoeTraceNode root = new HoopoeTraceNode(null, "c1", "m1");
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "cr", "mr");
         setTimeInMs(root, 0, 100);
 
-        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c2", "m2");
+        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c1", "m1");
         setTimeInMs(n1, 5, 80);
 
-        HoopoeTraceNode n2 = new HoopoeTraceNode(n1, "c3", "m3");
+        HoopoeTraceNode n2 = new HoopoeTraceNode(n1, "c2", "m2");
         setTimeInMs(n2, 6, 30);
 
-        HoopoeTraceNode n3 = new HoopoeTraceNode(n1, "c4", "m4");
+        HoopoeTraceNode n3 = new HoopoeTraceNode(n1, "c3", "m3");
         setTimeInMs(n3, 40, 55);
 
         HoopoeProfiledInvocation actualRoot = executeAndGetInvocation(root);
@@ -142,14 +143,14 @@ public class StorageTest {
 
     @Test
     public void testDifferentAttributeSummaries() throws Exception {
-        HoopoeTraceNode root = new HoopoeTraceNode(null, "c1", "m1");
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "cr", "mr");
         setTimeInMs(root, 0, 100);
 
-        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c2", "m2");
+        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c1", "m1");
         setTimeInMs(n1, 5, 80);
         n1.addAttribute(new HoopoeAttribute("sql", "query", true));
 
-        HoopoeTraceNode n2 = new HoopoeTraceNode(root, "c3", "m3");
+        HoopoeTraceNode n2 = new HoopoeTraceNode(root, "c2", "m2");
         setTimeInMs(n2, 85, 90);
         n2.addAttribute(new HoopoeAttribute("transaction", null, false));
 
@@ -176,14 +177,14 @@ public class StorageTest {
 
     @Test
     public void testDifferentAttributeSummariesDetails() throws Exception {
-        HoopoeTraceNode root = new HoopoeTraceNode(null, "c1", "m1");
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "cr", "mr");
         setTimeInMs(root, 0, 100);
 
-        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c2", "m2");
+        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c1", "m1");
         setTimeInMs(n1, 5, 80);
         n1.addAttribute(new HoopoeAttribute("sql", "query1", true));
 
-        HoopoeTraceNode n2 = new HoopoeTraceNode(root, "c3", "m3");
+        HoopoeTraceNode n2 = new HoopoeTraceNode(root, "c2", "m2");
         setTimeInMs(n2, 85, 90);
         n2.addAttribute(new HoopoeAttribute("sql", "query2", true));
 
@@ -210,14 +211,14 @@ public class StorageTest {
 
     @Test
     public void testAttributeSummariesMerge() throws Exception {
-        HoopoeTraceNode root = new HoopoeTraceNode(null, "c1", "m1");
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "cr", "mr");
         setTimeInMs(root, 0, 100);
 
-        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c2", "m2");
+        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c1", "m1");
         setTimeInMs(n1, 5, 80);
         n1.addAttribute(new HoopoeAttribute("sql", "query", true));
 
-        HoopoeTraceNode n2 = new HoopoeTraceNode(root, "c3", "m3");
+        HoopoeTraceNode n2 = new HoopoeTraceNode(root, "c2", "m2");
         setTimeInMs(n2, 85, 90);
         n2.addAttribute(new HoopoeAttribute("sql", "query", true));
 
@@ -236,16 +237,26 @@ public class StorageTest {
 
     @Test
     public void testSameAttributeSummaries() throws Exception {
-        HoopoeTraceNode root = new HoopoeTraceNode(null, "c1", "m1");
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "cr", "mr");
         setTimeInMs(root, 0, 100);
 
-        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c2", "m2");
+        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c1", "m1");
         setTimeInMs(n1, 5, 80);
-        root.addAttribute(new HoopoeAttribute("sql", "query", true));
+        n1.addAttribute(new HoopoeAttribute("sql", "query", true));
 
-        HoopoeTraceNode n2 = new HoopoeTraceNode(root, "c3", "m3");
+        HoopoeTraceNode n2 = new HoopoeTraceNode(root, "c2", "m2");
         setTimeInMs(n2, 85, 90);
-        root.addAttribute(new HoopoeAttribute("sql", "query", true));
+        n2.addAttribute(new HoopoeAttribute("sql", "query", true));
+
+        HoopoeProfiledInvocationSummary actualInvocationSummary = executeAndGetSummary(root);
+        Collection<HoopoeAttributeSummary> attributeSummaries = actualInvocationSummary.getAttributeSummaries();
+        assertThat(attributeSummaries, notNullValue());
+        assertThat(attributeSummaries.size(), equalTo(1));
+        HoopoeAttributeSummary attributeSummary = attributeSummaries.iterator().next();
+        assertThat(attributeSummary.getTotalOccurrences(), equalTo(2));
+        assertThat(attributeSummary.getName(), equalTo("sql"));
+        assertThat(attributeSummary.getDetails(), equalTo("query"));
+        assertThat(attributeSummary.getTotalTimeInNs(), equalTo(msToNs((80 - 5) + (90 - 85))));
     }
 
     @Test
@@ -326,6 +337,29 @@ public class StorageTest {
         Collection<HoopoeProfiledInvocationSummary> actualSummaries = storage.getProfiledInvocationSummaries();
         assertThat(actualSummaries, notNullValue());
         assertThat(actualSummaries.size(), equalTo(0));
+    }
+
+    @Test
+    public void testFastInvocationsAreTrimmed() throws Exception {
+        HoopoeTraceNode root = new HoopoeTraceNode(null, "cr", "mr");
+        setTimeInMs(root, 0, 500);
+
+        HoopoeTraceNode n1 = new HoopoeTraceNode(root, "c1", "m1");
+        setTimeInMs(n1, 10, 300);
+
+        HoopoeTraceNode n2 = new HoopoeTraceNode(n1, "c2", "m2");
+        setTimeInNs(n2, msToNs(15), msToNs(15) + 999_999);  // duration less than 1ms
+
+        HoopoeTraceNode n3 = new HoopoeTraceNode(root, "c3", "m3");
+        setTimeInNs(n3, msToNs(320), msToNs(320) + 999_999);  // duration less than 1ms
+
+        HoopoeProfiledInvocation actualRoot = executeAndGetInvocation(root);
+        assertInvocation(actualRoot, root);
+        assertThat(actualRoot.getChildren().size(), equalTo(1));
+
+        HoopoeProfiledInvocation actualN1 = actualRoot.getChildren().get(0);
+        assertInvocation(actualN1, n1);
+        assertThat(actualN1.getChildren().size(), equalTo(0));
     }
 
     private void assertNotMergedInvocation(HoopoeProfiledInvocation actualCall, HoopoeTraceNode initialNode) {
