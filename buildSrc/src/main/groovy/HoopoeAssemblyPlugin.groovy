@@ -15,9 +15,7 @@ class HoopoeAssemblyPlugin implements Plugin<Project> {
 
         SourceSet mainSourceSet = project.sourceSets.getByName('main');
         def runtimeConfiguration = project.configurations.findByName('runtime')
-
-
-
+        def providedConfiguration = project.configurations.findByName('provided')
 
         def hoopoeZipTask = project.task(type: Zip, 'hoopoeZip') {
 
@@ -34,21 +32,20 @@ class HoopoeAssemblyPlugin implements Plugin<Project> {
             }
 
             from({
-                runtimeConfiguration.resolvedConfiguration.resolvedArtifacts*.file
+                def artifacts = runtimeConfiguration.resolvedConfiguration.resolvedArtifacts -
+                        providedConfiguration.resolvedConfiguration.resolvedArtifacts
+                artifacts*.file
             }) {
                 into('lib')
             }
         }
-
 
         Task assembleTask = project.tasks.findByName('assemble')
         hoopoeZipTask.dependsOn.add(project.tasks.findByName('jar'))
         assembleTask.dependsOn.add(hoopoeZipTask);
 
         project.artifacts.add('hoopoe', hoopoeZipTask)
-
     }
-
 
 }
 
