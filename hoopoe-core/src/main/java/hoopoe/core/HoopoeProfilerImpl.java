@@ -62,11 +62,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
                                             String[] enabledPlugins,
                                             Object[] args) {
         HoopoeTraceNode previousTraceNode = currentTraceNodeHolder.get();
-        HoopoeTraceNode currentTraceNode = HoopoeTraceNode.builder()
-                .parent(previousTraceNode)
-                .className(className)
-                .methodSignature(methodSignature)
-                .build();
+        HoopoeTraceNode currentTraceNode = new HoopoeTraceNode(previousTraceNode, className, methodSignature);
         for (String enabledPlugin : enabledPlugins) {
             HoopoePlugin plugin = instance.plugins.get(enabledPlugin);
             plugin.onCall(className, superclasses, methodSignature, args);

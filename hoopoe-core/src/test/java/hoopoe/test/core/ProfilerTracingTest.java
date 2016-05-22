@@ -64,8 +64,8 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
                         assertTraceNode(nextNode, BaseGuineaPig.class, "simpleMethod()", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
                     }
                 },
 
@@ -80,13 +80,13 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
                         assertTraceNode(nextNode, BaseGuineaPig.class, "simpleMethod()", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
 
                         nextNode = traceNode.getChildren().get(1);
                         assertTraceNode(nextNode, BaseGuineaPig.class, "emptyMethod()", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
                     }
                 },
 
@@ -101,8 +101,8 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
                         assertTraceNode(nextNode, BaseGuineaPig.class, "privateMethod()", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
                     }
                 },
 
@@ -117,8 +117,8 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
                         assertTraceNode(nextNode, BaseGuineaPig.class, "staticMethod()", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
                     }
                 },
 
@@ -133,8 +133,8 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
                         assertTraceNode(nextNode, BaseGuineaPig.class, "methodWithParams(int)", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
                     }
                 },
 
@@ -149,8 +149,8 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
                         assertTraceNode(nextNode, ApprenticeGuineaPig.class, "ApprenticeGuineaPig()", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
                     }
                 },
 
@@ -166,38 +166,38 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
 
                         HoopoeTraceNode nextNode = traceNode.getChildren().get(0);
                         assertTraceNode(nextNode, BaseGuineaPig.class, "emptyMethod()", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
-                        leavesDuration += nextNode.getDurationInNanoSeconds();
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
+                        leavesDuration += nextNode.getDurationInNs();
 
                         nextNode = traceNode.getChildren().get(1);
                         assertTraceNode(nextNode, ApprenticeGuineaPig.class, "ApprenticeGuineaPig(java.lang.String)", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
 
                         nextNode = traceNode.getChildren().get(2);
                         assertTraceNode(nextNode, ApprenticeGuineaPig.class, "someSimpleMethod()", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
-                        leavesDuration += nextNode.getDurationInNanoSeconds();
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
+                        leavesDuration += nextNode.getDurationInNs();
 
                         nextNode = traceNode.getChildren().get(3);
                         assertTraceNode(nextNode, ApprenticeGuineaPig.class, "callBack(hoopoe.test.core.guineapigs.BaseGuineaPig)", 1);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(traceNode.getDurationInNs()));
 
                         HoopoeTraceNode callbackNode = nextNode.getChildren().get(0);
                         assertTraceNode(callbackNode, BaseGuineaPig.class, "methodWithOneInnerCall()", 1);
-                        assertThat(callbackNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(nextNode.getDurationInNanoSeconds()));
+                        assertThat(callbackNode.getDurationInNs(),
+                                lessThanOrEqualTo(nextNode.getDurationInNs()));
 
                         nextNode = callbackNode.getChildren().get(0);
                         assertTraceNode(nextNode, BaseGuineaPig.class, "simpleMethod()", 0);
-                        assertThat(nextNode.getDurationInNanoSeconds(),
-                                lessThanOrEqualTo(callbackNode.getDurationInNanoSeconds()));
-                        leavesDuration += nextNode.getDurationInNanoSeconds();
+                        assertThat(nextNode.getDurationInNs(),
+                                lessThanOrEqualTo(callbackNode.getDurationInNs()));
+                        leavesDuration += nextNode.getDurationInNs();
 
-                        assertThat(leavesDuration, lessThanOrEqualTo(traceNode.getDurationInNanoSeconds()));
+                        assertThat(leavesDuration, lessThanOrEqualTo(traceNode.getDurationInNs()));
                     }
                 },
 
