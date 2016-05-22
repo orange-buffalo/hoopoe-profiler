@@ -44,9 +44,7 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
             return;
         }
         LocalDateTime profiledOn = LocalDateTime.now();
-        executorService.execute(() -> {
-            processTraceResults(thread.getName(), profiledOn, traceRoot);
-        });
+        executorService.execute(() -> processTraceResults(thread.getName(), profiledOn, traceRoot));
     }
 
     @Override

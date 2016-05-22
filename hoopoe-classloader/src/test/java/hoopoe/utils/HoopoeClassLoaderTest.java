@@ -42,7 +42,7 @@ public class HoopoeClassLoaderTest {
 
         Method method = classA.getMethod("getString");
         Object aInstance = classA.newInstance();
-        assertThat(method.invoke(aInstance), CoreMatchers.<Object>equalTo("string"));
+        assertThat(method.invoke(aInstance), equalTo("string"));
     }
 
     @Test
@@ -54,7 +54,7 @@ public class HoopoeClassLoaderTest {
 
         Method method = classB.getMethod("getInt");
         Object bInstance = classB.newInstance();
-        assertThat(method.invoke(bInstance), CoreMatchers.<Object>equalTo(42));
+        assertThat(method.invoke(bInstance), equalTo(42));
     }
 
     @Test
@@ -66,7 +66,7 @@ public class HoopoeClassLoaderTest {
 
         Method method = classD.getMethod("getChar");
         Object dInstance = classD.newInstance();
-        assertThat(method.invoke(dInstance), CoreMatchers.<Object>equalTo('c'));
+        assertThat(method.invoke(dInstance), equalTo('c'));
     }
 
     @Test
@@ -78,7 +78,7 @@ public class HoopoeClassLoaderTest {
 
         Method method = classC.getMethod("getDelegatedInt");
         Object cInstance = classC.newInstance();
-        assertThat(method.invoke(cInstance), CoreMatchers.<Object>equalTo(42));
+        assertThat(method.invoke(cInstance), equalTo(42));
 
         method = classC.getMethod("getB");
         Object bInstance = method.invoke(cInstance);
@@ -100,7 +100,7 @@ public class HoopoeClassLoaderTest {
 
         Method method = classB.getMethod("getInt");
         Object bInstance = classB.newInstance();
-        assertThat(method.invoke(bInstance), CoreMatchers.<Object>equalTo(42));
+        assertThat(method.invoke(bInstance), equalTo(42));
     }
 
     @Test
@@ -112,7 +112,7 @@ public class HoopoeClassLoaderTest {
 
         Method method = classC.getMethod("getDelegatedInt");
         Object cInstance = classC.newInstance();
-        assertThat(method.invoke(cInstance), CoreMatchers.<Object>equalTo(42));
+        assertThat(method.invoke(cInstance), equalTo(42));
 
         method = classC.getMethod("getB");
         Object bInstance = method.invoke(cInstance);
