@@ -24,8 +24,23 @@ class HoopoeDependencyPlugin implements Plugin<Project> {
 
         }
 
+        def hoopoeUberTask = project.task(type: Copy, 'hoopoeUberTask') {
+
+            from {
+                (project.configurations.runtime.resolvedConfiguration.resolvedArtifacts -
+                        project.configurations.provided.resolvedConfiguration.resolvedArtifacts).findAll({
+                    it.classifier != 'hoopoe'
+                }).collect({project.zipTree(it.file)})
+            }
+            into mainSourceSet.output.classesDir
+            include '**/*.class'
+            includeEmptyDirs false
+
+        }
+
         Task processResourcesTask = project.tasks.findByName('processResources')
         processResourcesTask.dependsOn.add(hoopoeCopyTask);
+        processResourcesTask.dependsOn.add(hoopoeUberTask);
 
     }
 }

@@ -89,8 +89,12 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         excludedClassesPatterns.add(Pattern.compile("javassist\\..*"));
         excludedClassesPatterns.add(Pattern.compile("sun\\..*"));
         excludedClassesPatterns.add(Pattern.compile("java\\.lang\\.reflect\\..*"));
+        excludedClassesPatterns.add(Pattern.compile("java\\.lang\\..*"));
+        excludedClassesPatterns.add(Pattern.compile("java\\.util\\..*"));
         excludedClassesPatterns.add(Pattern.compile("org\\.mockito\\..*"));
         excludedClassesPatterns.add(Pattern.compile("org\\.hamcrest\\..*"));
+        excludedClassesPatterns.add(Pattern.compile("java\\.time\\..*"));
+        excludedClassesPatterns.add(Pattern.compile("java\\..*"));
 //        excludedClassesPatterns.add(Pattern.compile("java\\.lang\\..*"));
 //        excludedClassesPatterns.add(Pattern.compile("java\\.io\\..*"));
 //        excludedClassesPatterns.add(Pattern.compile("java\\.util\\..*"));

@@ -8,12 +8,12 @@ public class HoopoeConfigurationImpl implements HoopoeConfiguration {
 
     @Override
     public HoopoeProfilerStorage createProfilerStorage() {
-        return null;
+        return new HoopoeStorageImpl();
     }
 
     @Override
     public HoopoePluginsProvider createPluginsProvider() {
-        return null;
+        return new HoopoePluginProviderImpl();
     }
 
 }

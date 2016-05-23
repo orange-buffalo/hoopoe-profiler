@@ -1,12 +1,13 @@
 apply plugin: HoopoeDependencyPlugin
 
 dependencies {
-
+    compile project(':hoopoe-classloader')
+    compile project(':hoopoe-api')
     compile project(path: ':hoopoe-core', configuration: 'hoopoe')
 }
 
 jar {
     manifest {
-        attributes('Premain-Class': 'Agent')
+        attributes('Premain-Class': 'hoopoe.core.HoopoeAgent')
     }
 }
