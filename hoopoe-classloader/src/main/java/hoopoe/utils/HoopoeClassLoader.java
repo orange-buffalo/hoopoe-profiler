@@ -1,13 +1,13 @@
 package hoopoe.utils;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import lombok.AllArgsConstructor;
 
 public final class HoopoeClassLoader extends ClassLoader {
 
@@ -111,19 +111,14 @@ public final class HoopoeClassLoader extends ClassLoader {
         }
     }
 
-    private byte[] getZipEntryBytes(ZipInputStream stream, ZipEntry streamEntry) throws IOException {
-        int entrySize = (int) streamEntry.getSize();
-        byte[] streamBytes = new byte[entrySize];
-        if (stream.read(streamBytes, 0, entrySize) != entrySize) {
-            throw new IllegalStateException("Cannot read " + streamEntry.getName());
+    private byte[] getZipEntryBytes(ZipInputStream zipStream, ZipEntry streamEntry) throws IOException {
+        ByteArrayOutputStream entryStream = new ByteArrayOutputStream();
+        int bytesRead;
+        byte[] buffer = new byte[8192 * 2];
+        while ((bytesRead = zipStream.read(buffer)) != -1) {
+            entryStream.write(buffer, 0, bytesRead);
         }
-        return streamBytes;
-    }
-
-    @AllArgsConstructor
-    private static class ZipEntryData {
-        private String name;
-        private byte[] data;
+        return entryStream.toByteArray();
     }
 
 }
