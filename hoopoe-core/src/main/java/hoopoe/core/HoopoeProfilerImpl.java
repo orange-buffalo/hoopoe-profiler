@@ -25,6 +25,8 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     private static HoopoeProfilerImpl instance;
 
+    private Thread mainThread;
+
     /**
      * A hook for tests. Otherwise it is extremely hard to disable profiler after test execution.
      */
@@ -53,6 +55,8 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
                 new InstrumentationHelper(excludedClassesPatterns, plugins.values());
         classFileTransformer = instrumentationHelper.createClassFileTransformer(this, instrumentation);
 
+        mainThread = Thread.currentThread();
+
         instance = this;
     }
 
@@ -61,6 +65,10 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
                                             String methodSignature,
                                             String[] enabledPlugins,
                                             Object[] args) {
+        if (Thread.currentThread() == instance.mainThread) {
+            return;
+        }
+
         HoopoeTraceNode previousTraceNode = currentTraceNodeHolder.get();
         HoopoeTraceNode currentTraceNode = new HoopoeTraceNode(previousTraceNode, className, methodSignature);
         for (String enabledPlugin : enabledPlugins) {
@@ -72,6 +80,10 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     }
 
     public static void finishMethodProfiling() {
+        if (Thread.currentThread() == instance.mainThread) {
+            return;
+        }
+
         HoopoeTraceNode currentTraceNode = currentTraceNodeHolder.get();
         currentTraceNode.finish();
 
