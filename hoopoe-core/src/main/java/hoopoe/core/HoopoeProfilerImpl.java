@@ -74,7 +74,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
                                             String methodSignature,
                                             String[] enabledPlugins,
                                             Object[] args) {
-        if (Thread.currentThread() == instance.mainThread) {
+        if (Thread.currentThread() == instance.mainThread) {    // todo cover with test
             return;
         }
 
