@@ -1,5 +1,7 @@
 package hoopoe.api;
 
+import java.util.Collection;
+
 public interface HoopoeConfiguration {
 
     HoopoeProfilerStorage createProfilerStorage();
@@ -10,4 +12,5 @@ public interface HoopoeConfiguration {
 
     long getMinimumTrackedInvocationTimeInNs();
 
+    Collection<String> getEnabledPlugins();
 }

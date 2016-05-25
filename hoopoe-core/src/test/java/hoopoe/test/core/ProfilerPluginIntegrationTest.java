@@ -27,6 +27,8 @@ import static org.mockito.Mockito.when;
 
 public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
 
+    private static final String GUINEAPIGS_PACKAGE = "hoopoe.test.core.guineapigs";
+
     @Override
     public void prepareTest() {
         super.prepareTest();
@@ -54,7 +56,7 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
         HoopoePlugin pluginMock = preparePluginMock();
         when(pluginMock.supports(any(), any(), any())).thenReturn(true);
 
-        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader();
+        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader(GUINEAPIGS_PACKAGE);
         Class guineaPigClass = PluginGuineaPig.class;
 
         executeWithAgentLoaded(() -> classLoader.loadClass(guineaPigClass.getCanonicalName()));
@@ -82,7 +84,7 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
         HoopoePlugin pluginMock = preparePluginMock();
         when(pluginMock.supports(any(), any(), any())).thenReturn(false);
 
-        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader();
+        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader(GUINEAPIGS_PACKAGE);
         Class guineaPigClass = PluginGuineaPig.class;
 
         executeWithAgentLoaded(() -> {
@@ -99,7 +101,7 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
         when(pluginMock.supports(any(), any(), any())).thenReturn(true);
         when(pluginMock.getAttributes(any(), any(), any(), any())).thenReturn(Collections.emptyList());
 
-        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader();
+        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader(GUINEAPIGS_PACKAGE);
         Class guineaPigClass = PluginGuineaPig.class;
 
         Object argument = new Object();

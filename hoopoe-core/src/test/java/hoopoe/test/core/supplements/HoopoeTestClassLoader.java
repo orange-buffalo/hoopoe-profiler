@@ -15,13 +15,17 @@ import org.reflections.scanners.SubTypesScanner;
 
 public class HoopoeTestClassLoader extends ClassLoader {
 
-    private static Map<String, byte[]> classesData = new HashMap<>();
+    private Map<String, byte[]> classesData = new HashMap<>();
 
     static {
         registerAsParallelCapable();
+    }
+
+    public HoopoeTestClassLoader(String packageToAdd) throws NotFoundException, IOException, CannotCompileException {
+        super(HoopoeTestClassLoader.class.getClassLoader());
 
         try {
-            Reflections reflections = new Reflections("hoopoe.test.core.guineapigs", new SubTypesScanner(false));
+            Reflections reflections = new Reflections(packageToAdd, new SubTypesScanner(false));
             Set<Class<?>> guineaPigClasses = reflections.getSubTypesOf(Object.class);
             guineaPigClasses.size();
             ClassPool classPool = new ClassPool();
@@ -34,10 +38,6 @@ public class HoopoeTestClassLoader extends ClassLoader {
         catch (IOException | CannotCompileException | NotFoundException e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    public HoopoeTestClassLoader() throws NotFoundException, IOException, CannotCompileException {
-        super(HoopoeTestClassLoader.class.getClassLoader());
     }
 
     @Override

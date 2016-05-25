@@ -17,6 +17,11 @@ public final class HoopoeClassLoader extends ClassLoader {
 
     private Map<String, byte[]> zipData = new HashMap<>();
 
+    public static HoopoeClassLoader fromStream(InputStream stream,
+                                               ClassLoader parentClassLoader) {
+        return new HoopoeClassLoader(stream, parentClassLoader);
+    }
+
     public static HoopoeClassLoader fromResource(String absoluteZipResourcePath,
                                                  ClassLoader parentClassLoader) {
         return new HoopoeClassLoader(
@@ -79,7 +84,15 @@ public final class HoopoeClassLoader extends ClassLoader {
             zippedName = "classes/" + zippedName;
         }
         byte[] bytes = zipData.get(zippedName);
-        return bytes == null ? null : new ByteArrayInputStream(bytes);
+        if (bytes != null) {
+            return new ByteArrayInputStream(bytes);
+        }
+        else if (getParent() != null) {
+            return getParent().getResourceAsStream(name);
+        }
+        else {
+            return null;
+        }
     }
 
     private void initClassData(ZipInputStream stream) throws IOException {

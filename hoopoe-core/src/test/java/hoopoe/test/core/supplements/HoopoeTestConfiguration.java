@@ -4,6 +4,8 @@ import hoopoe.api.HoopoeConfiguration;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfilerStorage;
 import hoopoe.api.HoopoeTracer;
+import java.util.Collection;
+import java.util.Collections;
 import lombok.Getter;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -40,6 +42,11 @@ public class HoopoeTestConfiguration implements HoopoeConfiguration {
     @Override
     public long getMinimumTrackedInvocationTimeInNs() {
         return 0;   // todo do we need mock here?
+    }
+
+    @Override
+    public Collection<String> getEnabledPlugins() {
+        return Collections.emptyList();
     }
 
     public static void resetMocks() {

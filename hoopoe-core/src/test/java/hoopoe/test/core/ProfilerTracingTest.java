@@ -196,7 +196,7 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
     @Test
     @UseDataProvider("dataForProfilingTest")
     public void testProfiling(ProfilerTraceTestItem testItem) throws Exception {
-        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader();
+        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader("hoopoe.test.core.guineapigs");
 
         // load before agent is connected to avoid infinite recursion
         CapturedInvocation.class.getName();
