@@ -7,7 +7,6 @@ import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Delegate;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class HoopoeProfiledInvocation {
@@ -20,11 +19,16 @@ public class HoopoeProfiledInvocation {
     @Getter
     private long ownTimeInNs;
 
-    @Delegate
-    private MethodInfo methodInfo;
+    @Getter
+    private String className;
+
+    @Getter
+    private String methodSignature;
 
     @Getter
     private int invocationsCount;
+
+    private Collection<HoopoeAttribute> attributes = new ArrayList<>(); //todo lazy
 
     public HoopoeProfiledInvocation(String className,
                                     String methodSignature,
@@ -34,7 +38,9 @@ public class HoopoeProfiledInvocation {
                                     int invocationsCount,
                                     Collection<HoopoeAttribute> attributes) {
         this.invocationsCount = invocationsCount;
-        this.methodInfo = new MethodInfo(className, methodSignature, attributes);
+        this.className = className;
+        this.methodSignature = methodSignature;
+        this.attributes = attributes;
         this.children = new ArrayList<>(children);
         this.totalTimeInNs = totalTimeInNs;
         this.ownTimeInNs = ownTimeInNs;
@@ -48,6 +54,10 @@ public class HoopoeProfiledInvocation {
         return Stream.concat(
                 Stream.of(this),
                 children.stream().flatMap(HoopoeProfiledInvocation::flattened));
+    }
+
+    public Collection<HoopoeAttribute> getAttributes() {
+        return new ArrayList<>(attributes);
     }
 
 }
