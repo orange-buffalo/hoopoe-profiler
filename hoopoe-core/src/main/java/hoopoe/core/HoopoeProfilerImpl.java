@@ -1,11 +1,14 @@
 package hoopoe.core;
 
+import hoopoe.api.HoopoeAttribute;
 import hoopoe.api.HoopoeConfiguration;
+import hoopoe.api.HoopoeHasAttributes;
 import hoopoe.api.HoopoePlugin;
 import hoopoe.api.HoopoePluginsProvider;
+import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.api.HoopoeProfiler;
 import hoopoe.api.HoopoeProfilerStorage;
-import hoopoe.api.HoopoeTraceNode;
+import hoopoe.api.HoopoeTracer;
 import hoopoe.core.supplements.ConfigurationHelper;
 import hoopoe.core.supplements.InstrumentationHelper;
 import java.lang.instrument.ClassFileTransformer;
@@ -16,12 +19,11 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j(topic = "hoopoe.profiler")
 public class HoopoeProfilerImpl implements HoopoeProfiler {
-
-    private static final ThreadLocal<HoopoeTraceNode> currentTraceNodeHolder = new ThreadLocal<>();
 
     private static HoopoeProfilerImpl instance;
 
@@ -30,13 +32,16 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     /**
      * A hook for tests. Otherwise it is extremely hard to disable profiler after test execution.
      */
-    private ClassFileTransformer classFileTransformer;
+    private ClassFileTransformer classFileTransformer;  // todo implement unload in this class?
 
     private HoopoeProfilerStorage storage;
 
+    @Getter
     private HoopoeConfiguration configuration;
 
     private Map<String, HoopoePlugin> plugins;
+
+    private HoopoeTracer tracer;
 
     public HoopoeProfilerImpl(String rawArgs, Instrumentation instrumentation) {
         log.info("starting profiler");
@@ -55,6 +60,10 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
                 new InstrumentationHelper(excludedClassesPatterns, plugins.values());
         classFileTransformer = instrumentationHelper.createClassFileTransformer(this, instrumentation);
 
+        // todo cover with test
+        tracer = configuration.createTracer();
+        tracer.setupProfiler(this);
+
         mainThread = Thread.currentThread();
 
         instance = this;
@@ -69,32 +78,29 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
             return;
         }
 
-        HoopoeTraceNode previousTraceNode = currentTraceNodeHolder.get();
-        HoopoeTraceNode currentTraceNode = new HoopoeTraceNode(previousTraceNode, className, methodSignature);
+        HoopoeHasAttributes hasAttributes = instance.tracer.onMethodEnter(className, methodSignature);
         for (String enabledPlugin : enabledPlugins) {
             HoopoePlugin plugin = instance.plugins.get(enabledPlugin);
-            plugin.onCall(className, superclasses, methodSignature, args);
+            Collection<HoopoeAttribute> attributes = plugin.getAttributes(
+                    className, superclasses, methodSignature, args);
+            hasAttributes.addAttributes(attributes);
         }
-
-        currentTraceNodeHolder.set(currentTraceNode);
     }
 
     public static void finishMethodProfiling() {
-        if (Thread.currentThread() == instance.mainThread) {
+        Thread currentThread = Thread.currentThread();
+        if (currentThread == instance.mainThread) {
             return;
         }
 
-        HoopoeTraceNode currentTraceNode = currentTraceNodeHolder.get();
-        currentTraceNode.finish();
-
-        HoopoeTraceNode previousTraceNode = currentTraceNode.getParent();
-        currentTraceNodeHolder.set(previousTraceNode);
-        if (previousTraceNode == null) {
-            instance.storage.consumeThreadTraceResults(Thread.currentThread(), currentTraceNode);
+        HoopoeProfiledInvocation profiledInvocation = instance.tracer.onMethodLeave();
+        if (profiledInvocation != null) {
+            instance.storage.addInvocation(currentThread, profiledInvocation);
         }
     }
 
     private Collection<Pattern> prepareExcludedClassesPatterns() {
+        // todo revise, delegate to configuration
         Collection<Pattern> excludedClassesPatterns = new ArrayList<>();
         excludedClassesPatterns.add(Pattern.compile("hoopoe\\.core\\..*"));
         excludedClassesPatterns.add(Pattern.compile("hoopoe\\.api\\..*"));

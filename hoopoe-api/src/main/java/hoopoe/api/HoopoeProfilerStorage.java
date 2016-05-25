@@ -4,7 +4,7 @@ import java.util.Collection;
 
 public interface HoopoeProfilerStorage {
 
-    void consumeThreadTraceResults(Thread thread, HoopoeTraceNode traceRoot);
+    void addInvocation(Thread thread, HoopoeProfiledInvocation invocation);
 
     Collection<HoopoeProfiledInvocationSummary> getProfiledInvocationSummaries();
 

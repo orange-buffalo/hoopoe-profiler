@@ -1,7 +1,9 @@
 package hoopoe.test.core;
 
+import hoopoe.api.HoopoeHasAttributes;
 import hoopoe.api.HoopoePlugin;
 import hoopoe.api.HoopoePluginsProvider;
+import hoopoe.api.HoopoeTracer;
 import hoopoe.test.core.guineapigs.PluginGuineaPig;
 import hoopoe.test.core.supplements.HoopoeTestClassLoader;
 import hoopoe.test.core.supplements.HoopoeTestConfiguration;
@@ -24,6 +26,13 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
+
+    @Override
+    public void prepareTest() {
+        super.prepareTest();
+        HoopoeTracer tracerMock = HoopoeTestConfiguration.getTracerMock();
+        when(tracerMock.onMethodEnter(any(), any())).thenReturn(Mockito.mock(HoopoeHasAttributes.class));
+    }
 
     @Test
     public void testPluginProviderInitialization() throws Exception {
@@ -81,13 +90,14 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
             instrumentedClass.getConstructors()[0].newInstance((Object) null);
         });
 
-        verify(pluginMock, never()).onCall(any(), any(), any(), any());
+        verify(pluginMock, never()).getAttributes(any(), any(), any(), any());
     }
 
     @Test
     public void testSupportedPlugin() throws Exception {
         HoopoePlugin pluginMock = preparePluginMock();
         when(pluginMock.supports(any(), any(), any())).thenReturn(true);
+        when(pluginMock.getAttributes(any(), any(), any(), any())).thenReturn(Collections.emptyList());
 
         HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader();
         Class guineaPigClass = PluginGuineaPig.class;
@@ -101,7 +111,7 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
         Matcher<String[]> superClassesMatcher = Matchers.arrayContainingInAnyOrder(
                 Object.class.getCanonicalName(), Serializable.class.getCanonicalName());
         verify(pluginMock, times(1))
-                .onCall(
+                .getAttributes(
                         eq(guineaPigClass.getCanonicalName()),
                         argThat(superClassesMatcher),
                         eq("PluginGuineaPig(java.lang.Object)"),

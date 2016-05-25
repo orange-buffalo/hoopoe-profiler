@@ -1,6 +1,7 @@
 package hoopoe.test.core.supplements;
 
-import hoopoe.api.HoopoeTraceNode;
+import hoopoe.test.core.ProfilerTracingTest;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,12 +32,20 @@ public abstract class ProfilerTraceTestItem {
     public abstract void executeTest() throws Exception;
 
     public abstract void assertCapturedData(String originalThreadName,
-                                            Map<String, HoopoeTraceNode> capturedData);
+                                            Map<String, List<ProfilerTracingTest.CapturedInvocation>> capturedData);
 
-    protected void assertTraceNode(HoopoeTraceNode traceNode, Class clazz, String methodSignature, int childrenCount) {
-        String className = clazz.getCanonicalName();
-        assertThat(traceNode.getClassName(), equalTo(className));
-        assertThat(traceNode.getMethodSignature(), equalTo(methodSignature));
-        assertThat(traceNode.getChildren().size(), equalTo(childrenCount));
+    protected void assertInvocationSequence(List<ProfilerTracingTest.CapturedInvocation> actualInvocations,
+                                            Object... expectedSequenceCalls) {
+        int expectedSequenceLength = expectedSequenceCalls.length / 2;
+        assertThat(actualInvocations.size(), equalTo(expectedSequenceLength));
+        for (int i = 0; i < expectedSequenceLength; i++) {
+            Class expectedClass = (Class) expectedSequenceCalls[2 * i];
+            String expectedMethodSignature = (String) expectedSequenceCalls[2 * i + 1];
+
+            ProfilerTracingTest.CapturedInvocation actualInvocation = actualInvocations.get(i);
+            assertThat(actualInvocation.getClassName(), equalTo(expectedClass.getCanonicalName()));
+            assertThat(actualInvocation.getMethodSignature(), equalTo(expectedMethodSignature));
+        }
     }
+
 }

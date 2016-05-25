@@ -1,6 +1,7 @@
 package hoopoe.test.core.supplements;
 
-import hoopoe.api.HoopoeTraceNode;
+import hoopoe.test.core.ProfilerTracingTest;
+import java.util.List;
 import java.util.Map;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -12,12 +13,13 @@ public abstract class SingleThreadProfilerTraceTestItem extends ProfilerTraceTes
     }
 
     @Override
-    public void assertCapturedData(String originalThreadName, Map<String, HoopoeTraceNode> capturedData) {
+    public void assertCapturedData(String originalThreadName,
+                                   Map<String, List<ProfilerTracingTest.CapturedInvocation>> capturedData) {
         assertThat(capturedData.size(), equalTo(1));
-        Map.Entry<String, HoopoeTraceNode> dataEntry = capturedData.entrySet().iterator().next();
+        Map.Entry<String, List<ProfilerTracingTest.CapturedInvocation>> dataEntry = capturedData.entrySet().iterator().next();
         assertThat(dataEntry.getKey(), equalTo(originalThreadName));
-        assertCapturedTraceNode(dataEntry.getValue());
+        assertCapturedInvocation(dataEntry.getValue());
     }
 
-    protected abstract void assertCapturedTraceNode(HoopoeTraceNode traceNode);
+    protected abstract void assertCapturedInvocation(List<ProfilerTracingTest.CapturedInvocation> invocations);
 }

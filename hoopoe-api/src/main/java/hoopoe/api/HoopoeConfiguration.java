@@ -6,4 +6,8 @@ public interface HoopoeConfiguration {
 
     HoopoePluginsProvider createPluginsProvider();
 
+    HoopoeTracer createTracer();
+
+    long getMinimumTrackedInvocationTimeInNs();
+
 }

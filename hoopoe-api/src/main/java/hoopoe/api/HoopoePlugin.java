@@ -6,8 +6,12 @@ public interface HoopoePlugin {
 
     String getId();
 
+    //todo make consistent String[] superclasses
     boolean supports(String className, Collection<String> superclasses, String methodSignature);
 
-    void onCall(String className, String[] superclasses, String methodSignature, Object[] arguments);
+    Collection<HoopoeAttribute> getAttributes(String className,
+                                              String[] superclasses,
+                                              String methodSignature,
+                                              Object[] arguments);
 
 }
