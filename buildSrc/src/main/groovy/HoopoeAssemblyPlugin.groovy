@@ -17,7 +17,24 @@ class HoopoeAssemblyPlugin implements Plugin<Project> {
         def runtimeConfiguration = project.configurations.findByName('runtime')
         def providedConfiguration = project.configurations.findByName('provided')
 
-        def hoopoeZipTask = project.task(type: Zip, 'hoopoeZip') {
+        def hoopoeManifestTask = project.task('hoopoeManifest') << {
+            def pluginClass = project.extensions.hoopoeAssembly.pluginClass
+            def extensionClass = project.extensions.hoopoeAssembly.extensionClass
+
+            if (pluginClass || extensionClass) {
+                def manifestFile = new File(temporaryDir, "META-INF/hoopoe.properties")
+                manifestFile.getParentFile().mkdirs()
+
+                if (pluginClass) {
+                    manifestFile.text = "plugin.className=${pluginClass}"
+                } else if (extensionClass) {
+                    manifestFile.text = "extension.className=${extensionClass}"
+                }
+                return manifestFile
+            }
+        }
+
+        def hoopoeZipTask = project.task(type: Zip, dependsOn: hoopoeManifestTask, 'hoopoeZipTask') {
 
             archiveName("${project.name}.zip")
 
@@ -30,6 +47,8 @@ class HoopoeAssemblyPlugin implements Plugin<Project> {
             from(mainSourceSet.output.resourcesDir) {
                 into('classes')
             }
+
+            from(hoopoeManifestTask.temporaryDir)
 
             from({
                 def artifacts = runtimeConfiguration.resolvedConfiguration.resolvedArtifacts -
