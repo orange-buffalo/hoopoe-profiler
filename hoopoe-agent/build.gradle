@@ -4,6 +4,7 @@ dependencies {
     compile project(':hoopoe-classloader')
     compile project(':hoopoe-api')
     compile project(path: ':hoopoe-core', configuration: 'hoopoe')
+    compile project(path: ':sql-queries-plugin', configuration: 'hoopoe')
 }
 
 jar {
