@@ -55,7 +55,7 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
     private List<HoopoeAttributeSummary> getAttributeSummaries(HoopoeProfiledInvocation invocation) {
         List<HoopoeAttributeSummary> attributeSummaries = new ArrayList<>(0);
         collectAttributeSummaries(invocation, attributeSummaries);
-        Collections.sort(attributeSummaries, this::compareAttributes);
+        Collections.sort(attributeSummaries, this::compareAttributeSummaries);
         return attributeSummaries;
     }
 
@@ -65,11 +65,9 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
             HoopoeAttributeSummary summary = null;
             for (Iterator<HoopoeAttributeSummary> summaryIterator = attributeSummaries.iterator(); summaryIterator.hasNext(); ) {
                 HoopoeAttributeSummary mergeCandidate = summaryIterator.next();
-                if (StringUtils.equals(attribute.getName(), mergeCandidate.getName())
-                        && StringUtils.equals(attribute.getDetails(), mergeCandidate.getDetails())) {
+                if (StringUtils.equals(attribute.getName(), mergeCandidate.getName())) {
                     summary = new HoopoeAttributeSummary(
                             mergeCandidate.getName(),
-                            mergeCandidate.getDetails(),
                             mergeCandidate.isContributingTime(),
                             mergeCandidate.getTotalTimeInNs() + invocation.getTotalTimeInNs(),
                             mergeCandidate.getTotalOccurrences() + 1);
@@ -81,7 +79,6 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
             if (summary == null) {
                 summary = new HoopoeAttributeSummary(
                         attribute.getName(),
-                        attribute.getDetails(),
                         attribute.isContributingTime(),
                         invocation.getTotalTimeInNs(),
                         1
@@ -96,12 +93,8 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
         }
     }
 
-    private int compareAttributes(HoopoeAttribute o1, HoopoeAttribute o2) {
-        int result = o1.getName().compareTo(o2.getName());
-        if (result == 0 && o1.getDetails() != null && o2.getDetails() != null) {
-            result = o1.getDetails().compareTo(o2.getDetails());
-        }
-        return result;
+    private int compareAttributeSummaries(HoopoeAttributeSummary o1, HoopoeAttributeSummary o2) {
+        return o1.getName().compareTo(o2.getName());
     }
 
 }

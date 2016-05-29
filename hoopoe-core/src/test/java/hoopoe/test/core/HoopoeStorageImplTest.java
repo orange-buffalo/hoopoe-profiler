@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,7 +66,6 @@ public class HoopoeStorageImplTest {
         assertThat(actualSummaries, notNullValue());
         assertThat(actualSummaries.size(), equalTo(2));
 
-        // todo test sorting, thread name - time ?
         Iterator<HoopoeProfiledInvocationSummary> actualSummariesIterator = actualSummaries.iterator();
         HoopoeProfiledInvocationSummary actualSummary = actualSummariesIterator.next();
         assertThat(actualSummary.getThreadName(), equalTo(THREAD_NAME));
@@ -107,23 +105,19 @@ public class HoopoeStorageImplTest {
         Iterator<HoopoeAttributeSummary> summaryIterator = actualSummaries.iterator();
         HoopoeAttributeSummary actualAttributeSummary = summaryIterator.next();
         assertThat(actualAttributeSummary.getName(), equalTo("sql"));
-        assertThat(actualAttributeSummary.getDetails(), equalTo("query"));
         assertThat(actualAttributeSummary.isContributingTime(), equalTo(true));
         assertThat(actualAttributeSummary.getTotalOccurrences(), equalTo(1));
         assertThat(actualAttributeSummary.getTotalTimeInNs(), equalTo(msToNs(75)));
 
         actualAttributeSummary = summaryIterator.next();
         assertThat(actualAttributeSummary.getName(), equalTo("transaction"));
-        assertThat(actualAttributeSummary.getDetails(), nullValue());
         assertThat(actualAttributeSummary.isContributingTime(), equalTo(false));
-        // todo this is failing, fix
-//        assertThat(actualAttributeSummary.getTotalOccurrences(), equalTo(2));
+        assertThat(actualAttributeSummary.getTotalOccurrences(), equalTo(1));
         assertThat(actualAttributeSummary.getTotalTimeInNs(), equalTo(msToNs(15)));
     }
 
-    // todo this looks wrong. total count of queries is interesting, not every of them
     @Test
-    public void testDifferentAttributeSummariesDetails() throws Exception {
+    public void testMergeOfAttributesWithSameNameAndDifferentDetails() throws Exception {
         HoopoeProfiledInvocation n1 = new HoopoeProfiledInvocation(
                 "c1", "m1", Collections.emptyList(), msToNs(75), 0, 1,
                 Collections.singleton(new HoopoeAttribute("sql", "query1", true)));
@@ -138,26 +132,17 @@ public class HoopoeStorageImplTest {
         HoopoeProfiledInvocationSummary actualInvocationSummary = executeAndGetSummary(root);
         Collection<HoopoeAttributeSummary> actualSummaries = actualInvocationSummary.getAttributeSummaries();
         assertThat(actualSummaries, notNullValue());
-        assertThat(actualSummaries.size(), equalTo(2));
+        assertThat(actualSummaries.size(), equalTo(1));
 
-        Iterator<HoopoeAttributeSummary> summaryIterator = actualSummaries.iterator();
-        HoopoeAttributeSummary actualAttributeSummary = summaryIterator.next();
+        HoopoeAttributeSummary actualAttributeSummary = actualSummaries.iterator().next();
         assertThat(actualAttributeSummary.getName(), equalTo("sql"));
-        assertThat(actualAttributeSummary.getDetails(), equalTo("query1"));
         assertThat(actualAttributeSummary.isContributingTime(), equalTo(true));
-        assertThat(actualAttributeSummary.getTotalOccurrences(), equalTo(1));
-        assertThat(actualAttributeSummary.getTotalTimeInNs(), equalTo(msToNs(75)));
-
-        actualAttributeSummary = summaryIterator.next();
-        assertThat(actualAttributeSummary.getName(), equalTo("sql"));
-        assertThat(actualAttributeSummary.getDetails(), equalTo("query2"));
-        assertThat(actualAttributeSummary.isContributingTime(), equalTo(true));
-        assertThat(actualAttributeSummary.getTotalOccurrences(), equalTo(1));
-        assertThat(actualAttributeSummary.getTotalTimeInNs(), equalTo(msToNs(15)));
+        assertThat(actualAttributeSummary.getTotalOccurrences(), equalTo(2));
+        assertThat(actualAttributeSummary.getTotalTimeInNs(), equalTo(msToNs(75 + 15)));
     }
 
     @Test
-    public void testAttributeSummariesMerge() throws Exception {
+    public void testMergeOfAttributesWithSameNameAndSameDetails() throws Exception {
         HoopoeProfiledInvocation n1 = new HoopoeProfiledInvocation(
                 "c1", "m1", Collections.emptyList(), msToNs(75), 0, 1,
                 Collections.singleton(new HoopoeAttribute("sql", "query", true)));
@@ -176,7 +161,6 @@ public class HoopoeStorageImplTest {
 
         HoopoeAttributeSummary actualAttributeSummary = actualSummaries.iterator().next();
         assertThat(actualAttributeSummary.getName(), equalTo("sql"));
-        assertThat(actualAttributeSummary.getDetails(), equalTo("query"));
         assertThat(actualAttributeSummary.isContributingTime(), equalTo(true));
         assertThat(actualAttributeSummary.getTotalOccurrences(), equalTo(2));
         assertThat(actualAttributeSummary.getTotalTimeInNs(), equalTo(msToNs(75 + 15)));

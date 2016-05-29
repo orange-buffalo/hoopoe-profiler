@@ -2,7 +2,13 @@ package hoopoe.api;
 
 import lombok.Getter;
 
-public class HoopoeAttributeSummary extends HoopoeAttribute {
+public class HoopoeAttributeSummary {
+
+    @Getter
+    private String name;
+
+    @Getter
+    private boolean contributingTime;
 
     @Getter
     private long totalTimeInNs;
@@ -11,11 +17,11 @@ public class HoopoeAttributeSummary extends HoopoeAttribute {
     private int totalOccurrences;
 
     public HoopoeAttributeSummary(String name,
-                                  String details,
                                   boolean contributingTime,
                                   long totalTimeInNs,
                                   int totalOccurrences) {
-        super(name, details, contributingTime);
+        this.name = name;
+        this.contributingTime = contributingTime;
         this.totalTimeInNs = totalTimeInNs;
         this.totalOccurrences = totalOccurrences;
     }
