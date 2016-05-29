@@ -1,6 +1,7 @@
 package hoopoe.test.core.supplements;
 
 import hoopoe.test.core.ProfilerTracingTest;
+import hoopoe.test.supplements.TestItem;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
@@ -8,21 +9,14 @@ import lombok.Setter;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public abstract class ProfilerTraceTestItem {
-
-    private String description;
+public abstract class ProfilerTraceTestItem extends TestItem {
 
     @Setter
     @Getter
     protected Class instrumentedClass;
 
     public ProfilerTraceTestItem(String description) {
-        this.description = description;
-    }
-
-    @Override
-    public String toString() {
-        return description;
+        super(description);
     }
 
     public abstract Class getEntryPointClass();

@@ -1,4 +1,4 @@
-apply plugin: HoopoeDependencyPlugin
+apply plugin: 'java'
 
 dependencies {
     provided 'org.projectlombok:lombok:1.14.8'

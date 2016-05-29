@@ -1,4 +1,4 @@
-package hoopoe.test.core.supplements;
+package hoopoe.test.supplements;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -12,7 +12,7 @@ import javassist.NotFoundException;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 
-public class HoopoeTestClassLoader extends ClassLoader {
+public class TestClassLoader extends ClassLoader {
 
     private Map<String, byte[]> classesData = new HashMap<>();
 
@@ -20,15 +20,15 @@ public class HoopoeTestClassLoader extends ClassLoader {
         registerAsParallelCapable();
     }
 
-    public HoopoeTestClassLoader(String packageToAdd) throws NotFoundException, IOException, CannotCompileException {
-        super(HoopoeTestClassLoader.class.getClassLoader());
+    public TestClassLoader(String packageToAdd) throws NotFoundException, IOException, CannotCompileException {
+        super(TestClassLoader.class.getClassLoader());
 
         try {
             Reflections reflections = new Reflections(packageToAdd, new SubTypesScanner(false));
             Set<Class<?>> guineaPigClasses = reflections.getSubTypesOf(Object.class);
             guineaPigClasses.size();
             ClassPool classPool = new ClassPool();
-            classPool.appendClassPath(new LoaderClassPath(HoopoeTestClassLoader.class.getClassLoader()));
+            classPool.appendClassPath(new LoaderClassPath(TestClassLoader.class.getClassLoader()));
             for (Class guineaPigClass : guineaPigClasses) {
                 CtClass ctClass = classPool.get(guineaPigClass.getCanonicalName());
                 classesData.put(guineaPigClass.getCanonicalName(), ctClass.toBytecode());

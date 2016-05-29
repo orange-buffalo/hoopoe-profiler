@@ -1,4 +1,4 @@
-package hoopoe.test.core.supplements;
+package hoopoe.test.supplements;
 
 import hoopoe.api.HoopoeConfiguration;
 import hoopoe.api.HoopoePluginsProvider;
@@ -10,7 +10,7 @@ import lombok.Getter;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class HoopoeTestConfiguration implements HoopoeConfiguration {
+public class TestConfiguration implements HoopoeConfiguration {
 
     @Mock
     @Getter
@@ -50,7 +50,7 @@ public class HoopoeTestConfiguration implements HoopoeConfiguration {
     }
 
     public static void resetMocks() {
-        MockitoAnnotations.initMocks(new HoopoeTestConfiguration());
+        MockitoAnnotations.initMocks(new TestConfiguration());
     }
 
 }

@@ -1,4 +1,4 @@
-package hoopoe.test.core.supplements;
+package hoopoe.test.supplements;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -12,15 +12,15 @@ public final class HoopoeTestHelper {
 
     public static void executeWithAgentLoaded(TestCode codeToRun) throws Exception {
         try {
-            HoopoeTestAgent.load("hoopoe.configuration.class=" + HoopoeTestConfiguration.class.getCanonicalName());
+            TestAgent.load("hoopoe.configuration.class=" + TestConfiguration.class.getCanonicalName());
             codeToRun.execute();
         }
         finally {
-            HoopoeTestAgent.unload();
+            TestAgent.unload();
         }
     }
 
-    public static Object[][] transform(ProfilerTraceTestItem... items) {
+    public static Object[][] transform(TestItem... items) {
         Object[][] data = new Object[items.length][1];
         for (int i = 0; i < items.length; i++) {
             data[i][0] = items[i];

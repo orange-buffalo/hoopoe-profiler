@@ -6,7 +6,7 @@ import hoopoe.api.HoopoeAttributeSummary;
 import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.api.HoopoeProfiledInvocationSummary;
 import hoopoe.core.HoopoeStorageImpl;
-import static hoopoe.test.core.supplements.HoopoeTestHelper.msToNs;
+import static hoopoe.test.supplements.HoopoeTestHelper.msToNs;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;

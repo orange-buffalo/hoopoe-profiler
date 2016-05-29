@@ -6,10 +6,10 @@ import com.tngtech.java.junit.dataprovider.UseDataProvider;
 import hoopoe.test.core.guineapigs.ApprenticeGuineaPig;
 import hoopoe.test.core.guineapigs.BaseGuineaPig;
 import hoopoe.test.core.guineapigs.RunnableGuineaPig;
-import hoopoe.test.core.supplements.HoopoeTestClassLoader;
-import hoopoe.test.core.supplements.HoopoeTestConfiguration;
-import hoopoe.test.core.supplements.HoopoeTestConfigurationRule;
-import hoopoe.test.core.supplements.HoopoeTestHelper;
+import hoopoe.test.supplements.TestClassLoader;
+import hoopoe.test.supplements.TestConfiguration;
+import hoopoe.test.supplements.TestConfigurationRule;
+import hoopoe.test.supplements.HoopoeTestHelper;
 import hoopoe.test.core.supplements.MethodEntryTestItemDelegate;
 import hoopoe.test.core.supplements.ProfilerTraceTestItem;
 import hoopoe.test.core.supplements.SingleThreadProfilerTraceTestItem;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 public class ProfilerTracingTest {
 
     @Rule
-    public HoopoeTestConfigurationRule configurationRule = new HoopoeTestConfigurationRule();
+    public TestConfigurationRule configurationRule = new TestConfigurationRule();
 
     @DataProvider
     public static Object[][] dataForProfilingTest() {
@@ -216,7 +216,7 @@ public class ProfilerTracingTest {
     @Test
     @UseDataProvider("dataForProfilingTest")
     public void testProfiling(ProfilerTraceTestItem testItem) throws Exception {
-        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader("hoopoe.test.core.guineapigs");
+        TestClassLoader classLoader = new TestClassLoader("hoopoe.test.core.guineapigs");
 
         // load before agent is connected to avoid infinite recursion
         CapturedInvocation.class.getName();
@@ -236,9 +236,9 @@ public class ProfilerTracingTest {
                     capturedInvocations.add(new CapturedInvocation(className, methodSignature));
                     return null;
                 })
-                .when(HoopoeTestConfiguration.getTracerMock())
+                .when(TestConfiguration.getTracerMock())
                 .onMethodEnter(any(), any());
-        when(HoopoeTestConfiguration.getTracerMock().onMethodLeave(any(), anyLong())).thenReturn(null);
+        when(TestConfiguration.getTracerMock().onMethodLeave(any(), anyLong())).thenReturn(null);
 
         String threadName = "testThread" + System.nanoTime();
         HoopoeTestHelper.executeWithAgentLoaded(() -> {

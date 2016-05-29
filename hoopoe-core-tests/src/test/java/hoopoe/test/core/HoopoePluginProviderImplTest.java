@@ -4,7 +4,7 @@ import hoopoe.api.HoopoePlugin;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfiler;
 import hoopoe.core.HoopoePluginProviderImpl;
-import hoopoe.test.core.supplements.HoopoeTestClassLoader;
+import hoopoe.test.supplements.TestClassLoader;
 import hoopoe.utils.HoopoeClassLoader;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +34,7 @@ public class HoopoePluginProviderImplTest {
     public void prepareTest() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader("hoopoe.core");
+        TestClassLoader classLoader = new TestClassLoader("hoopoe.core");
         Class providerClass = classLoader.loadClass(HoopoePluginProviderImpl.class.getCanonicalName());
         pluginProvider = (HoopoePluginsProvider) providerClass.newInstance();
         pluginProvider.setupProfiler(profilerMock);

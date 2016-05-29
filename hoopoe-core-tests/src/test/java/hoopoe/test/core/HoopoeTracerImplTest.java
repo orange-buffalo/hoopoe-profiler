@@ -4,7 +4,7 @@ import hoopoe.api.HoopoeAttribute;
 import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.api.HoopoeProfiler;
 import hoopoe.core.HoopoeTracerImpl;
-import static hoopoe.test.core.supplements.HoopoeTestHelper.msToNs;
+import static hoopoe.test.supplements.HoopoeTestHelper.msToNs;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
