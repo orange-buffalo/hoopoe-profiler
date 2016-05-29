@@ -1,5 +1,6 @@
 package hoopoe.core.supplements;
 
+import hoopoe.api.HoopoeMethodInfo;
 import hoopoe.api.HoopoePlugin;
 import hoopoe.core.HoopoeProfilerImpl;
 import java.io.File;
@@ -16,7 +17,9 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.jar.JarFile;
@@ -238,7 +241,7 @@ public class InstrumentationHelper {
     }
 
     private Collection<String> getSuperclasses(CtClass ctClass) throws NotFoundException {
-        Collection<String> superclasses = Arrays.stream(ctClass.getInterfaces())
+        Set<String> superclasses = Arrays.stream(ctClass.getInterfaces())
                 .map(CtClass::getName)
                 .collect(Collectors.toSet());
         CtClass superclass = ctClass.getSuperclass();
@@ -246,7 +249,7 @@ public class InstrumentationHelper {
             superclasses.add(superclass.getName());
             superclasses.addAll(getSuperclasses(superclass));
         }
-        return superclasses;
+        return Collections.unmodifiableSet(superclasses);
     }
 
     private boolean isLockedForInterception(CtBehavior ctBehavior) {
@@ -270,8 +273,10 @@ public class InstrumentationHelper {
     }
 
     private String getPluginActions(CtClass ctClass, Collection<String> superclasses, String methodSignature) {
+        HoopoeMethodInfo methodInfo = new HoopoeMethodInfo(ctClass.getName(), methodSignature, superclasses);
+
         List<String> pluginActionsId = plugins.stream()
-                .map(hoopoePlugin -> hoopoePlugin.createActionIfSupported(ctClass.getName(), superclasses, methodSignature))
+                .map(hoopoePlugin -> hoopoePlugin.createActionIfSupported(methodInfo))
                 .filter(pluginAction -> pluginAction != null)
                 .map(pluginAction -> String.valueOf(profiler.addPluginAction(pluginAction)))
                 .collect(Collectors.toList());
