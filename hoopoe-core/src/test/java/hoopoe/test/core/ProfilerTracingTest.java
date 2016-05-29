@@ -8,6 +8,8 @@ import hoopoe.test.core.guineapigs.BaseGuineaPig;
 import hoopoe.test.core.guineapigs.RunnableGuineaPig;
 import hoopoe.test.core.supplements.HoopoeTestClassLoader;
 import hoopoe.test.core.supplements.HoopoeTestConfiguration;
+import hoopoe.test.core.supplements.HoopoeTestConfigurationRule;
+import hoopoe.test.core.supplements.HoopoeTestHelper;
 import hoopoe.test.core.supplements.MethodEntryTestItemDelegate;
 import hoopoe.test.core.supplements.ProfilerTraceTestItem;
 import hoopoe.test.core.supplements.SingleThreadProfilerTraceTestItem;
@@ -21,6 +23,7 @@ import lombok.experimental.Delegate;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.mockito.Matchers.any;
@@ -29,11 +32,14 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 @RunWith(DataProviderRunner.class)
-public class ProfilerTracingTest extends AbstractProfilerTest {
+public class ProfilerTracingTest {
+
+    @Rule
+    public HoopoeTestConfigurationRule configurationRule = new HoopoeTestConfigurationRule();
 
     @DataProvider
     public static Object[][] dataForProfilingTest() {
-        return transform(
+        return HoopoeTestHelper.transform(
                 new SingleThreadProfilerTraceTestItem("Simple method with no other calls") {
 
                     @Delegate
@@ -235,7 +241,7 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
         when(HoopoeTestConfiguration.getTracerMock().onMethodLeave(any(), anyLong())).thenReturn(null);
 
         String threadName = "testThread" + System.nanoTime();
-        executeWithAgentLoaded(() -> {
+        HoopoeTestHelper.executeWithAgentLoaded(() -> {
             Class instrumentedClass = classLoader.loadClass(testItem.getEntryPointClass().getCanonicalName());
             testItem.setInstrumentedClass(instrumentedClass);
             testItem.prepareTest();
