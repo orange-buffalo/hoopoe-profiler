@@ -17,4 +17,9 @@ public class HoopoeThreadLocalCacheImpl implements HoopoeThreadLocalCache {
     public <T> T get(Object key) {
         return (T) cache.get(key);
     }
+
+    @Override
+    public void remove(Object key) {
+        cache.remove(key);
+    }
 }

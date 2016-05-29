@@ -6,4 +6,6 @@ public interface HoopoeThreadLocalCache {
 
     <T> T get(Object key);
 
+    void remove(Object key);
+
 }
