@@ -9,6 +9,7 @@ import hoopoe.test.core.supplements.HoopoeTestConfiguration;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicReference;
 import org.hamcrest.Matcher;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import org.junit.Test;
@@ -93,15 +94,17 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
         HoopoePlugin pluginMock = preparePluginMock();
         HoopoePluginAction pluginActionMock = Mockito.mock(HoopoePluginAction.class);
         when(pluginMock.createActionIfSupported(any(), any(), any())).thenReturn(pluginActionMock);
-        when(pluginActionMock.getAttributes(any(), any())).thenReturn(Collections.emptyList());
+        when(pluginActionMock.getAttributes(any(), any(), any())).thenReturn(Collections.emptyList());
 
         HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader(GUINEAPIGS_PACKAGE);
         Class guineaPigClass = PluginGuineaPig.class;
 
         Object argument = new Object();
+        AtomicReference thisInMethod = new AtomicReference();
         executeWithAgentLoaded(() -> {
             Class<?> instrumentedClass = classLoader.loadClass(guineaPigClass.getCanonicalName());
-            instrumentedClass.getConstructors()[0].newInstance(argument);
+            Object instance = instrumentedClass.getConstructors()[0].newInstance(argument);
+            thisInMethod.set(instance);
         });
 
         Matcher superClassesMatcher = containsInAnyOrder(
@@ -115,8 +118,8 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
         verify(pluginActionMock, times(1))
                 .getAttributes(
                         eq(new Object[] {argument}),
-                        eq(null)
-                );
+                        eq(null),
+                        eq(thisInMethod.get()));
     }
 
     private HoopoePlugin preparePluginMock() {

@@ -4,6 +4,6 @@ import java.util.Collection;
 
 public interface HoopoePluginAction {
 
-    Collection<HoopoeAttribute> getAttributes(Object[] arguments, Object returnValue);
+    Collection<HoopoeAttribute> getAttributes(Object[] arguments, Object returnValue, Object thisInMethod);
 
 }

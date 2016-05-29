@@ -48,7 +48,7 @@ public class InstrumentationHelper {
 
     private static final String AFTER_METHOD_CALL = MessageFormat.format(
             "{0}.finishProfilingMethod.invoke(" +
-                    "{0}.profiler, new java.lang.Object[] '{'%s, $args, ($w) $_'}');", BRIDGE_CLASS_NAME);
+                    "{0}.profiler, new java.lang.Object[] '{'%s, $args, ($w) $_, %s'}');", BRIDGE_CLASS_NAME);
 
     private byte[] hoopoeProfilerBridgeClassBytes;
 
@@ -176,20 +176,24 @@ public class InstrumentationHelper {
                 behaviors.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
                 behaviors.addAll(Arrays.asList(ctClass.getDeclaredConstructors()));
 
-                for (CtBehavior behavior : behaviors) {
+                for (CtBehavior ctBehavior : behaviors) {
                     try {
-                        if (!isLockedForInterception(behavior)) {
-                            String methodSignature = getMethodSignature(ctClass, behavior.getLongName());
+                        if (!isLockedForInterception(ctBehavior)) {
+                            String methodSignature = getMethodSignature(ctClass, ctBehavior.getLongName());
 
                             String pluginActions = getPluginActions(ctClass, superclasses, methodSignature);
 
-                            behavior.insertBefore(String.format(
-                                    BEFORE_METHOD_CALL, canonicalClassName, methodSignature, pluginActions));
-                            behavior.insertAfter(String.format(AFTER_METHOD_CALL, pluginActions), true);
+                            ctBehavior.insertBefore(
+                                    String.format(BEFORE_METHOD_CALL, canonicalClassName, methodSignature));
+
+                            String thisInMethod = Modifier.isStatic(ctBehavior.getModifiers()) ? "null" : "$0";
+
+                            ctBehavior.insertAfter(
+                                    String.format(AFTER_METHOD_CALL, pluginActions, thisInMethod), true);
                         }
                     }
                     catch (CannotCompileException e) {
-                        log.warn("cannot change body of {}: {}", behavior.getLongName(), e.getReason());
+                        log.warn("cannot change body of {}: {}", ctBehavior.getLongName(), e.getReason());
                     }
                 }
                 byte[] modifiedClassBytes = ctClass.toBytecode();

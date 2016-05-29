@@ -78,7 +78,8 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     public static void finishMethodProfiling(int[] pluginActionIndicies,
                                              Object[] args,
-                                             Object returnValue) {
+                                             Object returnValue,
+                                             Object thisInMethod) {
         Thread currentThread = Thread.currentThread();
         if (currentThread == instance.mainThread) {
             return;
@@ -89,7 +90,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
                 : new ArrayList<>(pluginActionIndicies.length);
         for (int pluginActionIndex : pluginActionIndicies) {
             HoopoePluginAction pluginAction = instance.pluginActions.get(pluginActionIndex);
-            attributes.addAll(pluginAction.getAttributes(args, returnValue));
+            attributes.addAll(pluginAction.getAttributes(args, returnValue, thisInMethod));
         }
 
         HoopoeProfiledInvocation profiledInvocation = instance.tracer.onMethodLeave(attributes);
