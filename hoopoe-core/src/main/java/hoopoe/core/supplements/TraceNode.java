@@ -66,7 +66,7 @@ public class TraceNode {
         }
     }
 
-    public void onMethodLeave() {
+    public void onMethodLeave(long profilerExternalOverheadInNs) {
         long methodLeaveTimeInNs = System.nanoTime();
 
         // this gives overhead, we try to compensate it calculating profilerOverheadInNs
@@ -88,7 +88,8 @@ public class TraceNode {
         // children profile overhead is a part of descendant calls execution time and should be deducted
         totalTimeInNs = methodLeaveTimeInNs - methodEnterTimeInNs - childrenProfilerOverheadInNs;
         ownTimeInNs = totalTimeInNs - childrenTotalTimeInNs;
-        profilerOverheadInNs = System.nanoTime() - methodLeaveTimeInNs + childrenProfilerOverheadInNs;
+        profilerOverheadInNs = System.nanoTime() - methodLeaveTimeInNs
+                + childrenProfilerOverheadInNs + profilerExternalOverheadInNs;
     }
 
     private static Collector<TraceNode, ?, Map<String, TraceNode>> getMergeTraceNodesCollector() {

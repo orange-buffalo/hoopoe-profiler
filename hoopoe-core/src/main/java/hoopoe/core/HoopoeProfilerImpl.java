@@ -8,8 +8,10 @@ import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.api.HoopoeProfiler;
 import hoopoe.api.HoopoeProfilerStorage;
+import hoopoe.api.HoopoeThreadLocalCache;
 import hoopoe.api.HoopoeTracer;
 import hoopoe.core.supplements.ConfigurationHelper;
+import hoopoe.core.supplements.HoopoeThreadLocalCacheImpl;
 import hoopoe.core.supplements.InstrumentationHelper;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -24,6 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j(topic = "hoopoe.profiler")
 public class HoopoeProfilerImpl implements HoopoeProfiler {
+
+    private static final Collection<HoopoeAttribute> NO_ATTRIBUTES = Collections.emptyList();
+
+    private static final ThreadLocal<List<HoopoeThreadLocalCache>> pluginActionCachesHolder = new ThreadLocal<>();
 
     private static HoopoeProfilerImpl instance;
 
@@ -85,17 +91,31 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
             return;
         }
 
-        Collection<HoopoeAttribute> attributes = pluginActionIndicies.length == 0
-                ? Collections.emptyList()
-                : new ArrayList<>(pluginActionIndicies.length);
-        for (int pluginActionIndex : pluginActionIndicies) {
-            HoopoePluginAction pluginAction = instance.pluginActions.get(pluginActionIndex);
-            attributes.addAll(pluginAction.getAttributes(args, returnValue, thisInMethod));
+        long startTimeInNs = System.nanoTime();
+        Collection<HoopoeAttribute> attributes = NO_ATTRIBUTES;
+        if (pluginActionIndicies.length != 0) {
+            attributes = new ArrayList<>(pluginActionIndicies.length);
+            List<HoopoeThreadLocalCache> pluginActionCaches = pluginActionCachesHolder.get();
+            if (pluginActionCaches == null) {
+                pluginActionCaches = new ArrayList<>(instance.pluginActions.size());
+                for (int i = 0; i < instance.pluginActions.size(); i++) {
+                    pluginActionCaches.add(new HoopoeThreadLocalCacheImpl());
+                }
+                pluginActionCachesHolder.set(pluginActionCaches);
+            }
+
+            for (int pluginActionIndex : pluginActionIndicies) {
+                HoopoePluginAction pluginAction = instance.pluginActions.get(pluginActionIndex);
+                HoopoeThreadLocalCache cache = pluginActionCaches.get(pluginActionIndex);
+                attributes.addAll(pluginAction.getAttributes(args, returnValue, thisInMethod, cache));
+            }
         }
 
-        HoopoeProfiledInvocation profiledInvocation = instance.tracer.onMethodLeave(attributes);
+        HoopoeProfiledInvocation profiledInvocation =
+                instance.tracer.onMethodLeave(attributes, System.nanoTime() - startTimeInNs);
         if (profiledInvocation != null) {
             instance.storage.addInvocation(currentThread, profiledInvocation);
+            pluginActionCachesHolder.set(null);
         }
     }
 

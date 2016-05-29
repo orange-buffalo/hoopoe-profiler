@@ -4,6 +4,7 @@ import hoopoe.api.HoopoeMethodInfo;
 import hoopoe.api.HoopoePlugin;
 import hoopoe.api.HoopoePluginAction;
 import hoopoe.api.HoopoePluginsProvider;
+import hoopoe.api.HoopoeThreadLocalCache;
 import hoopoe.test.core.guineapigs.PluginGuineaPig;
 import hoopoe.test.core.supplements.HoopoeTestClassLoader;
 import hoopoe.test.core.supplements.HoopoeTestConfiguration;
@@ -12,8 +13,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicReference;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import org.junit.Test;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.doReturn;
@@ -98,7 +101,7 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
         HoopoePlugin pluginMock = preparePluginMock();
         HoopoePluginAction pluginActionMock = Mockito.mock(HoopoePluginAction.class);
         when(pluginMock.createActionIfSupported(any())).thenReturn(pluginActionMock);
-        when(pluginActionMock.getAttributes(any(), any(), any())).thenReturn(Collections.emptyList());
+        when(pluginActionMock.getAttributes(any(), any(), any(), any())).thenReturn(Collections.emptyList());
 
         HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader(GUINEAPIGS_PACKAGE);
         Class guineaPigClass = PluginGuineaPig.class;
@@ -125,7 +128,8 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
                 .getAttributes(
                         eq(new Object[] {argument}),
                         eq(null),
-                        eq(thisInMethod.get()));
+                        eq(thisInMethod.get()),
+                        (HoopoeThreadLocalCache) argThat(notNullValue()));
     }
 
     private HoopoePlugin preparePluginMock() {

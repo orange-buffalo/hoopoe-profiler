@@ -25,10 +25,10 @@ public class HoopoeTracerImpl implements HoopoeTracer {
     }
 
     @Override
-    public HoopoeProfiledInvocation onMethodLeave(Collection<HoopoeAttribute> attributes) {
+    public HoopoeProfiledInvocation onMethodLeave(Collection<HoopoeAttribute> attributes, long profilerOverheadInNs) {
         TraceNode currentTraceNode = currentTraceNodeHolder.get();
         currentTraceNode.setAttributes(attributes);
-        currentTraceNode.onMethodLeave();
+        currentTraceNode.onMethodLeave(profilerOverheadInNs);
 
         TraceNode previousTraceNode = currentTraceNode.getParent();
         currentTraceNodeHolder.set(previousTraceNode);

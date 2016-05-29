@@ -41,7 +41,7 @@ public class HoopoeTracerImplTest {
             mockMinimumTrackedInvocationTimeInNs(0);
 
             tracer.onMethodEnter("cr", "mr");
-            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList());
+            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList(), 0);
 
             assertInvocation(actualRoot, "cr", "mr", 1);
             assertNoAttributes(actualRoot);
@@ -56,7 +56,7 @@ public class HoopoeTracerImplTest {
 
             tracer.onMethodEnter("cr", "mr");
             HoopoeAttribute attribute = new HoopoeAttribute("a1", null, true);
-            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.singleton(attribute));
+            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.singleton(attribute), 0);
 
             assertInvocation(actualRoot, "cr", "mr", 1);
             assertThat(actualRoot.getAttributes().size(), equalTo(1));
@@ -74,15 +74,15 @@ public class HoopoeTracerImplTest {
             tracer.onMethodEnter("c3", "m3");
 
             // pop c3.m3
-            HoopoeProfiledInvocation actualInvocation = tracer.onMethodLeave(Collections.emptyList());
+            HoopoeProfiledInvocation actualInvocation = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertThat(actualInvocation, nullValue());
 
             // pop c2.m2
-            actualInvocation = tracer.onMethodLeave(Collections.emptyList());
+            actualInvocation = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertThat(actualInvocation, nullValue());
 
             // pop c1.m1 - root of invocation
-            actualInvocation = tracer.onMethodLeave(Collections.emptyList());
+            actualInvocation = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertInvocation(actualInvocation, "c1", "m1", 1);
             assertChildrenCount(actualInvocation, 1);
 
@@ -104,17 +104,17 @@ public class HoopoeTracerImplTest {
 
             // first invocation is fast
             tracer.onMethodEnter("c2", "m2.fast");
-            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList());
+            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertThat(actualRoot, nullValue());
 
             // second invocation is slow
             tracer.onMethodEnter("c2", "m2.slow");
             Thread.sleep(10);
-            actualRoot = tracer.onMethodLeave(Collections.emptyList());
+            actualRoot = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertThat(actualRoot, nullValue());
 
             // pop c1.m1 - root of invocation
-            actualRoot = tracer.onMethodLeave(Collections.emptyList());
+            actualRoot = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertInvocation(actualRoot, "cr", "mr", 1);
             assertChildrenCount(actualRoot, 2);
             Iterator<HoopoeProfiledInvocation> invocationIterator = actualRoot.getChildren().iterator();
@@ -144,15 +144,15 @@ public class HoopoeTracerImplTest {
             tracer.onMethodEnter("c3", "m3");
 
             // pop c3.m3
-            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList());
+            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertThat(actualRoot, nullValue());
 
             // pop c2.m2
-            actualRoot = tracer.onMethodLeave(Collections.emptyList());
+            actualRoot = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertThat(actualRoot, nullValue());
 
             // pop c1.m1 - root of invocation
-            actualRoot = tracer.onMethodLeave(Collections.emptyList());
+            actualRoot = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertInvocation(actualRoot, "c1", "m1", 1);
             assertThat(actualRoot.getChildren().size(), equalTo(1));
 
@@ -182,18 +182,18 @@ public class HoopoeTracerImplTest {
             tracer.onMethodEnter("c", "m");
 
             tracer.onMethodEnter("c3", "m3");
-            tracer.onMethodLeave(Collections.emptyList());
+            tracer.onMethodLeave(Collections.emptyList(), 0);
 
             // leave n2, pop n1
-            tracer.onMethodLeave(Collections.emptyList());
+            tracer.onMethodLeave(Collections.emptyList(), 0);
 
             // visit n4
             tracer.onMethodEnter("c", "m");
-            tracer.onMethodLeave(Collections.emptyList());
+            tracer.onMethodLeave(Collections.emptyList(), 0);
 
             // pop n1, pop root
-            tracer.onMethodLeave(Collections.emptyList());
-            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList());
+            tracer.onMethodLeave(Collections.emptyList(), 0);
+            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList(), 0);
 
             assertThat(actualRoot, notNullValue());
 
@@ -226,13 +226,13 @@ public class HoopoeTracerImplTest {
             // increase execution time to have predictable children order
             Thread.sleep(15);
             HoopoeAttribute firstAttribute = new HoopoeAttribute("sql", "query1", true);
-            tracer.onMethodLeave(Collections.singletonList(firstAttribute));
+            tracer.onMethodLeave(Collections.singletonList(firstAttribute), 0);
 
             tracer.onMethodEnter("c", "m");
             HoopoeAttribute secondAttribute = new HoopoeAttribute("sql", "query2", true);
-            tracer.onMethodLeave(Collections.singletonList(secondAttribute));
+            tracer.onMethodLeave(Collections.singletonList(secondAttribute), 0);
 
-            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList());
+            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertInvocation(actualRoot, "cr", "mr", 1);
             assertChildrenCount(actualRoot, 2);
             assertNoAttributes(actualRoot);
@@ -268,15 +268,15 @@ public class HoopoeTracerImplTest {
 
             // too fast, should be trimmed
             tracer.onMethodEnter("c2", "m2");
-            tracer.onMethodLeave(Collections.emptyList());
+            tracer.onMethodLeave(Collections.emptyList(), 0);
 
-            tracer.onMethodLeave(Collections.emptyList());
+            tracer.onMethodLeave(Collections.emptyList(), 0);
 
             // too fast, should be trimmed
             tracer.onMethodEnter("c3", "m3");
-            tracer.onMethodLeave(Collections.emptyList());
+            tracer.onMethodLeave(Collections.emptyList(), 0);
 
-            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList());
+            HoopoeProfiledInvocation actualRoot = tracer.onMethodLeave(Collections.emptyList(), 0);
             assertInvocation(actualRoot, "cr", "mr", 1);
             assertChildrenCount(actualRoot, 1);
 

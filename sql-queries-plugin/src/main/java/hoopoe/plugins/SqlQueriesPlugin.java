@@ -24,7 +24,7 @@ public class SqlQueriesPlugin implements HoopoePlugin {
             case "executeUpdate(java.lang.String,java.lang.String[])":
                 if (methodInfo.instanceOf("java.sql.Statement")) {
 
-                    return (arguments, returnValue, thisInMethod) -> {
+                    return (arguments, returnValue, thisInMethod, cache) -> {
                         String query = (String) arguments[0];
                         return Collections.singleton(new HoopoeAttribute(ATTRIBUTE_NAME, query, true));
                     };

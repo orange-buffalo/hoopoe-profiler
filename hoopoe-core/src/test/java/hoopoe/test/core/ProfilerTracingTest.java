@@ -24,6 +24,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -231,7 +232,7 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
                 })
                 .when(HoopoeTestConfiguration.getTracerMock())
                 .onMethodEnter(any(), any());
-        when(HoopoeTestConfiguration.getTracerMock().onMethodLeave(any())).thenReturn(null);
+        when(HoopoeTestConfiguration.getTracerMock().onMethodLeave(any(), anyLong())).thenReturn(null);
 
         String threadName = "testThread" + System.nanoTime();
         executeWithAgentLoaded(() -> {

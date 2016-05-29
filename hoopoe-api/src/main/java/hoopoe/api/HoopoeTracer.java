@@ -6,6 +6,6 @@ public interface HoopoeTracer extends HoopoeProfilerSupplement {
 
     void onMethodEnter(String className, String methodSignature);
 
-    HoopoeProfiledInvocation onMethodLeave(Collection<HoopoeAttribute> attributes);
+    HoopoeProfiledInvocation onMethodLeave(Collection<HoopoeAttribute> attributes, long profilerOverheadInNs);
 
 }
