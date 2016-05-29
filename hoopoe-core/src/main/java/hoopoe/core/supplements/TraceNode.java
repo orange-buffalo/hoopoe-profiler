@@ -1,7 +1,6 @@
 package hoopoe.core.supplements;
 
 import hoopoe.api.HoopoeAttribute;
-import hoopoe.api.HoopoeHasAttributes;
 import hoopoe.api.HoopoeProfiledInvocation;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,9 +11,10 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
-public class TraceNode implements HoopoeHasAttributes {
+public class TraceNode {
 
     @Getter
     private TraceNode parent;
@@ -29,6 +29,7 @@ public class TraceNode implements HoopoeHasAttributes {
 
     private String groupingKey;
 
+    @Setter
     private Collection<HoopoeAttribute> attributes;
 
     /**
@@ -102,24 +103,6 @@ public class TraceNode implements HoopoeHasAttributes {
 
     public HoopoeProfiledInvocation convertToProfiledInvocation() {
         return convertToProfiledInvocation(this);
-    }
-
-    @Override
-    public void addAttributes(Collection<HoopoeAttribute> attributes) {
-        if (this.attributes == null) {
-            this.attributes = new ArrayList<>(attributes);
-        }
-        else {
-            this.attributes.addAll(attributes);
-        }
-    }
-
-    /**
-     * For performance reasons returns null if no attributes were added.
-     */
-    @Override  //todo not used, should be removed from API ?
-    public Collection<HoopoeAttribute> getAttributes() {
-        return attributes == null ? null : new ArrayList<>(attributes);
     }
 
     private static TraceNode mergeNodes(TraceNode aggregated, TraceNode nextNode) {

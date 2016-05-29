@@ -7,8 +7,8 @@ public class PluginGuineaPig implements Serializable {
     public PluginGuineaPig(Object argument) {
     }
 
-    public void doStuff() {
-
+    public int doStuff() {
+        return 42;
     }
 
 }

@@ -95,7 +95,6 @@ public class HoopoePluginProviderImplTest {
         HoopoePlugin actualPlugin = actualPlugins.iterator().next();
         assertThat(actualPlugin.getClass().getClassLoader().getClass().getCanonicalName(),
                 equalTo(HoopoeClassLoader.class.getCanonicalName()));
-        assertThat(actualPlugin.getId(), equalTo("test-plugin"));
     }
 
 }

@@ -1,9 +1,8 @@
 package hoopoe.test.core;
 
-import hoopoe.api.HoopoeHasAttributes;
 import hoopoe.api.HoopoePlugin;
+import hoopoe.api.HoopoePluginAction;
 import hoopoe.api.HoopoePluginsProvider;
-import hoopoe.api.HoopoeTracer;
 import hoopoe.test.core.guineapigs.PluginGuineaPig;
 import hoopoe.test.core.supplements.HoopoeTestClassLoader;
 import hoopoe.test.core.supplements.HoopoeTestConfiguration;
@@ -11,15 +10,13 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import org.junit.Test;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import org.mockito.Mockito;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -32,8 +29,6 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
     @Override
     public void prepareTest() {
         super.prepareTest();
-        HoopoeTracer tracerMock = HoopoeTestConfiguration.getTracerMock();
-        when(tracerMock.onMethodEnter(any(), any())).thenReturn(Mockito.mock(HoopoeHasAttributes.class));
     }
 
     @Test
@@ -54,27 +49,25 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
     @Test
     public void testPluginRequest() throws Exception {
         HoopoePlugin pluginMock = preparePluginMock();
-        when(pluginMock.supports(any(), any(), any())).thenReturn(true);
+        when(pluginMock.createActionIfSupported(any(), any(), any())).thenReturn(null);
 
         HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader(GUINEAPIGS_PACKAGE);
         Class guineaPigClass = PluginGuineaPig.class;
 
         executeWithAgentLoaded(() -> classLoader.loadClass(guineaPigClass.getCanonicalName()));
 
-        Matcher<Iterable<? extends String>> superClassesMatcher = Matchers.containsInAnyOrder(
+        Matcher<Iterable<? extends String>> superClassesMatcher = containsInAnyOrder(
                 Object.class.getCanonicalName(), Serializable.class.getCanonicalName());
 
-        verify(pluginMock, times(1)).supports(
+        verify(pluginMock, times(1)).createActionIfSupported(
                 eq(guineaPigClass.getCanonicalName()),
                 (Collection<String>) argThat(superClassesMatcher),
                 eq("PluginGuineaPig(java.lang.Object)"));
 
-        verify(pluginMock, times(1)).supports(
+        verify(pluginMock, times(1)).createActionIfSupported(
                 eq(guineaPigClass.getCanonicalName()),
                 (Collection<String>) argThat(superClassesMatcher),
                 eq("doStuff()"));
-
-        verify(pluginMock, atLeast(2)).getId();
 
         verifyNoMoreInteractions(pluginMock);
     }
@@ -82,7 +75,7 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
     @Test
     public void testUnsupportedPlugin() throws Exception {
         HoopoePlugin pluginMock = preparePluginMock();
-        when(pluginMock.supports(any(), any(), any())).thenReturn(false);
+        when(pluginMock.createActionIfSupported(any(), any(), any())).thenReturn(null);
 
         HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader(GUINEAPIGS_PACKAGE);
         Class guineaPigClass = PluginGuineaPig.class;
@@ -92,14 +85,15 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
             instrumentedClass.getConstructors()[0].newInstance((Object) null);
         });
 
-        verify(pluginMock, never()).getAttributes(any(), any(), any(), any());
+        // basically no verification, just valid execution
     }
 
     @Test
     public void testSupportedPlugin() throws Exception {
         HoopoePlugin pluginMock = preparePluginMock();
-        when(pluginMock.supports(any(), any(), any())).thenReturn(true);
-        when(pluginMock.getAttributes(any(), any(), any(), any())).thenReturn(Collections.emptyList());
+        HoopoePluginAction pluginActionMock = Mockito.mock(HoopoePluginAction.class);
+        when(pluginMock.createActionIfSupported(any(), any(), any())).thenReturn(pluginActionMock);
+        when(pluginActionMock.getAttributes(any(), any())).thenReturn(Collections.emptyList());
 
         HoopoeTestClassLoader classLoader = new HoopoeTestClassLoader(GUINEAPIGS_PACKAGE);
         Class guineaPigClass = PluginGuineaPig.class;
@@ -110,20 +104,23 @@ public class ProfilerPluginIntegrationTest extends AbstractProfilerTest {
             instrumentedClass.getConstructors()[0].newInstance(argument);
         });
 
-        Matcher<String[]> superClassesMatcher = Matchers.arrayContainingInAnyOrder(
+        Matcher superClassesMatcher = containsInAnyOrder(
                 Object.class.getCanonicalName(), Serializable.class.getCanonicalName());
         verify(pluginMock, times(1))
-                .getAttributes(
+                .createActionIfSupported(
                         eq(guineaPigClass.getCanonicalName()),
-                        argThat(superClassesMatcher),
-                        eq("PluginGuineaPig(java.lang.Object)"),
-                        eq(new Object[] {argument})
+                        (Collection<String>) argThat(superClassesMatcher),
+                        eq("PluginGuineaPig(java.lang.Object)")
+                );
+        verify(pluginActionMock, times(1))
+                .getAttributes(
+                        eq(new Object[] {argument}),
+                        eq(null)
                 );
     }
 
     private HoopoePlugin preparePluginMock() {
         HoopoePlugin pluginMock = Mockito.mock(HoopoePlugin.class);
-        when(pluginMock.getId()).thenReturn("id");
 
         HoopoePluginsProvider pluginsProviderMock = HoopoeTestConfiguration.getPluginsProviderMock();
         doReturn(Collections.singleton(pluginMock))

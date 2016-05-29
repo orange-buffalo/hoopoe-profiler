@@ -44,10 +44,11 @@ public class InstrumentationHelper {
 
     private static final String BEFORE_METHOD_CALL = MessageFormat.format(
             "{0}.startProfilingMethod.invoke(" +
-                    "{0}.profiler, new java.lang.Object[] '{'\"%s\", %s, \"%s\", %s, $args'}');", BRIDGE_CLASS_NAME);
+                    "{0}.profiler, new java.lang.Object[] '{'\"%s\", \"%s\"'}');", BRIDGE_CLASS_NAME);
 
     private static final String AFTER_METHOD_CALL = MessageFormat.format(
-            "{0}.finishProfilingMethod.invoke({0}.profiler, {0}.NO_ARGS);", BRIDGE_CLASS_NAME);
+            "{0}.finishProfilingMethod.invoke(" +
+                    "{0}.profiler, new java.lang.Object[] '{'%s, $args, ($w) $_'}');", BRIDGE_CLASS_NAME);
 
     private byte[] hoopoeProfilerBridgeClassBytes;
 
@@ -57,10 +58,13 @@ public class InstrumentationHelper {
 
     private Collection<HoopoePlugin> plugins;
 
+    private HoopoeProfilerImpl profiler;
+
     public InstrumentationHelper(Collection<Pattern> excludedClassesPatterns,
-                                 Collection<HoopoePlugin> plugins) {
+                                 Collection<HoopoePlugin> plugins, HoopoeProfilerImpl profiler) {
         this.excludedClassesPatterns = excludedClassesPatterns;
         this.plugins = plugins;
+        this.profiler = profiler;
     }
 
     public ClassFileTransformer createClassFileTransformer(HoopoeProfilerImpl profiler,
@@ -99,10 +103,7 @@ public class InstrumentationHelper {
                 CtField.make("public static java.lang.reflect.Method finishProfilingMethod;", bridgeCtClass));
 
         bridgeCtClass.addField(
-                CtField.make("public static final java.lang.Object[] NO_ARGS = new java.lang.Object[0];", bridgeCtClass));
-
-        bridgeCtClass.addField(
-                CtField.make("public static final java.lang.String[] NO_STRING_ARGS = new java.lang.String[0];", bridgeCtClass));
+                CtField.make("public static final int[] INT_NO_ARGS = new int[0];", bridgeCtClass));
 
         hoopoeProfilerBridgeClassBytes = bridgeCtClass.toBytecode();
 
@@ -170,7 +171,6 @@ public class InstrumentationHelper {
                 log.debug("modifying {}", canonicalClassName);
 
                 Collection<String> superclasses = getSuperclasses(ctClass);
-                String superclassesParameter = getSuperclassesParameter(superclasses);
 
                 Collection<CtBehavior> behaviors = new ArrayList<>();
                 behaviors.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
@@ -181,11 +181,11 @@ public class InstrumentationHelper {
                         if (!isLockedForInterception(behavior)) {
                             String methodSignature = getMethodSignature(ctClass, behavior.getLongName());
 
-                            String enabledPlugins = getEnabledPlugins(ctClass, superclasses, methodSignature);
+                            String pluginActions = getPluginActions(ctClass, superclasses, methodSignature);
 
                             behavior.insertBefore(String.format(
-                                    BEFORE_METHOD_CALL, canonicalClassName, superclassesParameter, methodSignature, enabledPlugins));
-                            behavior.insertAfter(AFTER_METHOD_CALL, true);
+                                    BEFORE_METHOD_CALL, canonicalClassName, methodSignature, pluginActions));
+                            behavior.insertAfter(String.format(AFTER_METHOD_CALL, pluginActions), true);
                         }
                     }
                     catch (CannotCompileException e) {
@@ -245,13 +245,6 @@ public class InstrumentationHelper {
         return superclasses;
     }
 
-    private String getSuperclassesParameter(Collection<String> superclasses) {
-        Collection<String> wrappedClassNames = superclasses.stream()
-                .map(s -> "\"" + s + "\"")
-                .collect(Collectors.toSet());
-        return "new java.lang.String[] {" + StringUtils.join(wrappedClassNames, ",") + "}";
-    }
-
     private boolean isLockedForInterception(CtBehavior ctBehavior) {
         int modifiers = ctBehavior.getModifiers();
         return Modifier.isAbstract(modifiers) || Modifier.isNative(modifiers);
@@ -272,14 +265,15 @@ public class InstrumentationHelper {
         }
     }
 
-    private String getEnabledPlugins(CtClass ctClass, Collection<String> superclasses, String methodSignature) {
-        List<String> supportedPlugins = plugins.stream()
-                .filter(hoopoePlugin -> hoopoePlugin.supports(ctClass.getName(), superclasses, methodSignature))
-                .map(hoopoePlugin -> "\"" + hoopoePlugin.getId() + "\"")
+    private String getPluginActions(CtClass ctClass, Collection<String> superclasses, String methodSignature) {
+        List<String> pluginActionsId = plugins.stream()
+                .map(hoopoePlugin -> hoopoePlugin.createActionIfSupported(ctClass.getName(), superclasses, methodSignature))
+                .filter(pluginAction -> pluginAction != null)
+                .map(pluginAction -> String.valueOf(profiler.addPluginAction(pluginAction)))
                 .collect(Collectors.toList());
-        return supportedPlugins.isEmpty()
-                ? BRIDGE_CLASS_NAME + ".NO_STRING_ARGS"
-                : "new java.lang.String[] {" + StringUtils.join(supportedPlugins, ",") + "}";
+        return pluginActionsId.isEmpty()
+                ? BRIDGE_CLASS_NAME + ".INT_NO_ARGS"
+                : "new int[] {" + StringUtils.join(pluginActionsId, ", ") + "}";
     }
 
 }

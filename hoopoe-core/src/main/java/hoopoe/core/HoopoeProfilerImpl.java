@@ -2,8 +2,8 @@ package hoopoe.core;
 
 import hoopoe.api.HoopoeAttribute;
 import hoopoe.api.HoopoeConfiguration;
-import hoopoe.api.HoopoeHasAttributes;
 import hoopoe.api.HoopoePlugin;
+import hoopoe.api.HoopoePluginAction;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.api.HoopoeProfiler;
@@ -15,10 +15,10 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,9 +39,9 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     @Getter
     private HoopoeConfiguration configuration;
 
-    private Map<String, HoopoePlugin> plugins;
-
     private HoopoeTracer tracer;
+
+    private List<HoopoePluginAction> pluginActions = new CopyOnWriteArrayList<>();
 
     public HoopoeProfilerImpl(String rawArgs, Instrumentation instrumentation) {
         log.info("starting profiler");
@@ -52,12 +52,11 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
         HoopoePluginsProvider pluginsProvider = configuration.createPluginsProvider();
         pluginsProvider.setupProfiler(this);
-        plugins = pluginsProvider.createPlugins().stream()
-                .collect(Collectors.toMap(HoopoePlugin::getId, Function.identity()));
+        Collection<HoopoePlugin> plugins = pluginsProvider.createPlugins();
 
         Collection<Pattern> excludedClassesPatterns = prepareExcludedClassesPatterns();
         InstrumentationHelper instrumentationHelper =
-                new InstrumentationHelper(excludedClassesPatterns, plugins.values());
+                new InstrumentationHelper(excludedClassesPatterns, plugins, this);
         classFileTransformer = instrumentationHelper.createClassFileTransformer(this, instrumentation);
 
         // todo cover with test
@@ -70,33 +69,38 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     }
 
     public static void startMethodProfiling(String className,
-                                            String[] superclasses,
-                                            String methodSignature,
-                                            String[] enabledPlugins,
-                                            Object[] args) {
+                                            String methodSignature) {
         if (Thread.currentThread() == instance.mainThread) {    // todo cover with test
             return;
         }
-
-        HoopoeHasAttributes hasAttributes = instance.tracer.onMethodEnter(className, methodSignature);
-        for (String enabledPlugin : enabledPlugins) {
-            HoopoePlugin plugin = instance.plugins.get(enabledPlugin);
-            Collection<HoopoeAttribute> attributes = plugin.getAttributes(
-                    className, superclasses, methodSignature, args);
-            hasAttributes.addAttributes(attributes);
-        }
+        instance.tracer.onMethodEnter(className, methodSignature);
     }
 
-    public static void finishMethodProfiling() {
+    public static void finishMethodProfiling(int[] pluginActionIndicies,
+                                             Object[] args,
+                                             Object returnValue) {
         Thread currentThread = Thread.currentThread();
         if (currentThread == instance.mainThread) {
             return;
         }
 
-        HoopoeProfiledInvocation profiledInvocation = instance.tracer.onMethodLeave();
+        Collection<HoopoeAttribute> attributes = pluginActionIndicies.length == 0
+                ? Collections.emptyList()
+                : new ArrayList<>(pluginActionIndicies.length);
+        for (int pluginActionIndex : pluginActionIndicies) {
+            HoopoePluginAction pluginAction = instance.pluginActions.get(pluginActionIndex);
+            attributes.addAll(pluginAction.getAttributes(args, returnValue));
+        }
+
+        HoopoeProfiledInvocation profiledInvocation = instance.tracer.onMethodLeave(attributes);
         if (profiledInvocation != null) {
             instance.storage.addInvocation(currentThread, profiledInvocation);
         }
+    }
+
+    public int addPluginAction(HoopoePluginAction pluginAction) {
+        pluginActions.add(pluginAction);
+        return pluginActions.size() - 1;
     }
 
     private Collection<Pattern> prepareExcludedClassesPatterns() {

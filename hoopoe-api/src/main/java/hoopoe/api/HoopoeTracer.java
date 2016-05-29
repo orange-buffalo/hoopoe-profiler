@@ -1,9 +1,11 @@
 package hoopoe.api;
 
+import java.util.Collection;
+
 public interface HoopoeTracer extends HoopoeProfilerSupplement {
 
-    HoopoeHasAttributes onMethodEnter(String className, String methodSignature);
+    void onMethodEnter(String className, String methodSignature);
 
-    HoopoeProfiledInvocation onMethodLeave();
+    HoopoeProfiledInvocation onMethodLeave(Collection<HoopoeAttribute> attributes);
 
 }

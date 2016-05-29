@@ -1,10 +1,11 @@
 package hoopoe.core;
 
-import hoopoe.api.HoopoeHasAttributes;
+import hoopoe.api.HoopoeAttribute;
 import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.api.HoopoeProfiler;
 import hoopoe.api.HoopoeTracer;
 import hoopoe.core.supplements.TraceNode;
+import java.util.Collection;
 
 public class HoopoeTracerImpl implements HoopoeTracer {
 
@@ -13,7 +14,7 @@ public class HoopoeTracerImpl implements HoopoeTracer {
     private HoopoeProfiler profiler;
 
     @Override
-    public HoopoeHasAttributes onMethodEnter(String className, String methodSignature) {
+    public void onMethodEnter(String className, String methodSignature) {
         TraceNode previousTraceNode = currentTraceNodeHolder.get();
         TraceNode currentTraceNode = new TraceNode(
                 previousTraceNode,
@@ -21,12 +22,12 @@ public class HoopoeTracerImpl implements HoopoeTracer {
                 methodSignature,
                 profiler.getConfiguration().getMinimumTrackedInvocationTimeInNs());
         currentTraceNodeHolder.set(currentTraceNode);
-        return currentTraceNode;
     }
 
     @Override
-    public HoopoeProfiledInvocation onMethodLeave() {
+    public HoopoeProfiledInvocation onMethodLeave(Collection<HoopoeAttribute> attributes) {
         TraceNode currentTraceNode = currentTraceNodeHolder.get();
+        currentTraceNode.setAttributes(attributes);
         currentTraceNode.onMethodLeave();
 
         TraceNode previousTraceNode = currentTraceNode.getParent();

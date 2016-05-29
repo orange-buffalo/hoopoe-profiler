@@ -218,7 +218,7 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
                 })
                 .when(HoopoeTestConfiguration.getTracerMock())
                 .onMethodEnter(any(), any());
-        when(HoopoeTestConfiguration.getTracerMock().onMethodLeave()).thenReturn(null);
+        when(HoopoeTestConfiguration.getTracerMock().onMethodLeave(any())).thenReturn(null);
 
         String threadName = "testThread" + System.nanoTime();
         executeWithAgentLoaded(() -> {
