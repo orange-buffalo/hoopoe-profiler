@@ -189,6 +189,19 @@ public class ProfilerTracingTest extends AbstractProfilerTest {
                                 RunnableGuineaPig.class, "run()",
                                 RunnableGuineaPig.class, "innerMethod()");
                     }
+                },
+
+                new SingleThreadProfilerTraceTestItem("Method with multiple params call") {
+                    @Delegate
+                    MethodEntryTestItemDelegate delegate =
+                            new MethodEntryTestItemDelegate(BaseGuineaPig.class, "callsMethodWithMultipleParams", this);
+
+                    @Override
+                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
+                        assertInvocationSequence(invocations,
+                                BaseGuineaPig.class, "callsMethodWithMultipleParams()",
+                                BaseGuineaPig.class, "methodWithMultipleParams(java.lang.String,int[],java.lang.Object[])");
+                    }
                 }
         );
     }

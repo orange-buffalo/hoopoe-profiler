@@ -68,4 +68,12 @@ public class BaseGuineaPig {
         thread.join();
     }
 
+    public void callsMethodWithMultipleParams() {
+        methodWithMultipleParams(null, null, null);
+    }
+
+    public void methodWithMultipleParams(String s, int[] i, Object[] o) {
+        String another = "42";
+    }
+
 }
