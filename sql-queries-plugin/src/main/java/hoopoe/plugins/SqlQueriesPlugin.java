@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class SqlQueriesPlugin implements HoopoePlugin {
 
-    private static final String ATTRIBUTE_NAME = "SQL Query";
+    public static final String ATTRIBUTE_NAME = "SQL Query";
 
     @Override
     public HoopoePluginAction createActionIfSupported(HoopoeMethodInfo methodInfo) {

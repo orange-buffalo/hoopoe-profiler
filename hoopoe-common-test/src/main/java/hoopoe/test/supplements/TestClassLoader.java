@@ -1,65 +1,53 @@
 package hoopoe.test.supplements;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
 import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.LoaderClassPath;
 import javassist.NotFoundException;
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
+import org.apache.commons.io.IOUtils;
 
 public class TestClassLoader extends ClassLoader {
 
-    private Map<String, byte[]> classesData = new HashMap<>();
+    private Collection<String> packagesToInclude;
 
     static {
         registerAsParallelCapable();
     }
 
-    public TestClassLoader(String packageToAdd) throws NotFoundException, IOException, CannotCompileException {
+    public TestClassLoader(String... packagesToInclude) throws NotFoundException, IOException, CannotCompileException {
         super(TestClassLoader.class.getClassLoader());
-
-        try {
-            Reflections reflections = new Reflections(packageToAdd, new SubTypesScanner(false));
-            Set<Class<?>> guineaPigClasses = reflections.getSubTypesOf(Object.class);
-            guineaPigClasses.size();
-            ClassPool classPool = new ClassPool();
-            classPool.appendClassPath(new LoaderClassPath(TestClassLoader.class.getClassLoader()));
-            for (Class guineaPigClass : guineaPigClasses) {
-                CtClass ctClass = classPool.get(guineaPigClass.getCanonicalName());
-                classesData.put(guineaPigClass.getCanonicalName(), ctClass.toBytecode());
-            }
-        }
-        catch (IOException | CannotCompileException | NotFoundException e) {
-            throw new IllegalStateException(e);
-        }
+        this.packagesToInclude = Arrays.asList(packagesToInclude);
     }
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
             Class<?> clazz = findLoadedClass(name);
-            if (clazz == null) {
+            if (clazz == null && getParent() != null) {
+                ClassLoader parent = getParent();
+                if (isIncluded(name)) {
+                    InputStream stream = parent.getResourceAsStream(name.replaceAll("\\.", "/") + ".class");
+                    if (stream != null) {
+                        try {
+                            byte[] bytes = IOUtils.toByteArray(stream);
+                            clazz = defineClass(name, bytes, 0, bytes.length);
+                        }
+                        catch (IOException e) {
+                            throw new ClassNotFoundException(name, e);
+                        }
 
-                byte[] classBytes = classesData.get(name);
-                if (classBytes != null) {
-                    clazz = defineClass(name, classBytes, 0, classBytes.length);
-                }
-
-                if (clazz == null) {
-                    ClassLoader parent = getParent();
-                    if (parent != null) {
-                        clazz = parent.loadClass(name);
                     }
                 }
 
                 if (clazz == null) {
-                    throw new ClassNotFoundException(name);
+                    clazz = parent.loadClass(name);
                 }
+            }
+
+            if (clazz == null) {
+                throw new ClassNotFoundException(name);
             }
 
             if (resolve) {
@@ -69,4 +57,23 @@ public class TestClassLoader extends ClassLoader {
             return clazz;
         }
     }
+
+    private boolean isIncluded(String name) {
+        if (name.startsWith("java.lang")) {
+            return false;
+        }
+
+        if (packagesToInclude.isEmpty()) {
+            return true;
+        }
+
+        for (String packageToInclude : packagesToInclude) {
+            if (name.startsWith(packageToInclude)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }

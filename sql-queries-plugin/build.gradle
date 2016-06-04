@@ -3,7 +3,9 @@ apply plugin: HoopoeAssemblyPlugin
 dependencies {
     provided project(':hoopoe-api')
 
-    testCompile group: 'junit', name: 'junit', version: '4.11'
+    testCompile 'junit:junit:4.11'
+    testCompile 'com.h2database:h2:1.4.192'
+    testCompile project(':hoopoe-common-test');
 }
 
 hoopoeAssembly {
