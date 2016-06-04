@@ -1,7 +1,6 @@
 package hoopoe.core.supplements;
 
 import hoopoe.api.HoopoeMethodInfo;
-import hoopoe.api.HoopoePlugin;
 import hoopoe.core.HoopoeProfilerImpl;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -59,14 +58,10 @@ public class InstrumentationHelper {
 
     private ConcurrentMap<ClassLoader, ClassPool> classPools = new ConcurrentHashMap<>();
 
-    private Collection<HoopoePlugin> plugins;
-
     private HoopoeProfilerImpl profiler;
 
-    public InstrumentationHelper(Collection<Pattern> excludedClassesPatterns,
-                                 Collection<HoopoePlugin> plugins, HoopoeProfilerImpl profiler) {
+    public InstrumentationHelper(Collection<Pattern> excludedClassesPatterns, HoopoeProfilerImpl profiler) {
         this.excludedClassesPatterns = excludedClassesPatterns;
-        this.plugins = plugins;
         this.profiler = profiler;
     }
 
@@ -275,14 +270,13 @@ public class InstrumentationHelper {
     private String getPluginActions(CtClass ctClass, Collection<String> superclasses, String methodSignature) {
         HoopoeMethodInfo methodInfo = new HoopoeMethodInfo(ctClass.getName(), methodSignature, superclasses);
 
-        List<String> pluginActionsId = plugins.stream()
-                .map(hoopoePlugin -> hoopoePlugin.createActionIfSupported(methodInfo))
-                .filter(pluginAction -> pluginAction != null)
-                .map(pluginAction -> String.valueOf(profiler.addPluginAction(pluginAction)))
-                .collect(Collectors.toList());
-        return pluginActionsId.isEmpty()
-                ? BRIDGE_CLASS_NAME + ".INT_NO_ARGS"
-                : "new int[] {" + StringUtils.join(pluginActionsId, ", ") + "}";
+        List<Integer> pluginActionIndicies = profiler.addPluginActions(methodInfo);
+        if (pluginActionIndicies.isEmpty()) {
+            return BRIDGE_CLASS_NAME + ".INT_NO_ARGS";
+        }
+        else {
+            return "new int[] {" + StringUtils.join(pluginActionIndicies, ", ") + "}";
+        }
     }
 
 }

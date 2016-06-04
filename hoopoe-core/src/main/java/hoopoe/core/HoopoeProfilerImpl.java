@@ -2,6 +2,7 @@ package hoopoe.core;
 
 import hoopoe.api.HoopoeAttribute;
 import hoopoe.api.HoopoeConfiguration;
+import hoopoe.api.HoopoeMethodInfo;
 import hoopoe.api.HoopoePlugin;
 import hoopoe.api.HoopoePluginAction;
 import hoopoe.api.HoopoePluginsProvider;
@@ -18,9 +19,12 @@ import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,8 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     private static final Collection<HoopoeAttribute> NO_ATTRIBUTES = Collections.emptyList();
-
-    private static final ThreadLocal<List<HoopoeThreadLocalCache>> pluginActionCachesHolder = new ThreadLocal<>();
 
     private static HoopoeProfilerImpl instance;
 
@@ -47,7 +49,11 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     private HoopoeTracer tracer;
 
-    private List<HoopoePluginAction> pluginActions = new CopyOnWriteArrayList<>();
+    private List<PluginActionWrapper> pluginActions = new CopyOnWriteArrayList<>();
+
+    private Collection<HoopoePlugin> plugins;
+
+    private Map<HoopoePlugin, HoopoeThreadLocalCache> pluginsThreadLocalCaches = new HashMap<>();
 
     public HoopoeProfilerImpl(String rawArgs, Instrumentation instrumentation) {
         log.info("starting profiler");
@@ -58,20 +64,18 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
         HoopoePluginsProvider pluginsProvider = configuration.createPluginsProvider();
         pluginsProvider.setupProfiler(this);
-        Collection<HoopoePlugin> plugins = pluginsProvider.createPlugins();
-
-        Collection<Pattern> excludedClassesPatterns = prepareExcludedClassesPatterns();
-        InstrumentationHelper instrumentationHelper =
-                new InstrumentationHelper(excludedClassesPatterns, plugins, this);
-        classFileTransformer = instrumentationHelper.createClassFileTransformer(this, instrumentation);
+        plugins = pluginsProvider.createPlugins();
 
         // todo cover with test
         tracer = configuration.createTracer();
         tracer.setupProfiler(this);
 
+        instance = this;
         mainThread = Thread.currentThread();
 
-        instance = this;
+        Collection<Pattern> excludedClassesPatterns = prepareExcludedClassesPatterns();
+        InstrumentationHelper instrumentationHelper = new InstrumentationHelper(excludedClassesPatterns, this);
+        classFileTransformer = instrumentationHelper.createClassFileTransformer(this, instrumentation);
     }
 
     public static void startMethodProfiling(String className,
@@ -95,19 +99,12 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         Collection<HoopoeAttribute> attributes = NO_ATTRIBUTES;
         if (pluginActionIndicies.length != 0) {
             attributes = new ArrayList<>(pluginActionIndicies.length);
-            List<HoopoeThreadLocalCache> pluginActionCaches = pluginActionCachesHolder.get();
-            if (pluginActionCaches == null) {
-                pluginActionCaches = new ArrayList<>(instance.pluginActions.size());
-                for (int i = 0; i < instance.pluginActions.size(); i++) {
-                    pluginActionCaches.add(new HoopoeThreadLocalCacheImpl());
-                }
-                pluginActionCachesHolder.set(pluginActionCaches);
-            }
 
             for (int pluginActionIndex : pluginActionIndicies) {
-                HoopoePluginAction pluginAction = instance.pluginActions.get(pluginActionIndex);
-                HoopoeThreadLocalCache cache = pluginActionCaches.get(pluginActionIndex);
-                attributes.addAll(pluginAction.getAttributes(args, returnValue, thisInMethod, cache));
+                PluginActionWrapper pluginActionWrapper = instance.pluginActions.get(pluginActionIndex);
+                attributes.addAll(
+                        pluginActionWrapper.pluginAction.getAttributes(
+                                args, returnValue, thisInMethod, pluginActionWrapper.cache));
             }
         }
 
@@ -115,13 +112,27 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
                 instance.tracer.onMethodLeave(attributes, System.nanoTime() - startTimeInNs);
         if (profiledInvocation != null) {
             instance.storage.addInvocation(currentThread, profiledInvocation);
-            pluginActionCachesHolder.set(null);
+            for (PluginActionWrapper pluginActionWrapper : instance.pluginActions) {
+                pluginActionWrapper.cache.clear();
+            }
         }
     }
 
-    public int addPluginAction(HoopoePluginAction pluginAction) {
-        pluginActions.add(pluginAction);
-        return pluginActions.size() - 1;
+    public List<Integer> addPluginActions(HoopoeMethodInfo methodInfo) {
+        List<Integer> pluginActionIndicies = new ArrayList<>(0);
+        for (HoopoePlugin plugin : plugins) {
+            HoopoePluginAction pluginAction = plugin.createActionIfSupported(methodInfo);
+            if (pluginAction != null) {
+                HoopoeThreadLocalCache cache = pluginsThreadLocalCaches.get(plugin);
+                if (cache == null) {
+                    cache = new HoopoeThreadLocalCacheImpl();
+                    pluginsThreadLocalCaches.put(plugin, cache);
+                }
+                pluginActions.add(new PluginActionWrapper(pluginAction, cache));
+                pluginActionIndicies.add(pluginActions.size() - 1);
+            }
+        }
+        return pluginActionIndicies;
     }
 
     private Collection<Pattern> prepareExcludedClassesPatterns() {
@@ -143,6 +154,12 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 //        excludedClassesPatterns.add(Pattern.compile("java\\.util\\..*"));
 //        excludedClassesPatterns.add(Pattern.compile("org\\.gradle\\..*"));
         return excludedClassesPatterns;
+    }
+
+    @AllArgsConstructor
+    private static class PluginActionWrapper {
+        HoopoePluginAction pluginAction;
+        HoopoeThreadLocalCache cache;
     }
 
 }

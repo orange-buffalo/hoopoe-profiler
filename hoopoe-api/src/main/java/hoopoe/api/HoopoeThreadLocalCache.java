@@ -8,4 +8,6 @@ public interface HoopoeThreadLocalCache {
 
     void remove(Object key);
 
+    void clear();
+
 }

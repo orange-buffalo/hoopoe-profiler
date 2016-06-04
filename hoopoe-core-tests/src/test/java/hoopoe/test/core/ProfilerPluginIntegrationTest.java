@@ -6,16 +6,19 @@ import hoopoe.api.HoopoePluginAction;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeThreadLocalCache;
 import hoopoe.test.core.guineapigs.PluginGuineaPig;
-import hoopoe.test.supplements.TestConfigurationRule;
 import hoopoe.test.supplements.HoopoeTestHelper;
 import hoopoe.test.supplements.TestClassLoader;
 import hoopoe.test.supplements.TestConfiguration;
+import hoopoe.test.supplements.TestConfigurationRule;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.mockito.Matchers.any;
@@ -74,7 +77,35 @@ public class ProfilerPluginIntegrationTest {
         verify(pluginMock, times(1)).createActionIfSupported(
                 eq(new HoopoeMethodInfo(
                         guineaPigClass.getCanonicalName(),
+                        "PluginGuineaPig()",
+                        superClasses
+                )));
+
+        verify(pluginMock, times(1)).createActionIfSupported(
+                eq(new HoopoeMethodInfo(
+                        guineaPigClass.getCanonicalName(),
                         "doStuff()",
+                        superClasses
+                )));
+
+        verify(pluginMock, times(1)).createActionIfSupported(
+                eq(new HoopoeMethodInfo(
+                        guineaPigClass.getCanonicalName(),
+                        "testCache()",
+                        superClasses
+                )));
+
+        verify(pluginMock, times(1)).createActionIfSupported(
+                eq(new HoopoeMethodInfo(
+                        guineaPigClass.getCanonicalName(),
+                        "firstMethodInCacheTest()",
+                        superClasses
+                )));
+
+        verify(pluginMock, times(1)).createActionIfSupported(
+                eq(new HoopoeMethodInfo(
+                        guineaPigClass.getCanonicalName(),
+                        "secondMethodInCacheTest()",
                         superClasses
                 )));
 
@@ -131,6 +162,45 @@ public class ProfilerPluginIntegrationTest {
                         eq(null),
                         eq(thisInMethod.get()),
                         (HoopoeThreadLocalCache) argThat(notNullValue()));
+    }
+
+    @Test
+    public void testPluginCache() throws Exception {
+        AtomicInteger pluginCalls = new AtomicInteger();
+        HoopoePlugin plugin = methodInfo -> {
+            if (methodInfo.getMethodSignature().equals("firstMethodInCacheTest()")) {
+                return (arguments, returnValue, thisInMethod, cache) -> {
+                    cache.set(thisInMethod, "testString");
+                    pluginCalls.incrementAndGet();
+                    return Collections.emptyList();
+                };
+            }
+            else if (methodInfo.getMethodSignature().equals("secondMethodInCacheTest()")) {
+                return (arguments, returnValue, thisInMethod, cache) -> {
+                    String actualCachedValue = cache.get(thisInMethod);
+                    assertThat(actualCachedValue, equalTo("testString"));
+                    pluginCalls.incrementAndGet();
+                    return Collections.emptyList();
+                };
+            }
+            return null;
+        };
+
+        HoopoePluginsProvider pluginsProviderMock = TestConfiguration.getPluginsProviderMock();
+        doReturn(Collections.singleton(plugin))
+                .when(pluginsProviderMock)
+                .createPlugins();
+
+        TestClassLoader classLoader = new TestClassLoader(GUINEAPIGS_PACKAGE);
+        Class guineaPigClass = PluginGuineaPig.class;
+
+        HoopoeTestHelper.executeWithAgentLoaded(() -> {
+            Class<?> instrumentedClass = classLoader.loadClass(guineaPigClass.getCanonicalName());
+            Object instance = instrumentedClass.newInstance();
+            instrumentedClass.getMethod("testCache").invoke(instance);
+        });
+
+        assertThat(pluginCalls.get(), equalTo(2));
     }
 
     private HoopoePlugin preparePluginMock() {
