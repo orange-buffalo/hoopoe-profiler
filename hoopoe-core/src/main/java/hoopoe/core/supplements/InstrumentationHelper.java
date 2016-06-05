@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,7 +25,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
@@ -236,15 +236,20 @@ public class InstrumentationHelper {
     }
 
     private Collection<String> getSuperclasses(CtClass ctClass) throws NotFoundException {
-        Set<String> superclasses = Arrays.stream(ctClass.getInterfaces())
-                .map(CtClass::getName)
-                .collect(Collectors.toSet());
+        Set<String> superclasses = new HashSet<>();
+        collectSuperclasses(ctClass, superclasses);
+        return Collections.unmodifiableSet(superclasses);
+    }
+
+    private void collectSuperclasses(CtClass ctClass, Set<String> superclasses) throws NotFoundException {
+        for (CtClass i : ctClass.getInterfaces()) {
+            superclasses.add(i.getName());
+        }
         CtClass superclass = ctClass.getSuperclass();
         if (superclass != null) {
             superclasses.add(superclass.getName());
-            superclasses.addAll(getSuperclasses(superclass));
+            collectSuperclasses(superclass, superclasses);
         }
-        return Collections.unmodifiableSet(superclasses);
     }
 
     private boolean isLockedForInterception(CtBehavior ctBehavior) {
