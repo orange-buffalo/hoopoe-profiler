@@ -2,62 +2,49 @@ package hoopoe.core.supplements;
 
 import hoopoe.api.HoopoeMethodInfo;
 import hoopoe.core.HoopoeProfilerImpl;
+import hoopoe.core.bootstrap.HoopoeProfilerBridge;
+import hoopoe.core.bootstrap.PluginActionIndicies;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.ProtectionDomain;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import javassist.ByteArrayClassPath;
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtBehavior;
-import javassist.CtClass;
-import javassist.CtField;
-import javassist.LoaderClassPath;
-import javassist.Modifier;
-import javassist.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.annotation.AnnotationDescription;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.method.ParameterDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.description.type.TypeList;
+import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.ElementMatchers;
+import net.bytebuddy.utility.JavaModule;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 @Slf4j(topic = "hoopoe.profiler")
 public class InstrumentationHelper {
 
-    private static final String BRIDGE_CLASS_NAME = "hoopoe.core.HoopoeProfilerBridge";
-
-    private static final String BEFORE_METHOD_CALL = MessageFormat.format(
-            "{0}.startProfilingMethod.invoke(" +
-                    "{0}.profiler, new java.lang.Object[] '{'\"%s\", \"%s\"'}');", BRIDGE_CLASS_NAME);
-
-    private static final String AFTER_METHOD_CALL = MessageFormat.format(
-            "{0}.finishProfilingMethod.invoke(" +
-                    "{0}.profiler, new java.lang.Object[] '{'%s, $args, ($w) $_, %s'}');", BRIDGE_CLASS_NAME);
-
-    private byte[] hoopoeProfilerBridgeClassBytes;
-
     private Collection<Pattern> excludedClassesPatterns;
-
-    private ConcurrentMap<ClassLoader, ClassPool> classPools = new ConcurrentHashMap<>();
-
     private HoopoeProfilerImpl profiler;
 
     public InstrumentationHelper(Collection<Pattern> excludedClassesPatterns, HoopoeProfilerImpl profiler) {
@@ -65,222 +52,249 @@ public class InstrumentationHelper {
         this.profiler = profiler;
     }
 
-    public ClassFileTransformer createClassFileTransformer(HoopoeProfilerImpl profiler,
-                                                           Instrumentation instrumentation) {
-        createProfilerBridge(instrumentation, profiler);
-        ClassFileTransformer classFileTransformer = InstrumentationHelper.this::transform;
-        instrumentation.addTransformer(classFileTransformer);
-        return classFileTransformer;
+    public ClassFileTransformer createClassFileTransformer(Instrumentation instrumentation) {
+        deployBootstrapJar(instrumentation);
+        intiProfilerBridge();
+
+        return new AgentBuilder.Default()
+                .with(new AgentListener())
+                .type(
+                        ElementMatchers.not(ElementMatchers.isInterface())
+                                .and(new ExcludedClassesElementMatcher())
+                )
+                .transform(
+                        (builder, typeDescription, classLoader) -> builder
+                                .visit(Advice
+                                        .withCustomMapping()
+                                        .bind(MethodSignature.class, new MethodSignatureValue())
+                                        .bind(ClassName.class, new ClassNameValue())
+                                        .bind(PluginActions.class, new PluginActionsValue())
+                                        .to(ProfilerBridgeAdvice.class)
+                                        .on(new IncludedMethodElementMatcher())
+                                )
+                )
+                .installOn(instrumentation);
     }
 
-    private void createProfilerBridge(Instrumentation instrumentation, HoopoeProfilerImpl profiler) {
+    private void deployBootstrapJar(Instrumentation instrumentation) {
         try {
-            generateProfilerBridgeClass();
-            File profilerBridgeJar = generateProfilerBridgeJar();
-            instrumentation.appendToBootstrapClassLoaderSearch(new JarFile(profilerBridgeJar));
-            intiProfilerBridge(profiler);
-        }
-        catch (CannotCompileException | IOException | ReflectiveOperationException e) {
-            log.error("cannot create the bridge", e);
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    private void generateProfilerBridgeClass() throws CannotCompileException, IOException {
-        ClassPool classPool = ClassPool.getDefault();
-
-        CtClass bridgeCtClass = classPool.makeClass(BRIDGE_CLASS_NAME);
-
-        bridgeCtClass.addField(
-                CtField.make("public static java.lang.Object profiler;", bridgeCtClass));
-
-        bridgeCtClass.addField(
-                CtField.make("public static java.lang.reflect.Method startProfilingMethod;", bridgeCtClass));
-
-        bridgeCtClass.addField(
-                CtField.make("public static java.lang.reflect.Method finishProfilingMethod;", bridgeCtClass));
-
-        bridgeCtClass.addField(
-                CtField.make("public static final int[] INT_NO_ARGS = new int[0];", bridgeCtClass));
-
-        hoopoeProfilerBridgeClassBytes = bridgeCtClass.toBytecode();
-
-        bridgeCtClass.detach();
-    }
-
-    private File generateProfilerBridgeJar() throws IOException {
-        Path bootstrapJarDir = Files.createTempDirectory("hoopoe-bootstrap-");
-        File bootstrapJar = new File(bootstrapJarDir.toFile(), "hoopoe-profiler-bridge.jar");
-        try (JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(bootstrapJar))) {
-            jarOutputStream.putNextEntry(new ZipEntry(BRIDGE_CLASS_NAME.replaceAll("\\.", "/") + ".class"));
-            IOUtils.write(hoopoeProfilerBridgeClassBytes, jarOutputStream);
-            jarOutputStream.closeEntry();
-        }
-        log.info("generated profiler bridge jar: {}", bootstrapJar);
-        return bootstrapJar;
-    }
-
-    private void intiProfilerBridge(HoopoeProfilerImpl profiler)
-            throws ClassNotFoundException, IllegalAccessException, NoSuchFieldException {
-
-        Class bridgeClass = Class.forName(BRIDGE_CLASS_NAME, true, null);
-
-        bridgeClass.getField("profiler").set(null, profiler);
-
-        Method[] profilerMethods = profiler.getClass().getMethods();
-
-        Method startProfilingMethod = Arrays.stream(profilerMethods)
-                .filter(method -> method.getName().equals("startMethodProfiling"))
-                .findAny()
-                .get();
-        startProfilingMethod.setAccessible(true);
-        bridgeClass.getField("startProfilingMethod").set(null, startProfilingMethod);
-
-        Method finishProfilingMethod = Arrays.stream(profilerMethods)
-                .filter(method -> method.getName().equals("finishMethodProfiling"))
-                .findAny()
-                .get();
-        finishProfilingMethod.setAccessible(true);
-        bridgeClass.getField("finishProfilingMethod").set(null, finishProfilingMethod);
-    }
-
-    private byte[] transform(ClassLoader loader,
-                             String className,
-                             Class<?> classBeingRedefined,
-                             ProtectionDomain protectionDomain,
-                             byte[] classfileBuffer) throws IllegalClassFormatException {
-
-        String canonicalClassName = className.replaceAll("/", ".");
-
-        log.debug("{} transformation requested", canonicalClassName);
-
-        for (Pattern excludedClassesPattern : excludedClassesPatterns) {
-            if (excludedClassesPattern.matcher(canonicalClassName).matches()) {
-                log.debug("skipping, due to excluded pattern {}", excludedClassesPattern);
-                return null;
+            Path bootstrapJarDir = Files.createTempDirectory("hoopoe-bootstrap-");
+            File bootstrapJar = new File(bootstrapJarDir.toFile(), "hoopoe-bootstrap.jar");
+            InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("hoopoe-bootstrap.jar");
+            if (resourceAsStream == null) {
+                throw new IllegalStateException("no bootstrap");
             }
+            IOUtils.copy(resourceAsStream,
+                    new FileOutputStream(bootstrapJar));
+            log.info("generated profiler bridge jar: {}", bootstrapJar);
+            instrumentation.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
         }
-
-        try {
-            ClassPool classPool = getClassPool(loader);
-            CtClass ctClass = classPool.get(canonicalClassName);
-
-            if (!isLockedForInterception(ctClass)) {
-                log.debug("modifying {}", canonicalClassName);
-
-                Collection<String> superclasses = getSuperclasses(ctClass);
-
-                Collection<CtBehavior> behaviors = new ArrayList<>();
-                behaviors.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
-                behaviors.addAll(Arrays.asList(ctClass.getDeclaredConstructors()));
-
-                for (CtBehavior ctBehavior : behaviors) {
-                    try {
-                        if (!isLockedForInterception(ctBehavior)) {
-                            String methodSignature = getMethodSignature(ctClass, ctBehavior.getLongName());
-
-                            String pluginActions = getPluginActions(ctClass, superclasses, methodSignature);
-
-                            ctBehavior.insertBefore(
-                                    String.format(BEFORE_METHOD_CALL, canonicalClassName, methodSignature));
-
-                            String thisInMethod = Modifier.isStatic(ctBehavior.getModifiers()) ? "null" : "$0";
-
-                            ctBehavior.insertAfter(
-                                    String.format(AFTER_METHOD_CALL, pluginActions, thisInMethod), true);
-                        }
-                    }
-                    catch (CannotCompileException e) {
-                        log.warn("cannot change body of {}: {}", ctBehavior.getLongName(), e.getReason());
-                    }
-                }
-                byte[] modifiedClassBytes = ctClass.toBytecode();
-                ctClass.detach();
-                return modifiedClassBytes;
-            }
-            else {
-                log.debug("{} is not interceptable", canonicalClassName);
-            }
+        catch (IOException e) {
+            throw new IllegalStateException(e);
         }
-        catch (Exception e) {
-            log.warn("cannot change class {}: {}", canonicalClassName, e.getMessage());
-        }
-        return null;
-    }
-
-    private ClassPool getClassPool(ClassLoader classLoader) {
-        if (classLoader == null) {
-            classLoader = ClassLoader.getSystemClassLoader().getParent();
-        }
-
-        ClassPool classPool = classPools.get(classLoader);
-        if (classPool == null) {
-            log.info("new classloader involved: {}", classLoader);
-
-            classPool = new ClassPool();
-            ClassLoader classPathLoader = classLoader;
-            while (classPathLoader != null) {
-                classPool.appendClassPath(new LoaderClassPath(classPathLoader));
-                classPathLoader = classPathLoader.getParent();
-            }
-            classPool.appendClassPath(
-                    new ByteArrayClassPath(BRIDGE_CLASS_NAME, hoopoeProfilerBridgeClassBytes));
-
-            classPools.putIfAbsent(classLoader, classPool);
-        }
-        return classPool;
-    }
-
-    private boolean isLockedForInterception(CtClass ctClass) {
-        return ctClass.isFrozen() || ctClass.isAnnotation() || ctClass.isPrimitive() || ctClass.isInterface();
-    }
-
-    private Collection<String> getSuperclasses(CtClass ctClass) throws NotFoundException {
-        Set<String> superclasses = new HashSet<>();
-        collectSuperclasses(ctClass, superclasses);
-        return Collections.unmodifiableSet(superclasses);
-    }
-
-    private void collectSuperclasses(CtClass ctClass, Set<String> superclasses) throws NotFoundException {
-        for (CtClass i : ctClass.getInterfaces()) {
-            superclasses.add(i.getName());
-        }
-        CtClass superclass = ctClass.getSuperclass();
-        if (superclass != null) {
-            superclasses.add(superclass.getName());
-            collectSuperclasses(superclass, superclasses);
-        }
-    }
-
-    private boolean isLockedForInterception(CtBehavior ctBehavior) {
-        int modifiers = ctBehavior.getModifiers();
-        return Modifier.isAbstract(modifiers) || Modifier.isNative(modifiers);
     }
 
     /**
-     * for constructors longMethodName is: canonical class name + "([params])"
-     * for methods longMethodName is: canonical class name + ".methodName([params])"
-     * normalize both to "[methodName][simpleClassName]([parameters])"
+     * Creates delegator via ByteBuddy.
+     * In case of anonymous / inner classes HoopoeProfilerBridge is requested during this class loading,
+     * and it is not available as bootstrap jar is not yet deployed.
      */
-    private String getMethodSignature(CtClass ctClass, String longMethodName) {
-        String shortMethodName = longMethodName.replace(ctClass.getName(), StringUtils.EMPTY);
-        if (shortMethodName.startsWith(".")) {
-            return shortMethodName.substring(1, shortMethodName.length());
+    private void intiProfilerBridge() {
+        try {
+            HoopoeProfilerBridge.instance = new ByteBuddy()
+                    .subclass(HoopoeProfilerBridge.class)
+                    .method(ElementMatchers.any())
+                    .intercept(MethodDelegation.to(profiler))
+                    .make()
+                    .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
+                    .getLoaded()
+                    .newInstance();
         }
-        else {
-            return ctClass.getSimpleName() + shortMethodName;
+        catch (InstantiationException | IllegalAccessException e) {
+            throw new IllegalStateException(e);
         }
     }
 
-    private String getPluginActions(CtClass ctClass, Collection<String> superclasses, String methodSignature) {
-        HoopoeMethodInfo methodInfo = new HoopoeMethodInfo(ctClass.getName(), methodSignature, superclasses);
+    private PluginActionIndicies getPluginActions(String className,
+                                                  Collection<String> superclasses,
+                                                  String methodSignature) {
+        HoopoeMethodInfo methodInfo = new HoopoeMethodInfo(className, methodSignature, superclasses);
 
         List<Integer> pluginActionIndicies = profiler.addPluginActions(methodInfo);
-        if (pluginActionIndicies.isEmpty()) {
-            return BRIDGE_CLASS_NAME + ".INT_NO_ARGS";
+        return pluginActionIndicies.isEmpty()
+                ? null
+                : new PluginActionIndicies(ArrayUtils.toPrimitive(
+                pluginActionIndicies.toArray(new Integer[pluginActionIndicies.size()])));
+    }
+
+    private static Collection<String> getSuperclasses(TypeDescription classDescription) {
+        Set<String> superclasses = new HashSet<>();
+        collectSuperclasses(classDescription, superclasses);
+        return Collections.unmodifiableSet(superclasses);
+    }
+
+    private static void collectSuperclasses(TypeDescription classDescription, Set<String> superclasses) {
+        classDescription.getInterfaces().asErasures().forEach(
+                interfaceDescription -> superclasses.add(getClassName(interfaceDescription))
+        );
+
+        TypeDescription.Generic superClassGeneric = classDescription.getSuperClass();
+        if (superClassGeneric != null) {
+            TypeDescription superClassDescription = superClassGeneric.asErasure();
+            superclasses.add(getClassName(superClassDescription));
+            collectSuperclasses(superClassDescription, superclasses);
         }
-        else {
-            return "new int[] {" + StringUtils.join(pluginActionIndicies, ", ") + "}";
+    }
+
+    private static String getClassName(TypeDescription classDescription) {
+        return classDescription.getName();
+    }
+
+    private static String getMethodSignature(MethodDescription.InDefinedShape instrumentedMethod) {
+        StringBuilder builder = new StringBuilder(
+                instrumentedMethod.isConstructor()
+                        ? instrumentedMethod.getDeclaringType().getSimpleName()
+                        : instrumentedMethod.getName()
+        ).append('(');
+
+        TypeList typeDescriptions = instrumentedMethod.getParameters().asTypeList().asErasures();
+        boolean first = true;
+        for (TypeDescription next : typeDescriptions) {
+            if (!first) {
+                builder.append(',');
+            }
+            builder.append(next.getCanonicalName());
+            first = false;
+        }
+
+        builder.append(')');
+        return builder.toString();
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.PARAMETER)
+    @interface MethodSignature {
+    }
+
+    private static class MethodSignatureValue implements Advice.DynamicValue<MethodSignature> {
+        @Override
+        public Object resolve(MethodDescription.InDefinedShape instrumentedMethod,
+                              ParameterDescription.InDefinedShape target,
+                              AnnotationDescription.Loadable<MethodSignature> annotation,
+                              boolean initialized) {
+            return getMethodSignature(instrumentedMethod);
+        }
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.PARAMETER)
+    @interface ClassName {
+    }
+
+    private static class ClassNameValue implements Advice.DynamicValue<ClassName> {
+        @Override
+        public Object resolve(MethodDescription.InDefinedShape instrumentedMethod,
+                              ParameterDescription.InDefinedShape target,
+                              AnnotationDescription.Loadable<ClassName> annotation,
+                              boolean initialized) {
+            return getClassName(instrumentedMethod.getDeclaringType());
+        }
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.PARAMETER)
+    @interface PluginActions {
+    }
+
+    private class PluginActionsValue implements Advice.DynamicValue<PluginActions> {
+        @Override
+        public Object resolve(MethodDescription.InDefinedShape instrumentedMethod,
+                              ParameterDescription.InDefinedShape target,
+                              AnnotationDescription.Loadable<PluginActions> annotation,
+                              boolean initialized) {
+            TypeDescription declaringType = instrumentedMethod.getDeclaringType();
+            return getPluginActions(
+                    getClassName(declaringType),
+                    getSuperclasses(declaringType),
+                    getMethodSignature(instrumentedMethod));
+        }
+    }
+
+    private class ExcludedClassesElementMatcher implements ElementMatcher<TypeDescription> {
+        @Override
+        public boolean matches(TypeDescription target) {
+            String className = target.getName();
+            for (Pattern excludedClassesPattern : excludedClassesPatterns) {
+                if (excludedClassesPattern.matcher(className).matches()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    private static class ProfilerBridgeAdvice {
+
+        @Advice.OnMethodEnter
+        public static void before(@ClassName String className,
+                                  @MethodSignature String methodSignature) throws Exception {
+            HoopoeProfilerBridge.instance.startMethodProfiling(className, methodSignature);
+//            System.out.print("");
+        }
+
+        @Advice.OnMethodExit
+        public static void after(@Advice.BoxedArguments Object[] arguments,
+                                 @Advice.This(optional = true) Object thisInMethod,
+                                 @Advice.BoxedReturn Object returnValue,
+                                 @PluginActions PluginActionIndicies indicies) throws Exception {
+            HoopoeProfilerBridge.instance.finishMethodProfiling(
+                    indicies == null ? HoopoeProfilerBridge.NO_PLUGINS : indicies.getIds(),
+                    arguments,
+                    returnValue,
+                    thisInMethod);
+//            System.out.print("");
+        }
+
+    }
+
+    private static class IncludedMethodElementMatcher implements ElementMatcher<MethodDescription> {
+        @Override
+        public boolean matches(MethodDescription target) {
+            return !target.isNative() && !target.isAbstract() && !target.isTypeInitializer();
+        }
+    }
+
+    private static class AgentListener implements AgentBuilder.Listener {
+
+        @Override
+        public void onTransformation(TypeDescription typeDescription,
+                                     ClassLoader classLoader,
+                                     JavaModule module,
+                                     DynamicType dynamicType) {
+        }
+
+        @Override
+        public void onIgnored(TypeDescription typeDescription,
+                              ClassLoader classLoader,
+                              JavaModule module) {
+            if (log.isTraceEnabled()) {
+                log.trace("{} is skipped", typeDescription.getName());
+            }
+        }
+
+        @Override
+        public void onError(String typeName,
+                            ClassLoader classLoader,
+                            JavaModule module,
+                            Throwable throwable) {
+            log.debug("error while transforming " + typeName, throwable);
+        }
+
+        @Override
+        public void onComplete(String typeName,
+                               ClassLoader classLoader,
+                               JavaModule module) {
+            log.trace("{} is instrumented", typeName);
         }
     }
 

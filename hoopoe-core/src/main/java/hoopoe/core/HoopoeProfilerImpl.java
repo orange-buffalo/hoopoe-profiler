@@ -33,8 +33,6 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     private static final Collection<HoopoeAttribute> NO_ATTRIBUTES = Collections.emptyList();
 
-    private static HoopoeProfilerImpl instance;
-
     private Thread mainThread;
 
     /**
@@ -70,28 +68,27 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         tracer = configuration.createTracer();
         tracer.setupProfiler(this);
 
-        instance = this;
         mainThread = Thread.currentThread();
 
         Collection<Pattern> excludedClassesPatterns = prepareExcludedClassesPatterns();
         InstrumentationHelper instrumentationHelper = new InstrumentationHelper(excludedClassesPatterns, this);
-        classFileTransformer = instrumentationHelper.createClassFileTransformer(this, instrumentation);
+        classFileTransformer = instrumentationHelper.createClassFileTransformer(instrumentation);
     }
 
-    public static void startMethodProfiling(String className,
+    public void startMethodProfiling(String className,
                                             String methodSignature) {
-        if (Thread.currentThread() == instance.mainThread) {    // todo cover with test
+        if (Thread.currentThread() == mainThread) {    // todo cover with test
             return;
         }
-        instance.tracer.onMethodEnter(className, methodSignature);
+        tracer.onMethodEnter(className, methodSignature);
     }
 
-    public static void finishMethodProfiling(int[] pluginActionIndicies,
+    public void finishMethodProfiling(int[] pluginActionIndicies,
                                              Object[] args,
                                              Object returnValue,
                                              Object thisInMethod) {
         Thread currentThread = Thread.currentThread();
-        if (currentThread == instance.mainThread) {
+        if (currentThread == mainThread) {
             return;
         }
 
@@ -101,7 +98,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
             attributes = new ArrayList<>(pluginActionIndicies.length);
 
             for (int pluginActionIndex : pluginActionIndicies) {
-                PluginActionWrapper pluginActionWrapper = instance.pluginActions.get(pluginActionIndex);
+                PluginActionWrapper pluginActionWrapper = pluginActions.get(pluginActionIndex);
                 attributes.addAll(
                         pluginActionWrapper.pluginAction.getAttributes(
                                 args, returnValue, thisInMethod, pluginActionWrapper.cache));
@@ -109,10 +106,10 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         }
 
         HoopoeProfiledInvocation profiledInvocation =
-                instance.tracer.onMethodLeave(attributes, System.nanoTime() - startTimeInNs);
+                tracer.onMethodLeave(attributes, System.nanoTime() - startTimeInNs);
         if (profiledInvocation != null) {
-            instance.storage.addInvocation(currentThread, profiledInvocation);
-            for (PluginActionWrapper pluginActionWrapper : instance.pluginActions) {
+            storage.addInvocation(currentThread, profiledInvocation);
+            for (PluginActionWrapper pluginActionWrapper : pluginActions) {
                 pluginActionWrapper.cache.clear();
             }
         }
@@ -149,6 +146,10 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         excludedClassesPatterns.add(Pattern.compile("org\\.hamcrest\\..*"));
         excludedClassesPatterns.add(Pattern.compile("java\\.time\\..*"));
         excludedClassesPatterns.add(Pattern.compile("java\\..*"));
+        excludedClassesPatterns.add(Pattern.compile("net\\.bytebuddy\\..*"));
+        //todo probably $$ is more reliable
+        excludedClassesPatterns.add(Pattern.compile(".*auxiliary.*"));
+        excludedClassesPatterns.add(Pattern.compile(".*CGLIB.*"));
 //        excludedClassesPatterns.add(Pattern.compile("java\\.lang\\..*"));
 //        excludedClassesPatterns.add(Pattern.compile("java\\.io\\..*"));
 //        excludedClassesPatterns.add(Pattern.compile("java\\.util\\..*"));

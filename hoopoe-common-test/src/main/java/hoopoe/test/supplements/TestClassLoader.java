@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
-import javassist.CannotCompileException;
-import javassist.NotFoundException;
 import org.apache.commons.io.IOUtils;
 
 public class TestClassLoader extends ClassLoader {
@@ -16,7 +14,7 @@ public class TestClassLoader extends ClassLoader {
         registerAsParallelCapable();
     }
 
-    public TestClassLoader(String... packagesToInclude) throws NotFoundException, IOException, CannotCompileException {
+    public TestClassLoader(String... packagesToInclude) throws IOException {
         super(TestClassLoader.class.getClassLoader());
         this.packagesToInclude = Arrays.asList(packagesToInclude);
     }

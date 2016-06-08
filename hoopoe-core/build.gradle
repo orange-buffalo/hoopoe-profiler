@@ -1,10 +1,10 @@
 apply plugin: HoopoeAssemblyPlugin
 
 dependencies {
-    compile 'org.javassist:javassist:3.20.0-GA'
     compile 'org.slf4j:slf4j-api:1.7.21'
     compile 'org.apache.commons:commons-lang3:3.4'
     compile 'commons-io:commons-io:2.5'
+    compile 'net.bytebuddy:byte-buddy:1.4.0'
     compile project(':hoopoe-classloader')
 
     runtime 'ch.qos.logback:logback-classic:1.1.7'
@@ -19,3 +19,20 @@ dependencies {
     testCompile 'org.mockito:mockito-core:1.10.19'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
 }
+
+task prepareBootstrapJar(type: Zip) {
+    archiveName "hoopoe-bootstrap.jar"
+    includeEmptyDirs false
+    from (project.sourceSets.main.output.classesDir) {
+        include '**/hoopoe/core/bootstrap/*.class'
+    }
+    destinationDir project.sourceSets.main.output.resourcesDir
+}
+
+task cleanupBootstrapJar(type: Delete) {
+  delete "${project.sourceSets.main.output.classesDir}/hoopoe/core/bootstrap"
+}
+
+tasks.cleanupBootstrapJar.dependsOn(prepareBootstrapJar)
+tasks.jar.dependsOn(cleanupBootstrapJar)
+tasks.compileTestJava.dependsOn(cleanupBootstrapJar)

@@ -122,7 +122,7 @@ public class ProfilerPluginIntegrationTest {
 
         HoopoeTestHelper.executeWithAgentLoaded(() -> {
             Class<?> instrumentedClass = classLoader.loadClass(guineaPigClass.getCanonicalName());
-            instrumentedClass.getConstructors()[0].newInstance((Object) null);
+            instrumentedClass.getConstructor().newInstance();
         });
 
         // basically no verification, just valid execution
@@ -142,7 +142,7 @@ public class ProfilerPluginIntegrationTest {
         AtomicReference thisInMethod = new AtomicReference();
         HoopoeTestHelper.executeWithAgentLoaded(() -> {
             Class<?> instrumentedClass = classLoader.loadClass(guineaPigClass.getCanonicalName());
-            Object instance = instrumentedClass.getConstructors()[0].newInstance(argument);
+            Object instance = instrumentedClass.getConstructor(Object.class).newInstance(argument);
             thisInMethod.set(instance);
         });
 

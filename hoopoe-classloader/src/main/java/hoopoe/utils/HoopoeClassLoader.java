@@ -50,7 +50,7 @@ public final class HoopoeClassLoader extends ClassLoader {
                 String zipDataName = "classes/" + name.replaceAll("\\.", "/") + ".class";
                 byte[] classBytes = zipData.get(zipDataName);
                 if (classBytes != null) {
-                    zipData.remove(zipDataName);
+                    //zipData.remove(zipDataName);
                     clazz = defineClass(name, classBytes, 0, classBytes.length);
                 }
 
