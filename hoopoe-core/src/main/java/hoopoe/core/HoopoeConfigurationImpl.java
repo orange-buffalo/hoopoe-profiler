@@ -3,7 +3,6 @@ package hoopoe.core;
 import hoopoe.api.HoopoeConfiguration;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfilerStorage;
-import hoopoe.api.HoopoeTracer;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -19,11 +18,6 @@ public class HoopoeConfigurationImpl implements HoopoeConfiguration {
     @Override
     public HoopoePluginsProvider createPluginsProvider() {
         return new HoopoePluginProviderImpl();
-    }
-
-    @Override
-    public HoopoeTracer createTracer() {
-        return new HoopoeTracerImpl();
     }
 
     @Override

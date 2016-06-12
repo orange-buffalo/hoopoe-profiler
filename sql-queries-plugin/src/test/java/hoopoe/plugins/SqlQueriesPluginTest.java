@@ -3,7 +3,7 @@ package hoopoe.plugins;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
-import hoopoe.api.HoopoeAttribute;
+import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.plugins.guineapigs.AbstractSqlGuineapig;
 import hoopoe.plugins.guineapigs.PreparedStatementExecuteBatchSqlGuineapig;
 import hoopoe.plugins.guineapigs.PreparedStatementExecuteQuerySqlGuineapig;
@@ -20,21 +20,16 @@ import hoopoe.test.supplements.TestConfigurationRule;
 import hoopoe.test.supplements.TestItem;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 @RunWith(DataProviderRunner.class)
@@ -98,49 +93,29 @@ public class SqlQueriesPluginTest {
         when(TestConfiguration.getPluginsProviderMock().createPlugins())
                 .thenReturn(Collections.singleton(new SqlQueriesPlugin()));
 
-        Stack<String> callsStack = new Stack<>();
-        doAnswer(
-                invocation -> {
-                    Object[] arguments = invocation.getArguments();
-                    String className = (String) arguments[0];
-                    String methodSignature = (String) arguments[1];
-                    callsStack.push(className + "." + methodSignature);
-                    return null;
-                })
-                .when(TestConfiguration.getTracerMock())
-                .onMethodEnter(any(), any());
+        TestClassLoader classLoader = new TestClassLoader("hoopoe.plugins.guineapigs", "org.h2");
+
+        HoopoeProfiledInvocation profiledInvocation = HoopoeTestHelper.getSingleProfiledInvocationWithAgentLoaded(() -> {
+            Class instrumentedClass = classLoader.loadClass(testItem.guineapigClass.getCanonicalName());
+            Object guineapig = instrumentedClass.newInstance();
+            Method method = instrumentedClass.getMethod("executeCodeUnderTest");
+            method.invoke(guineapig);
+        });
 
         Map<String, Set<String>> capturedData = new HashMap<>();
-        doAnswer(
-                invocation -> {
-                    Object[] arguments = invocation.getArguments();
-                    Collection<HoopoeAttribute> attributes = (Collection<HoopoeAttribute>) arguments[0];
-                    String callee = callsStack.pop();
-                    if (attributes != null && !attributes.isEmpty()) {
-                        attributes.stream()
+        profiledInvocation.flattened()
+                .forEach(invocation ->
+                        invocation.getAttributes().stream()
                                 .filter(attribute -> attribute.getName().equals(SqlQueriesPlugin.ATTRIBUTE_NAME))
                                 .forEach(attribute -> {
+                                    String callee = invocation.getClassName() + "." + invocation.getMethodSignature();
                                     Set<String> queries = capturedData.get(callee);
                                     if (queries == null) {
                                         queries = new HashSet<>();
                                         capturedData.put(callee, queries);
                                     }
                                     queries.add(attribute.getDetails());
-                                });
-                    }
-                    return null;
-                })
-                .when(TestConfiguration.getTracerMock())
-                .onMethodLeave(any(), anyLong());
-
-        TestClassLoader classLoader = new TestClassLoader("hoopoe.plugins.guineapigs", "org.h2");
-
-        HoopoeTestHelper.executeWithAgentLoaded(() -> {
-            Class instrumentedClass = classLoader.loadClass(testItem.guineapigClass.getCanonicalName());
-            Object guineapig = instrumentedClass.newInstance();
-            Method method = instrumentedClass.getMethod("executeCodeUnderTest");
-            method.invoke(guineapig);
-        });
+                                }));
 
         assertThat(capturedData, equalTo(testItem.expectedQueries));
     }

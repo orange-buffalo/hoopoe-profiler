@@ -3,7 +3,11 @@ package hoopoe.test.core.guineapigs;
 public class BaseGuineaPig {
 
     public void emptyMethod() {
-
+        try {
+            Thread.sleep(50);
+        }
+        catch (InterruptedException e) {
+        }
     }
 
     public void simpleMethod() {

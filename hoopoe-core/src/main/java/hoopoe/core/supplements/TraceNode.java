@@ -5,31 +5,29 @@ import hoopoe.api.HoopoeProfiledInvocation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 public class TraceNode {
 
-    @Getter
-    private TraceNode parent;
-
     private List<TraceNode> children;
-
-    private long methodEnterTimeInNs;
 
     private String className;
 
     private String methodSignature;
 
-    private String groupingKey;
+    @Getter
+    private long startTimeInNs;
 
-    @Setter
+    @Getter
+    private long endTimeInNs;
+
     private Collection<HoopoeAttribute> attributes;
 
     /**
@@ -38,58 +36,45 @@ public class TraceNode {
     private long ownTimeInNs;
 
     /**
-     * Overhead by profiler. Includes own overhead + all immediate children overhead.
+     * Accumulative profiler overhead of this method and all its children.
      */
     private long profilerOverheadInNs;
 
     /**
-     * ownTimeInNs + totalTimeInNs of all children - profiler overhead of all immediate children
+     * ownTimeInNs + totalTimeInNs of all children (profiler overhead is excluded).
      */
     private long totalTimeInNs;
 
     private int invocationsCount;
 
-    private long trimThresholdInNs;
-
-    public TraceNode(TraceNode parent, String className, String methodSignature, long trimThresholdInNs) {
-        this.parent = parent;
+    public TraceNode(String className,
+                     String methodSignature,
+                     long startTimeInNs,
+                     long endTimeInNs,
+                     Collection<HoopoeAttribute> attributes) {
         this.className = className;
         this.methodSignature = methodSignature;
-        this.trimThresholdInNs = trimThresholdInNs;
-        this.methodEnterTimeInNs = System.nanoTime();
+        this.startTimeInNs = startTimeInNs;
+        this.endTimeInNs = endTimeInNs;
+        this.attributes = attributes;
         this.invocationsCount = 1;
-        if (parent != null) {
-            if (parent.children == null) {
-                parent.children = new ArrayList<>(1);
-            }
-            parent.children.add(this);
-        }
+        this.profilerOverheadInNs = System.nanoTime() - endTimeInNs;
+        this.totalTimeInNs = Math.max(0, endTimeInNs - startTimeInNs - profilerOverheadInNs);
+        this.ownTimeInNs = this.totalTimeInNs;
     }
 
-    public void onMethodLeave(long profilerExternalOverheadInNs) {
-        long methodLeaveTimeInNs = System.nanoTime();
+    public HoopoeProfiledInvocation convertToProfiledInvocation() {
+        return convertToProfiledInvocation(this);
+    }
 
-        // this gives overhead, we try to compensate it calculating profilerOverheadInNs
-        long childrenTotalTimeInNs = 0;
-        long childrenProfilerOverheadInNs = 0;
-        if (children != null) {
-            children = children.stream()
-                    .collect(getMergeTraceNodesCollector())
-                    .values().stream()
-                    .filter(traceNode -> traceNode.totalTimeInNs >= trimThresholdInNs)
-                    .collect(Collectors.toList());
-
-            for (TraceNode childNode : children) {
-                childrenTotalTimeInNs += childNode.totalTimeInNs;
-                childrenProfilerOverheadInNs += childNode.profilerOverheadInNs;
-            }
+    public void addChild(TraceNode child) {
+        if (children == null) {
+            children = new LinkedList<>();
         }
-
-        // children profile overhead is a part of descendant calls execution time and should be deducted
-        totalTimeInNs = methodLeaveTimeInNs - methodEnterTimeInNs - childrenProfilerOverheadInNs;
-        ownTimeInNs = totalTimeInNs - childrenTotalTimeInNs;
-        profilerOverheadInNs = System.nanoTime() - methodLeaveTimeInNs
-                + childrenProfilerOverheadInNs + profilerExternalOverheadInNs;
+        children.add(child);
+        profilerOverheadInNs += child.profilerOverheadInNs;
+        ownTimeInNs = Math.max(0, ownTimeInNs - child.totalTimeInNs - child.profilerOverheadInNs);
+        totalTimeInNs = Math.max(0, totalTimeInNs - child.profilerOverheadInNs);
     }
 
     private static Collector<TraceNode, ?, Map<String, TraceNode>> getMergeTraceNodesCollector() {
@@ -100,10 +85,6 @@ public class TraceNode {
                         Function.identity(),
                         TraceNode::mergeNodes
                 ));
-    }
-
-    public HoopoeProfiledInvocation convertToProfiledInvocation() {
-        return convertToProfiledInvocation(this);
     }
 
     private static TraceNode mergeNodes(TraceNode aggregated, TraceNode nextNode) {
@@ -152,18 +133,15 @@ public class TraceNode {
     }
 
     private String getGroupingKey() {
-        if (groupingKey == null) {
-            String attributesKey = StringUtils.EMPTY;
-            if (attributes != null) {
-                List<HoopoeAttribute> sortedAttributes = new ArrayList(attributes);
-                Collections.sort(sortedAttributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
-                for (HoopoeAttribute attribute : sortedAttributes) {
-                    attributesKey += attribute.getName() + attribute.getDetails();
-                }
+        String attributesKey = StringUtils.EMPTY;
+        if (attributes != null) {
+            List<HoopoeAttribute> sortedAttributes = new ArrayList(attributes);
+            Collections.sort(sortedAttributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+            for (HoopoeAttribute attribute : sortedAttributes) {
+                attributesKey += attribute.getName() + attribute.getDetails();
             }
-            groupingKey = className + methodSignature + attributesKey;
         }
-        return groupingKey;
+        return className + methodSignature + attributesKey;
     }
 
 }

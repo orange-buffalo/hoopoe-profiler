@@ -3,10 +3,10 @@ package hoopoe.test.supplements;
 import hoopoe.api.HoopoeConfiguration;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfilerStorage;
-import hoopoe.api.HoopoeTracer;
 import java.util.Collection;
 import java.util.Collections;
 import lombok.Getter;
+import lombok.Setter;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -20,9 +20,9 @@ public class TestConfiguration implements HoopoeConfiguration {
     @Getter
     private static HoopoePluginsProvider pluginsProviderMock;
 
-    @Mock
     @Getter
-    private static HoopoeTracer tracerMock;
+    @Setter
+    private static long minimumTrackedInvocationTimeInNs;
 
     @Override
     public HoopoeProfilerStorage createProfilerStorage() {
@@ -35,13 +35,8 @@ public class TestConfiguration implements HoopoeConfiguration {
     }
 
     @Override
-    public HoopoeTracer createTracer() {
-        return tracerMock;
-    }
-
-    @Override
     public long getMinimumTrackedInvocationTimeInNs() {
-        return 0;   // todo do we need mock here?
+        return minimumTrackedInvocationTimeInNs;
     }
 
     @Override
@@ -51,6 +46,7 @@ public class TestConfiguration implements HoopoeConfiguration {
 
     public static void resetMocks() {
         MockitoAnnotations.initMocks(new TestConfiguration());
+        minimumTrackedInvocationTimeInNs = 0;
     }
 
 }

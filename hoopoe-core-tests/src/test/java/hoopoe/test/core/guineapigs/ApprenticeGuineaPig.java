@@ -9,9 +9,19 @@ public class ApprenticeGuineaPig {
 
     public ApprenticeGuineaPig(String s) {
         this.s = s;
+        try {
+            Thread.sleep(30);
+        }
+        catch (InterruptedException e) {
+        }
     }
 
     public String someSimpleMethod() {
+        try {
+            Thread.sleep(20);
+        }
+        catch (InterruptedException e) {
+        }
         return s;
     }
 

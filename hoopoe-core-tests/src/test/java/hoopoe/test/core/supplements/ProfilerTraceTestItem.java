@@ -1,9 +1,10 @@
 package hoopoe.test.core.supplements;
 
-import hoopoe.test.core.ProfilerTracingTest;
+import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.test.supplements.TestItem;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -19,6 +20,10 @@ public abstract class ProfilerTraceTestItem extends TestItem {
         super(description);
     }
 
+    public void setupConfiguration() {
+        // no op, could be overridden if needed
+    }
+
     public abstract Class getEntryPointClass();
 
     public abstract void prepareTest() throws Exception;
@@ -26,17 +31,20 @@ public abstract class ProfilerTraceTestItem extends TestItem {
     public abstract void executeTest() throws Exception;
 
     public abstract void assertCapturedData(String originalThreadName,
-                                            Map<String, List<ProfilerTracingTest.CapturedInvocation>> capturedData);
+                                            Map<String, HoopoeProfiledInvocation> capturedData);
 
-    protected void assertInvocationSequence(List<ProfilerTracingTest.CapturedInvocation> actualInvocations,
+    protected void assertInvocationSequence(HoopoeProfiledInvocation actualInvocationsRoot,
                                             Object... expectedSequenceCalls) {
         int expectedSequenceLength = expectedSequenceCalls.length / 2;
+        List<HoopoeProfiledInvocation> actualInvocations =
+                actualInvocationsRoot.flattened().collect(Collectors.toList());
+
         assertThat(actualInvocations.size(), equalTo(expectedSequenceLength));
         for (int i = 0; i < expectedSequenceLength; i++) {
             Class expectedClass = (Class) expectedSequenceCalls[2 * i];
             String expectedMethodSignature = (String) expectedSequenceCalls[2 * i + 1];
 
-            ProfilerTracingTest.CapturedInvocation actualInvocation = actualInvocations.get(i);
+            HoopoeProfiledInvocation actualInvocation = actualInvocations.get(i);
             assertThat(actualInvocation.getClassName(), equalTo(expectedClass.getCanonicalName()));
             assertThat(actualInvocation.getMethodSignature(), equalTo(expectedMethodSignature));
         }

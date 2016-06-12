@@ -18,8 +18,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
@@ -30,13 +32,13 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.ParameterDescription;
+import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
-import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
+import static net.bytebuddy.matcher.ElementMatchers.any;
 import net.bytebuddy.utility.JavaModule;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -46,6 +48,9 @@ public class InstrumentationHelper {
 
     private Collection<Pattern> excludedClassesPatterns;
     private HoopoeProfilerImpl profiler;
+    // todo multithreading
+    // todo cleanup
+    private Map<String, PluginActionIndicies> pluginActionsCache = new HashMap<>();
 
     public InstrumentationHelper(Collection<Pattern> excludedClassesPatterns, HoopoeProfilerImpl profiler) {
         this.excludedClassesPatterns = excludedClassesPatterns;
@@ -56,21 +61,39 @@ public class InstrumentationHelper {
         deployBootstrapJar(instrumentation);
         intiProfilerBridge();
 
+        Advice.WithCustomMapping baseAdviceConfig = Advice
+                .withCustomMapping()
+                .bind(MethodSignature.class, new MethodSignatureValue())
+                .bind(ClassName.class, new ClassNameValue())
+                .bind(MinimumTrackedTime.class, new MinimumTrackedTimeValue(
+                        profiler.getConfiguration().getMinimumTrackedInvocationTimeInNs()));
+
         return new AgentBuilder.Default()
                 .with(new AgentListener())
-                .type(
-                        ElementMatchers.not(ElementMatchers.isInterface())
-                                .and(new ExcludedClassesElementMatcher())
+                .type(new ExcludedClassesMatcher())
+                .transform(
+                        (builder, typeDescription, classLoader) -> builder
+                                .visit(
+                                        baseAdviceConfig
+                                                .bind(PluginActions.class, new PluginActionsValue())
+                                                .to(PluginsAwareAdvice.class)
+                                                .on(new PluginsAwareMethodsMatcher())
+                                )
                 )
                 .transform(
                         (builder, typeDescription, classLoader) -> builder
-                                .visit(Advice
-                                        .withCustomMapping()
-                                        .bind(MethodSignature.class, new MethodSignatureValue())
-                                        .bind(ClassName.class, new ClassNameValue())
-                                        .bind(PluginActions.class, new PluginActionsValue())
-                                        .to(ProfilerBridgeAdvice.class)
-                                        .on(new IncludedMethodElementMatcher())
+                                .visit(
+                                        baseAdviceConfig
+                                                .to(PluginsUnawareAdvice.class)
+                                                .on(new PluginsUnawareMethodsMatcher())
+                                )
+                )
+                .transform(
+                        (builder, typeDescription, classLoader) -> builder
+                                .visit(
+                                        baseAdviceConfig
+                                                .to(PluginsUnawareConstructorAdvice.class)
+                                                .on(new PluginsUnawareConstructorMethodsMatcher())
                                 )
                 )
                 .installOn(instrumentation);
@@ -103,7 +126,7 @@ public class InstrumentationHelper {
         try {
             HoopoeProfilerBridge.instance = new ByteBuddy()
                     .subclass(HoopoeProfilerBridge.class)
-                    .method(ElementMatchers.any())
+                    .method(any())
                     .intercept(MethodDelegation.to(profiler))
                     .make()
                     .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
@@ -115,49 +138,71 @@ public class InstrumentationHelper {
         }
     }
 
-    private PluginActionIndicies getPluginActions(String className,
-                                                  Collection<String> superclasses,
-                                                  String methodSignature) {
-        HoopoeMethodInfo methodInfo = new HoopoeMethodInfo(className, methodSignature, superclasses);
+    private PluginActionIndicies getPluginActions(MethodDescription method) {
+        TypeDefinition declaringType = method.getDeclaringType();
+        String className = getClassName(declaringType);
+        String methodSignature = getMethodSignature(method);
 
-        List<Integer> pluginActionIndicies = profiler.addPluginActions(methodInfo);
-        return pluginActionIndicies.isEmpty()
+        String methodKey = className + methodSignature;
+        if (pluginActionsCache.containsKey(methodKey)) {
+            return pluginActionsCache.get(methodKey);
+        }
+
+        HoopoeMethodInfo methodInfo = new HoopoeMethodInfo(
+                className,
+                methodSignature,
+                getSuperclasses(declaringType));
+
+        List<Integer> rawPluginActionIndicies = profiler.addPluginActions(methodInfo);
+        PluginActionIndicies pluginActionIndicies = rawPluginActionIndicies.isEmpty()
                 ? null
                 : new PluginActionIndicies(ArrayUtils.toPrimitive(
-                pluginActionIndicies.toArray(new Integer[pluginActionIndicies.size()])));
+                rawPluginActionIndicies.toArray(new Integer[rawPluginActionIndicies.size()])));
+        pluginActionsCache.put(methodKey, pluginActionIndicies);
+        return pluginActionIndicies;
     }
 
-    private static Collection<String> getSuperclasses(TypeDescription classDescription) {
+    private static Collection<String> getSuperclasses(TypeDefinition classDescription) {
         Set<String> superclasses = new HashSet<>();
         collectSuperclasses(classDescription, superclasses);
         return Collections.unmodifiableSet(superclasses);
     }
 
-    private static void collectSuperclasses(TypeDescription classDescription, Set<String> superclasses) {
+    private static void collectSuperclasses(TypeDefinition classDescription, Set<String> superclasses) {
         classDescription.getInterfaces().asErasures().forEach(
                 interfaceDescription -> superclasses.add(getClassName(interfaceDescription))
         );
 
         TypeDescription.Generic superClassGeneric = classDescription.getSuperClass();
         if (superClassGeneric != null) {
-            TypeDescription superClassDescription = superClassGeneric.asErasure();
+            TypeDefinition superClassDescription = superClassGeneric.asErasure();
             superclasses.add(getClassName(superClassDescription));
             collectSuperclasses(superClassDescription, superclasses);
         }
     }
 
-    private static String getClassName(TypeDescription classDescription) {
-        return classDescription.getName();
+    private static String getClassName(TypeDefinition classDescription) {
+        return classDescription.getTypeName();
     }
 
-    private static String getMethodSignature(MethodDescription.InDefinedShape instrumentedMethod) {
-        StringBuilder builder = new StringBuilder(
-                instrumentedMethod.isConstructor()
-                        ? instrumentedMethod.getDeclaringType().getSimpleName()
-                        : instrumentedMethod.getName()
-        ).append('(');
+    private static String getMethodSignature(MethodDescription methodDescription) {
+        StringBuilder builder = new StringBuilder();
+        if (methodDescription.isConstructor()) {
+            TypeDefinition declaringType = methodDescription.getDeclaringType();
+            if (declaringType instanceof TypeDescription) {
+                builder.append(((TypeDescription) declaringType).getSimpleName());
+            }
+            else {
+                String typeName = declaringType.getTypeName();
+                builder.append(typeName.substring(typeName.lastIndexOf('.')));
+            }
+        }
+        else {
+            builder.append(methodDescription.getName());
+        }
+        builder.append('(');
 
-        TypeList typeDescriptions = instrumentedMethod.getParameters().asTypeList().asErasures();
+        TypeList typeDescriptions = methodDescription.getParameters().asTypeList().asErasures();
         boolean first = true;
         for (TypeDescription next : typeDescriptions) {
             if (!first) {
@@ -169,6 +214,28 @@ public class InstrumentationHelper {
 
         builder.append(')');
         return builder.toString();
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.PARAMETER)
+    @interface MinimumTrackedTime {
+    }
+
+    private class MinimumTrackedTimeValue implements Advice.DynamicValue<MinimumTrackedTime> {
+
+        private long time;
+
+        private MinimumTrackedTimeValue(long time) {
+            this.time = time;
+        }
+
+        @Override
+        public Object resolve(MethodDescription.InDefinedShape instrumentedMethod,
+                              ParameterDescription.InDefinedShape target,
+                              AnnotationDescription.Loadable<MinimumTrackedTime> annotation,
+                              boolean initialized) {
+            return time;
+        }
     }
 
     @Retention(RetentionPolicy.RUNTIME)
@@ -212,18 +279,34 @@ public class InstrumentationHelper {
                               ParameterDescription.InDefinedShape target,
                               AnnotationDescription.Loadable<PluginActions> annotation,
                               boolean initialized) {
-            TypeDescription declaringType = instrumentedMethod.getDeclaringType();
-            return getPluginActions(
-                    getClassName(declaringType),
-                    getSuperclasses(declaringType),
-                    getMethodSignature(instrumentedMethod));
+            return getPluginActions(instrumentedMethod);
         }
     }
 
-    private class ExcludedClassesElementMatcher implements ElementMatcher<TypeDescription> {
+    private class ExcludedClassesMatcher implements ElementMatcher<TypeDescription> {
         @Override
         public boolean matches(TypeDescription target) {
+            if (target.isInterface()) {
+                return false;
+            }
             String className = target.getName();
+            //todo
+//            if (className.startsWith("sun"))  {
+//                return false;
+//            }
+//            if (className.startsWith("net.bytebuddy"))  {
+//                return false;
+//            }
+//            if (className.startsWith("hoopoe"))  {
+//                return false;
+//            }
+//            if (className.contains("$$"))  {
+//                return false;
+//            }
+//            if (className.startsWith("sun"))  {
+//                return false;
+//            }
+
             for (Pattern excludedClassesPattern : excludedClassesPatterns) {
                 if (excludedClassesPattern.matcher(className).matches()) {
                     return false;
@@ -233,45 +316,117 @@ public class InstrumentationHelper {
         }
     }
 
-    private static class ProfilerBridgeAdvice {
+    private static class PluginsAwareAdvice {
 
         @Advice.OnMethodEnter
-        public static void before(@ClassName String className,
-                                  @MethodSignature String methodSignature) throws Exception {
-            HoopoeProfilerBridge.instance.startMethodProfiling(className, methodSignature);
-//            System.out.print("");
+        public static long before() {
+            HoopoeProfilerBridge.callStackDepth.set(HoopoeProfilerBridge.callStackDepth.get() + 1);
+            return System.nanoTime();
         }
 
         @Advice.OnMethodExit
-        public static void after(@Advice.BoxedArguments Object[] arguments,
+        public static void after(@Advice.Enter long startTime,
+                                 @ClassName String className,
+                                 @MethodSignature String methodSignature,
+                                 @MinimumTrackedTime long minimumTrackedTimeInNs,
+                                 @Advice.BoxedArguments Object[] arguments,
                                  @Advice.This(optional = true) Object thisInMethod,
                                  @Advice.BoxedReturn Object returnValue,
-                                 @PluginActions PluginActionIndicies indicies) throws Exception {
-            HoopoeProfilerBridge.instance.finishMethodProfiling(
-                    indicies == null ? HoopoeProfilerBridge.NO_PLUGINS : indicies.getIds(),
-                    arguments,
-                    returnValue,
-                    thisInMethod);
-//            System.out.print("");
+                                 @PluginActions PluginActionIndicies pluginActionIndicies) throws Exception {
+            long endTime = System.nanoTime();
+            if (endTime - startTime >= minimumTrackedTimeInNs) {
+                HoopoeProfilerBridge.instance.profileCall(
+                        startTime, endTime, className, methodSignature,
+                        pluginActionIndicies.getIds(), arguments, returnValue, thisInMethod
+                );
+            }
+            Integer depth = HoopoeProfilerBridge.callStackDepth.get() - 1;
+            HoopoeProfilerBridge.callStackDepth.set(depth);
+            if (depth == 0) {
+                HoopoeProfilerBridge.instance.finishThreadProfiling();
+            }
         }
-
     }
 
-    private static class IncludedMethodElementMatcher implements ElementMatcher<MethodDescription> {
+    private static class PluginsUnawareAdvice {
+
+        @Advice.OnMethodEnter
+        public static long before() {
+            HoopoeProfilerBridge.callStackDepth.set(HoopoeProfilerBridge.callStackDepth.get() + 1);
+            return System.nanoTime();
+        }
+
+        @Advice.OnMethodExit(onThrowable = Throwable.class)
+        public static void after(@Advice.Enter long startTime,
+                                 @ClassName String className,
+                                 @MethodSignature String methodSignature,
+                                 @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
+            long endTime = System.nanoTime();
+            if (endTime - startTime >= minimumTrackedTimeInNs) {
+                HoopoeProfilerBridge.instance.profileCall(
+                        startTime, endTime, className, methodSignature, null, null, null, null
+                );
+            }
+            Integer depth = HoopoeProfilerBridge.callStackDepth.get() - 1;
+            HoopoeProfilerBridge.callStackDepth.set(depth);
+            if (depth == 0) {
+                HoopoeProfilerBridge.instance.finishThreadProfiling();
+            }
+        }
+    }
+
+    private static class PluginsUnawareConstructorAdvice {
+
+        @Advice.OnMethodEnter
+        public static long before() {
+            HoopoeProfilerBridge.callStackDepth.set(HoopoeProfilerBridge.callStackDepth.get() + 1);
+            return System.nanoTime();
+        }
+
+        @Advice.OnMethodExit
+        public static void after(@Advice.Enter long startTime,
+                                 @ClassName String className,
+                                 @MethodSignature String methodSignature,
+                                 @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
+            long endTime = System.nanoTime();
+            if (endTime - startTime >= minimumTrackedTimeInNs) {
+                HoopoeProfilerBridge.instance.profileCall(
+                        startTime, endTime, className, methodSignature, null, null, null, null
+                );
+            }
+            Integer depth = HoopoeProfilerBridge.callStackDepth.get() - 1;
+            HoopoeProfilerBridge.callStackDepth.set(depth);
+            if (depth == 0) {
+                HoopoeProfilerBridge.instance.finishThreadProfiling();
+            }
+        }
+    }
+
+    private class PluginsAwareMethodsMatcher implements ElementMatcher<MethodDescription> {
         @Override
         public boolean matches(MethodDescription target) {
-            return !target.isNative() && !target.isAbstract() && !target.isTypeInitializer();
+            return !target.isConstructor() && !target.isNative() && !target.isAbstract()
+                    && !target.isTypeInitializer() && getPluginActions(target) != null;
         }
     }
 
-    private static class AgentListener implements AgentBuilder.Listener {
-
+    private class PluginsUnawareMethodsMatcher implements ElementMatcher<MethodDescription> {
         @Override
-        public void onTransformation(TypeDescription typeDescription,
-                                     ClassLoader classLoader,
-                                     JavaModule module,
-                                     DynamicType dynamicType) {
+        public boolean matches(MethodDescription target) {
+            return !target.isConstructor() && !target.isNative() && !target.isAbstract()
+                    && !target.isTypeInitializer() && getPluginActions(target) == null;
         }
+    }
+
+    private class PluginsUnawareConstructorMethodsMatcher implements ElementMatcher<MethodDescription> {
+        @Override
+        public boolean matches(MethodDescription target) {
+            return target.isConstructor() && !target.isNative() && !target.isAbstract()
+                    && !target.isTypeInitializer() && getPluginActions(target) == null;
+        }
+    }
+
+    private static class AgentListener extends AgentBuilder.Listener.Adapter {
 
         @Override
         public void onIgnored(TypeDescription typeDescription,
@@ -287,7 +442,7 @@ public class InstrumentationHelper {
                             ClassLoader classLoader,
                             JavaModule module,
                             Throwable throwable) {
-            log.debug("error while transforming " + typeName, throwable);
+            log.debug("error while transforming {}: {}", typeName, throwable.getMessage());
         }
 
         @Override

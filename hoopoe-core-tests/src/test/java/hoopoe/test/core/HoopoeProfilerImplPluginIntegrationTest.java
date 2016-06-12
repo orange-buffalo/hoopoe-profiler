@@ -31,7 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class ProfilerPluginIntegrationTest {
+public class HoopoeProfilerImplPluginIntegrationTest {
 
     private static final String GUINEAPIGS_PACKAGE = "hoopoe.test.core.guineapigs";
 
@@ -109,6 +109,13 @@ public class ProfilerPluginIntegrationTest {
                         superClasses
                 )));
 
+        verify(pluginMock, times(1)).createActionIfSupported(
+                eq(new HoopoeMethodInfo(
+                        guineaPigClass.getCanonicalName(),
+                        "methodForAttributes(java.lang.Object)",
+                        superClasses
+                )));
+
         verifyNoMoreInteractions(pluginMock);
     }
 
@@ -142,7 +149,8 @@ public class ProfilerPluginIntegrationTest {
         AtomicReference thisInMethod = new AtomicReference();
         HoopoeTestHelper.executeWithAgentLoaded(() -> {
             Class<?> instrumentedClass = classLoader.loadClass(guineaPigClass.getCanonicalName());
-            Object instance = instrumentedClass.getConstructor(Object.class).newInstance(argument);
+            Object instance = instrumentedClass.getConstructor().newInstance();
+            instrumentedClass.getMethod("methodForAttributes", Object.class).invoke(instance, argument);
             thisInMethod.set(instance);
         });
 
@@ -153,7 +161,7 @@ public class ProfilerPluginIntegrationTest {
                 .createActionIfSupported(
                         eq(new HoopoeMethodInfo(
                         guineaPigClass.getCanonicalName(),
-                        "PluginGuineaPig(java.lang.Object)",
+                        "methodForAttributes(java.lang.Object)",
                         superClasses
                 )));
         verify(pluginActionMock, times(1))

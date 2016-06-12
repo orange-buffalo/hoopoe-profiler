@@ -3,16 +3,19 @@ package hoopoe.core.bootstrap;
 // todo move to a separate module
 public abstract class HoopoeProfilerBridge {
 
-    public static final int[] NO_PLUGINS = new int[0];
+    public static final ThreadLocal<Integer> callStackDepth = ThreadLocal.withInitial(() -> 0);
 
     public static HoopoeProfilerBridge instance;
 
-    public abstract void startMethodProfiling(String className,
-                                              String methodSignature);
+    public abstract void profileCall(long startTimeInNs,
+                                     long endTimeInNs,
+                                     String className,
+                                     String methodSignature,
+                                     int[] pluginActionIndicies,
+                                     Object[] args,
+                                     Object returnValue,
+                                     Object thisInMethod);
 
-    public abstract void finishMethodProfiling(int[] pluginActionIndicies,
-                                               Object[] args,
-                                               Object returnValue,
-                                               Object thisInMethod);
+    public abstract void finishThreadProfiling();
 
 }

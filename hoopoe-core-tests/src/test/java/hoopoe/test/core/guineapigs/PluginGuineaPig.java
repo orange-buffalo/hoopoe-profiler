@@ -25,4 +25,8 @@ public class PluginGuineaPig implements Serializable {
     public void secondMethodInCacheTest() {
     }
 
+    public void methodForAttributes(Object argument) {
+
+    }
+
 }

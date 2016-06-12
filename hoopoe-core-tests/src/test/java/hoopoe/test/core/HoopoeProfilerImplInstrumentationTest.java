@@ -3,22 +3,19 @@ package hoopoe.test.core;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
+import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.test.core.guineapigs.ApprenticeGuineaPig;
 import hoopoe.test.core.guineapigs.BaseGuineaPig;
 import hoopoe.test.core.guineapigs.RunnableGuineaPig;
-import hoopoe.test.supplements.TestClassLoader;
-import hoopoe.test.supplements.TestConfiguration;
-import hoopoe.test.supplements.TestConfigurationRule;
-import hoopoe.test.supplements.HoopoeTestHelper;
 import hoopoe.test.core.supplements.MethodEntryTestItemDelegate;
 import hoopoe.test.core.supplements.ProfilerTraceTestItem;
 import hoopoe.test.core.supplements.SingleThreadProfilerTraceTestItem;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import hoopoe.test.supplements.HoopoeTestHelper;
+import static hoopoe.test.supplements.HoopoeTestHelper.msToNs;
+import hoopoe.test.supplements.TestClassLoader;
+import hoopoe.test.supplements.TestConfiguration;
+import hoopoe.test.supplements.TestConfigurationRule;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.experimental.Delegate;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,13 +23,9 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.when;
 
 @RunWith(DataProviderRunner.class)
-public class ProfilerTracingTest {
+public class HoopoeProfilerImplInstrumentationTest {
 
     @Rule
     public TestConfigurationRule configurationRule = new TestConfigurationRule();
@@ -47,8 +40,8 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "simpleMethod", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "simpleMethod()");
                     }
                 },
@@ -59,8 +52,8 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "emptyMethod", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "emptyMethod()");
                     }
                 },
@@ -71,8 +64,8 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithOneInnerCall", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "methodWithOneInnerCall()",
                                 BaseGuineaPig.class, "simpleMethod()");
                     }
@@ -84,11 +77,11 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithTwoInnerCalls", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "methodWithTwoInnerCalls()",
-                                BaseGuineaPig.class, "simpleMethod()",
-                                BaseGuineaPig.class, "emptyMethod()");
+                                BaseGuineaPig.class, "emptyMethod()",
+                                BaseGuineaPig.class, "simpleMethod()");
                     }
                 },
 
@@ -98,8 +91,8 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "callsPrivateMethod", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "callsPrivateMethod()",
                                 BaseGuineaPig.class, "privateMethod()");
                     }
@@ -111,8 +104,8 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "callsStaticMethod", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "callsStaticMethod()",
                                 BaseGuineaPig.class, "staticMethod()");
                     }
@@ -124,8 +117,8 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "callsMethodWithParams", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "callsMethodWithParams()",
                                 BaseGuineaPig.class, "methodWithParams(int)");
                     }
@@ -137,8 +130,8 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithConstructorCall", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "methodWithConstructorCall()",
                                 ApprenticeGuineaPig.class, "ApprenticeGuineaPig()");
                     }
@@ -150,8 +143,8 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithCallTree", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "methodWithCallTree()",
                                 BaseGuineaPig.class, "emptyMethod()",
                                 ApprenticeGuineaPig.class, "ApprenticeGuineaPig(java.lang.String)",
@@ -168,8 +161,8 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "methodWithException", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "methodWithException()");
                     }
                 },
@@ -181,16 +174,16 @@ public class ProfilerTracingTest {
 
                     @Override
                     public void assertCapturedData(String originalThreadName,
-                                                   Map<String, List<ProfilerTracingTest.CapturedInvocation>> capturedData) {
+                                                   Map<String, HoopoeProfiledInvocation> capturedData) {
                         assertThat(capturedData.size(), equalTo(2));
 
-                        List<CapturedInvocation> mainThreadInvocation = capturedData.get(originalThreadName);
+                        HoopoeProfiledInvocation mainThreadInvocation = capturedData.get(originalThreadName);
                         assertThat(mainThreadInvocation, notNullValue());
                         assertInvocationSequence(mainThreadInvocation,
                                 BaseGuineaPig.class, "startNewThread()",
                                 RunnableGuineaPig.class, "RunnableGuineaPig()");
 
-                        List<CapturedInvocation> childThreadInvocation = capturedData.get("RunnableGuineaPig");
+                        HoopoeProfiledInvocation childThreadInvocation = capturedData.get("RunnableGuineaPig");
                         assertThat(mainThreadInvocation, notNullValue());
                         assertInvocationSequence(childThreadInvocation,
                                 RunnableGuineaPig.class, "run()",
@@ -204,10 +197,27 @@ public class ProfilerTracingTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "callsMethodWithMultipleParams", this);
 
                     @Override
-                    protected void assertCapturedInvocation(List<CapturedInvocation> invocations) {
-                        assertInvocationSequence(invocations,
+                    protected void assertCapturedInvocation(HoopoeProfiledInvocation actualInvocations) {
+                        assertInvocationSequence(actualInvocations,
                                 BaseGuineaPig.class, "callsMethodWithMultipleParams()",
                                 BaseGuineaPig.class, "methodWithMultipleParams(java.lang.String,int[],java.lang.Object[])");
+                    }
+                },
+
+                new ProfilerTraceTestItem("Fast invocations should be trimmed") {
+                    @Delegate
+                    MethodEntryTestItemDelegate delegate =
+                            new MethodEntryTestItemDelegate(BaseGuineaPig.class, "simpleMethod", this);
+
+                    @Override
+                    public void setupConfiguration() {
+                        TestConfiguration.setMinimumTrackedInvocationTimeInNs(msToNs(10_000));
+                    }
+
+                    @Override
+                    public void assertCapturedData(String originalThreadName,
+                                                   Map<String, HoopoeProfiledInvocation> capturedData) {
+                        assertThat(capturedData.size(), equalTo(0));
                     }
                 }
         );
@@ -216,58 +226,32 @@ public class ProfilerTracingTest {
     @Test
     @UseDataProvider("dataForProfilingTest")
     public void testProfiling(ProfilerTraceTestItem testItem) throws Exception {
+        testItem.setupConfiguration();
+
         TestClassLoader classLoader = new TestClassLoader("hoopoe.test.core.guineapigs");
 
-        // load before agent is connected to avoid infinite recursion
-        CapturedInvocation.class.getName();
-
-        Map<String, List<CapturedInvocation>> capturedData = new HashMap<>();
-        doAnswer(
-                invocation -> {
-                    Object[] arguments = invocation.getArguments();
-                    String className = (String ) arguments[0];
-                    String methodSignature = (String) arguments[1];
-                    String threadName = Thread.currentThread().getName();
-                    List<CapturedInvocation> capturedInvocations = capturedData.get(threadName);
-                    if (capturedInvocations == null) {
-                        capturedInvocations = new ArrayList<>();
-                        capturedData.put(threadName, capturedInvocations);
-                    }
-                    capturedInvocations.add(new CapturedInvocation(className, methodSignature));
-                    return null;
-                })
-                .when(TestConfiguration.getTracerMock())
-                .onMethodEnter(any(), any());
-        when(TestConfiguration.getTracerMock().onMethodLeave(any(), anyLong())).thenReturn(null);
-
         String threadName = "testThread" + System.nanoTime();
-        HoopoeTestHelper.executeWithAgentLoaded(() -> {
-            Class instrumentedClass = classLoader.loadClass(testItem.getEntryPointClass().getCanonicalName());
-            testItem.setInstrumentedClass(instrumentedClass);
-            testItem.prepareTest();
+        Map<String, HoopoeProfiledInvocation> capturedData =
+                HoopoeTestHelper.getProfiledInvocationsWithAgentLoaded(() -> {
+                    Class instrumentedClass = classLoader.loadClass(testItem.getEntryPointClass().getCanonicalName());
+                    testItem.setInstrumentedClass(instrumentedClass);
+                    testItem.prepareTest();
 
-            Thread thread = new Thread(() -> {
-                try {
-                    testItem.executeTest();
-                }
-                catch (Exception e) {
-                    throw new IllegalStateException(e);
-                }
-            }, threadName);
-            thread.start();
-            thread.join();
-        });
+                    Thread thread = new Thread(() -> {
+                        try {
+                            testItem.executeTest();
+                        }
+                        catch (Exception e) {
+                            throw new IllegalStateException(e);
+                        }
+                    }, threadName);
+                    thread.start();
+                    thread.join();
+                });
 
         // all captured executions in this thread are preparations and should be ignored during assertion
         capturedData.remove(Thread.currentThread().getName());
         testItem.assertCapturedData(threadName, capturedData);
-    }
-
-    @Getter
-    @AllArgsConstructor
-    public static class CapturedInvocation {
-        protected String className;
-        protected String methodSignature;
     }
 
 }
