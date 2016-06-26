@@ -61,7 +61,10 @@ class HoopoeAssemblyPlugin implements Plugin<Project> {
 
         Task assembleTask = project.tasks.findByName('assemble')
         hoopoeZipTask.dependsOn.add(project.tasks.findByName('jar'))
-        assembleTask.dependsOn.add(hoopoeZipTask);
+        def generateRebelTask = project.tasks.findByName('generateRebel')
+        if (generateRebelTask) {
+            assembleTask.dependsOn.add(generateRebelTask);
+        }
 
         project.artifacts.add('hoopoe', hoopoeZipTask)
     }

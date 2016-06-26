@@ -136,6 +136,8 @@ public class InstrumentationHelper {
         catch (InstantiationException | IllegalAccessException e) {
             throw new IllegalStateException(e);
         }
+
+        log.info("profiler bridge initialized");
     }
 
     private PluginActionIndicies getPluginActions(MethodDescription method) {
@@ -334,14 +336,17 @@ public class InstrumentationHelper {
                                  @Advice.BoxedReturn Object returnValue,
                                  @PluginActions PluginActionIndicies pluginActionIndicies) throws Exception {
             long endTime = System.nanoTime();
+
+            Integer depth = HoopoeProfilerBridge.callStackDepth.get() - 1;
+            HoopoeProfilerBridge.callStackDepth.set(depth);
+
             if (endTime - startTime >= minimumTrackedTimeInNs) {
                 HoopoeProfilerBridge.instance.profileCall(
                         startTime, endTime, className, methodSignature,
                         pluginActionIndicies.getIds(), arguments, returnValue, thisInMethod
                 );
             }
-            Integer depth = HoopoeProfilerBridge.callStackDepth.get() - 1;
-            HoopoeProfilerBridge.callStackDepth.set(depth);
+
             if (depth == 0) {
                 HoopoeProfilerBridge.instance.finishThreadProfiling();
             }
@@ -362,13 +367,16 @@ public class InstrumentationHelper {
                                  @MethodSignature String methodSignature,
                                  @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
             long endTime = System.nanoTime();
+
+            Integer depth = HoopoeProfilerBridge.callStackDepth.get() - 1;
+            HoopoeProfilerBridge.callStackDepth.set(depth);
+
             if (endTime - startTime >= minimumTrackedTimeInNs) {
                 HoopoeProfilerBridge.instance.profileCall(
                         startTime, endTime, className, methodSignature, null, null, null, null
                 );
             }
-            Integer depth = HoopoeProfilerBridge.callStackDepth.get() - 1;
-            HoopoeProfilerBridge.callStackDepth.set(depth);
+
             if (depth == 0) {
                 HoopoeProfilerBridge.instance.finishThreadProfiling();
             }
@@ -389,13 +397,16 @@ public class InstrumentationHelper {
                                  @MethodSignature String methodSignature,
                                  @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
             long endTime = System.nanoTime();
+
+            Integer depth = HoopoeProfilerBridge.callStackDepth.get() - 1;
+            HoopoeProfilerBridge.callStackDepth.set(depth);
+
             if (endTime - startTime >= minimumTrackedTimeInNs) {
                 HoopoeProfilerBridge.instance.profileCall(
                         startTime, endTime, className, methodSignature, null, null, null, null
                 );
             }
-            Integer depth = HoopoeProfilerBridge.callStackDepth.get() - 1;
-            HoopoeProfilerBridge.callStackDepth.set(depth);
+
             if (depth == 0) {
                 HoopoeProfilerBridge.instance.finishThreadProfiling();
             }

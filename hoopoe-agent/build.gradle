@@ -1,5 +1,8 @@
 apply plugin: HoopoeDependencyPlugin
 
+// todo do to generate for releases
+apply plugin: 'rebel'
+
 dependencies {
     compile project(':hoopoe-classloader')
     compile project(':hoopoe-api')
@@ -11,4 +14,15 @@ jar {
     manifest {
         attributes('Premain-Class': 'hoopoe.core.HoopoeAgent')
     }
+}
+
+rebel {
+  classpath {
+    resource {
+      directory = "${project(':hoopoe-api').buildDir}/classes/main"
+    }
+
+    resource {}
+
+  }
 }

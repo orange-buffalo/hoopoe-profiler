@@ -1,5 +1,8 @@
 apply plugin: HoopoeAssemblyPlugin
 
+// todo do to generate for releases
+apply plugin: 'rebel'
+
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.21'
     compile 'org.apache.commons:commons-lang3:3.4'
@@ -36,3 +39,16 @@ task cleanupBootstrapJar(type: Delete) {
 tasks.cleanupBootstrapJar.dependsOn(prepareBootstrapJar)
 tasks.jar.dependsOn(cleanupBootstrapJar)
 tasks.compileTestJava.dependsOn(cleanupBootstrapJar)
+
+rebel {
+    classpath {
+        omitDefaultClassesDir = true
+
+        resource {}
+
+        resource {
+            directory = project.sourceSets.main.output.classesDir
+            excludes = ['**/hoopoe/core/bootstrap/**']
+        }
+    }
+}
