@@ -5,6 +5,7 @@ import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfilerStorage;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 public class HoopoeConfigurationImpl implements HoopoeConfiguration {
 
@@ -28,6 +29,11 @@ public class HoopoeConfigurationImpl implements HoopoeConfiguration {
     @Override
     public Collection<String> getEnabledPlugins() {
         return Collections.singleton("sql-queries-plugin");
+    }
+
+    @Override
+    public Collection<Pattern> getExcludedClassesPatterns() {
+        return Collections.emptyList();
     }
 
 }

@@ -71,31 +71,25 @@ public class InstrumentationHelper {
         return new AgentBuilder.Default()
                 .with(new AgentListener())
                 .type(new ExcludedClassesMatcher())
-                .transform(
-                        (builder, typeDescription, classLoader) -> builder
-                                .visit(
-                                        baseAdviceConfig
-                                                .bind(PluginActions.class, new PluginActionsValue())
-                                                .to(PluginsAwareAdvice.class)
-                                                .on(new PluginsAwareMethodsMatcher())
-                                )
-                )
-                .transform(
-                        (builder, typeDescription, classLoader) -> builder
-                                .visit(
-                                        baseAdviceConfig
-                                                .to(PluginsUnawareAdvice.class)
-                                                .on(new PluginsUnawareMethodsMatcher())
-                                )
-                )
-                .transform(
-                        (builder, typeDescription, classLoader) -> builder
-                                .visit(
-                                        baseAdviceConfig
-                                                .to(PluginsUnawareConstructorAdvice.class)
-                                                .on(new PluginsUnawareConstructorMethodsMatcher())
-                                )
-                )
+                .transform((builder, typeDescription, classLoader) -> {
+                    if (classLoader != null && classLoader.getClass().getName().equals("hoopoe.utils.HoopoeClassLoader")) {
+                        return builder;
+                    }
+                    return builder
+                            .visit(baseAdviceConfig
+                                    .bind(PluginActions.class, new PluginActionsValue())
+                                    .to(PluginsAwareAdvice.class)
+                                    .on(new PluginsAwareMethodsMatcher())
+                            )
+                            .visit(baseAdviceConfig
+                                    .to(PluginsUnawareAdvice.class)
+                                    .on(new PluginsUnawareMethodsMatcher())
+                            )
+                            .visit(baseAdviceConfig
+                                    .to(PluginsUnawareConstructorAdvice.class)
+                                    .on(new PluginsUnawareConstructorMethodsMatcher())
+                            );
+                })
                 .installOn(instrumentation);
     }
 
@@ -291,29 +285,22 @@ public class InstrumentationHelper {
             if (target.isInterface()) {
                 return false;
             }
+
             String className = target.getName();
-            //todo
-//            if (className.startsWith("sun"))  {
-//                return false;
-//            }
-//            if (className.startsWith("net.bytebuddy"))  {
-//                return false;
-//            }
-//            if (className.startsWith("hoopoe"))  {
-//                return false;
-//            }
-//            if (className.contains("$$"))  {
-//                return false;
-//            }
-//            if (className.startsWith("sun"))  {
-//                return false;
-//            }
+
+            if (className.startsWith("hoopoe.api")
+                    || className.startsWith("sun.") || className.startsWith("com.sun")
+                    || className.startsWith("jdk.")
+                    || className.contains("$$")) {
+                return false;
+            }
 
             for (Pattern excludedClassesPattern : excludedClassesPatterns) {
                 if (excludedClassesPattern.matcher(className).matches()) {
                     return false;
                 }
             }
+
             return true;
         }
     }

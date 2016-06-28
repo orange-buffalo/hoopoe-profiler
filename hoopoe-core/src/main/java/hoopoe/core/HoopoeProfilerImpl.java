@@ -23,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -60,8 +59,8 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         pluginsProvider.setupProfiler(this);
         plugins = pluginsProvider.createPlugins();
 
-        Collection<Pattern> excludedClassesPatterns = prepareExcludedClassesPatterns();
-        InstrumentationHelper instrumentationHelper = new InstrumentationHelper(excludedClassesPatterns, this);
+        InstrumentationHelper instrumentationHelper =
+                new InstrumentationHelper(configuration.getExcludedClassesPatterns(), this);
         classFileTransformer = instrumentationHelper.createClassFileTransformer(instrumentation);
     }
 
@@ -149,32 +148,6 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
             }
         }
         return pluginActionIndicies;
-    }
-
-    private Collection<Pattern> prepareExcludedClassesPatterns() {
-        // todo revise, delegate to configuration
-        Collection<Pattern> excludedClassesPatterns = new ArrayList<>();
-        excludedClassesPatterns.add(Pattern.compile("hoopoe\\.core\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("hoopoe\\.api\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("javassist\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("sun\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("java\\.lang\\.reflect\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("java\\.lang\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("java\\.util\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("org\\.mockito\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("org\\.hamcrest\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("java\\.time\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("java\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("jdk\\..*"));
-        excludedClassesPatterns.add(Pattern.compile("net\\.bytebuddy\\..*"));
-        //todo probably $$ is more reliable
-        excludedClassesPatterns.add(Pattern.compile(".*auxiliary.*"));
-        excludedClassesPatterns.add(Pattern.compile(".*CGLIB.*"));
-//        excludedClassesPatterns.add(Pattern.compile("java\\.lang\\..*"));
-//        excludedClassesPatterns.add(Pattern.compile("java\\.io\\..*"));
-//        excludedClassesPatterns.add(Pattern.compile("java\\.util\\..*"));
-//        excludedClassesPatterns.add(Pattern.compile("org\\.gradle\\..*"));
-        return excludedClassesPatterns;
     }
 
     @AllArgsConstructor

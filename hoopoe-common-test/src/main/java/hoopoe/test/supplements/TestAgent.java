@@ -6,6 +6,7 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 
+// todo can we now replace it with real agent?
 public class TestAgent {
 
     private static Instrumentation instrumentation;
