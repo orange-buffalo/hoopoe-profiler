@@ -3,8 +3,10 @@ package hoopoe.api;
 import java.util.Collection;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 @EqualsAndHashCode
+@ToString
 public class HoopoeMethodInfo {
 
     @Getter

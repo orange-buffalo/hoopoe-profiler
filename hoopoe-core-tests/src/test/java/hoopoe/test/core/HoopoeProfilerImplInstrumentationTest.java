@@ -10,16 +10,16 @@ import hoopoe.test.core.guineapigs.RunnableGuineaPig;
 import hoopoe.test.core.supplements.MethodEntryTestItemDelegate;
 import hoopoe.test.core.supplements.ProfilerTraceTestItem;
 import hoopoe.test.core.supplements.SingleThreadProfilerTraceTestItem;
+import hoopoe.test.supplements.HoopoeTestExecutor;
 import hoopoe.test.supplements.HoopoeTestHelper;
 import static hoopoe.test.supplements.HoopoeTestHelper.msToNs;
-import hoopoe.test.supplements.TestClassLoader;
 import hoopoe.test.supplements.TestConfiguration;
 import hoopoe.test.supplements.TestConfigurationRule;
 import java.util.Map;
 import lombok.experimental.Delegate;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -225,33 +225,27 @@ public class HoopoeProfilerImplInstrumentationTest {
 
     @Test
     @UseDataProvider("dataForProfilingTest")
-    public void testProfiling(ProfilerTraceTestItem testItem) throws Exception {
-        testItem.setupConfiguration();
-
-        TestClassLoader classLoader = new TestClassLoader("hoopoe.test.core.guineapigs");
+    public void testProfiling(ProfilerTraceTestItem inputTestItem) throws Exception {
+        inputTestItem.setupConfiguration();
 
         String threadName = "testThread" + System.nanoTime();
-        Map<String, HoopoeProfiledInvocation> capturedData =
-                HoopoeTestHelper.getProfiledInvocationsWithAgentLoaded(() -> {
-                    Class instrumentedClass = classLoader.loadClass(testItem.getEntryPointClass().getCanonicalName());
-                    testItem.setInstrumentedClass(instrumentedClass);
-                    testItem.prepareTest();
 
-                    Thread thread = new Thread(() -> {
-                        try {
-                            testItem.executeTest();
-                        }
-                        catch (Exception e) {
-                            throw new IllegalStateException(e);
-                        }
-                    }, threadName);
-                    thread.start();
-                    thread.join();
-                });
+        Map<String, HoopoeProfiledInvocation> capturedData =
+                HoopoeTestExecutor.<ProfilerTraceTestItem>create()
+                        .withPackage("hoopoe.test.core.guineapigs")
+                        .withPackage("hoopoe.test.supplements")
+                        .withContext(testClassLoader -> {
+                            Class instrumentedClass = testClassLoader.loadClass(inputTestItem.getEntryPointClass().getCanonicalName());
+                            inputTestItem.setInstrumentedClass(instrumentedClass);
+                            inputTestItem.prepareTest();
+                            return inputTestItem;
+                        })
+                        .executeWithAgentLoaded(ProfilerTraceTestItem::executeTest, threadName)
+                        .getCapturedData();
 
         // all captured executions in this thread are preparations and should be ignored during assertion
         capturedData.remove(Thread.currentThread().getName());
-        testItem.assertCapturedData(threadName, capturedData);
+        inputTestItem.assertCapturedData(threadName, capturedData);
     }
 
 }

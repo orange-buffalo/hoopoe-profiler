@@ -2,21 +2,47 @@ package hoopoe.test.supplements;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 
 public class TestClassLoader extends ClassLoader {
 
-    private Collection<String> packagesToInclude;
+    private Collection<String> packagesToInclude = new ArrayList<>();
+    private Map<String, byte[]> includedClasses = new HashMap<>();
+    private boolean includeAllPackages;
 
     static {
         registerAsParallelCapable();
     }
 
-    public TestClassLoader(String... packagesToInclude) throws IOException {
+    public TestClassLoader() {
         super(TestClassLoader.class.getClassLoader());
-        this.packagesToInclude = Arrays.asList(packagesToInclude);
+    }
+
+    public void includePackages(String... packagesToInclude) {
+        this.packagesToInclude.addAll(Arrays.asList(packagesToInclude));
+    }
+
+    public void includeClass(Class clazz) throws IOException {
+        byte[] classBytes = IOUtils.toByteArray(
+                getParent().getResourceAsStream(classNameToClassPath(clazz.getTypeName())));
+        includeClass(clazz.getTypeName(), classBytes);
+    }
+
+    public void includeClass(String className, byte[] classBytes) {
+        this.includedClasses.put(className, classBytes);
+    }
+
+    public void includeAllPackages() {
+        this.includeAllPackages = true;
+    }
+
+    public static String classNameToClassPath(String className) {
+        return className.replaceAll("\\.", "/") + ".class";
     }
 
     @Override
@@ -25,12 +51,17 @@ public class TestClassLoader extends ClassLoader {
             Class<?> clazz = findLoadedClass(name);
             if (clazz == null && getParent() != null) {
                 ClassLoader parent = getParent();
-                if (isIncluded(name)) {
-                    InputStream stream = parent.getResourceAsStream(name.replaceAll("\\.", "/") + ".class");
+
+                byte[] classBytes = null;
+
+                if (includedClasses.containsKey(name)) {
+                    classBytes = includedClasses.get(name);
+                }
+                else if (isIncludedByPackage(name)) {
+                    InputStream stream = parent.getResourceAsStream(classNameToClassPath(name));
                     if (stream != null) {
                         try {
-                            byte[] bytes = IOUtils.toByteArray(stream);
-                            clazz = defineClass(name, bytes, 0, bytes.length);
+                            classBytes = IOUtils.toByteArray(stream);
                         }
                         catch (IOException e) {
                             throw new ClassNotFoundException(name, e);
@@ -39,8 +70,11 @@ public class TestClassLoader extends ClassLoader {
                     }
                 }
 
-                if (clazz == null) {
+                if (classBytes == null) {
                     clazz = parent.loadClass(name);
+                }
+                else {
+                    clazz = defineClass(name, classBytes, 0, classBytes.length);
                 }
             }
 
@@ -56,13 +90,17 @@ public class TestClassLoader extends ClassLoader {
         }
     }
 
-    private boolean isIncluded(String name) {
+    private boolean isIncludedByPackage(String name) {
         if (name.startsWith("java.lang")) {
             return false;
         }
 
-        if (packagesToInclude.isEmpty()) {
+        if (includeAllPackages) {
             return true;
+        }
+
+        if (packagesToInclude.isEmpty()) {
+            return false;
         }
 
         for (String packageToInclude : packagesToInclude) {

@@ -34,7 +34,9 @@ public class HoopoePluginProviderImplTest {
     public void prepareTest() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        TestClassLoader classLoader = new TestClassLoader("hoopoe.core");
+        TestClassLoader classLoader = new TestClassLoader();
+        classLoader.includePackages("hoopoe.core");
+
         Class providerClass = classLoader.loadClass(HoopoePluginProviderImpl.class.getCanonicalName());
         pluginProvider = (HoopoePluginsProvider) providerClass.newInstance();
         pluginProvider.setupProfiler(profilerMock);

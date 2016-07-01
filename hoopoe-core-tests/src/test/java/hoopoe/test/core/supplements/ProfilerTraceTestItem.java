@@ -2,6 +2,7 @@ package hoopoe.test.core.supplements;
 
 import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.test.supplements.TestItem;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,7 +40,8 @@ public abstract class ProfilerTraceTestItem extends TestItem {
         List<HoopoeProfiledInvocation> actualInvocations =
                 actualInvocationsRoot.flattened().collect(Collectors.toList());
 
-        assertThat(actualInvocations.size(), equalTo(expectedSequenceLength));
+        assertThat(actualInvocations + " do not fit " + Arrays.toString(expectedSequenceCalls),
+                actualInvocations.size(), equalTo(expectedSequenceLength));
         for (int i = 0; i < expectedSequenceLength; i++) {
             Class expectedClass = (Class) expectedSequenceCalls[2 * i];
             String expectedMethodSignature = (String) expectedSequenceCalls[2 * i + 1];

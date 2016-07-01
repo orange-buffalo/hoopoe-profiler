@@ -3,8 +3,6 @@ package hoopoe.core.bootstrap;
 // todo move to a separate module
 public abstract class HoopoeProfilerBridge {
 
-    public static final ThreadLocal<Integer> callStackDepth = ThreadLocal.withInitial(() -> 0);
-
     public static HoopoeProfilerBridge instance;
 
     public abstract void profileCall(long startTimeInNs,
@@ -16,6 +14,8 @@ public abstract class HoopoeProfilerBridge {
                                      Object returnValue,
                                      Object thisInMethod);
 
-    public abstract void finishThreadProfiling();
+    public abstract void onRunnableEnter();
+
+    public abstract void onRunnableExit();
 
 }

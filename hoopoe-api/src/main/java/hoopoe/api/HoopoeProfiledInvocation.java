@@ -60,4 +60,9 @@ public class HoopoeProfiledInvocation {
         return new ArrayList<>(attributes);
     }
 
+    @Override
+    public String toString() {
+        return className + "." + methodSignature + " [" + totalTimeInNs + "ns]";
+    }
+
 }

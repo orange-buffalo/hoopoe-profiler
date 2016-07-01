@@ -6,29 +6,32 @@ import hoopoe.api.HoopoePluginAction;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeThreadLocalCache;
 import hoopoe.test.core.guineapigs.PluginGuineaPig;
-import hoopoe.test.supplements.HoopoeTestHelper;
-import hoopoe.test.supplements.TestClassLoader;
+import hoopoe.test.supplements.HoopoeTestExecutor;
 import hoopoe.test.supplements.TestConfiguration;
 import hoopoe.test.supplements.TestConfigurationRule;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isIn;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class HoopoeProfilerImplPluginIntegrationTest {
@@ -45,9 +48,11 @@ public class HoopoeProfilerImplPluginIntegrationTest {
                 .when(pluginsProviderMock)
                 .createPlugins();
 
-        HoopoeTestHelper.executeWithAgentLoaded(() -> {
-            // we just test initialization of profiler during agent loading
-        });
+        HoopoeTestExecutor.create()
+                .withContext(testClassLoader -> new Object())
+                .executeWithAgentLoaded(context -> {
+                    // we just test initialization of profiler during agent loading
+                });
 
         verify(pluginsProviderMock).setupProfiler(any());
         verify(pluginsProviderMock).createPlugins();
@@ -56,67 +61,52 @@ public class HoopoeProfilerImplPluginIntegrationTest {
     @Test
     public void testPluginRequest() throws Exception {
         HoopoePlugin pluginMock = preparePluginMock();
-        when(pluginMock.createActionIfSupported(any())).thenReturn(null);
 
-        TestClassLoader classLoader = new TestClassLoader(GUINEAPIGS_PACKAGE);
+        Collection<HoopoeMethodInfo> actualRequests = new HashSet<>();
+        doAnswer(invocation -> {
+            actualRequests.add((HoopoeMethodInfo) invocation.getArguments()[0]);
+            return null;
+        }).when(pluginMock).createActionIfSupported(any());
+
         Class guineaPigClass = PluginGuineaPig.class;
 
-        HoopoeTestHelper.executeWithAgentLoaded(() -> classLoader.loadClass(guineaPigClass.getCanonicalName()));
+        HoopoeTestExecutor.create()
+                .withPackage(GUINEAPIGS_PACKAGE)
+                .withContext(testClassLoader -> testClassLoader.loadClass(guineaPigClass.getCanonicalName()))
+                .executeWithAgentLoaded(context -> {
+                });
 
         HashSet<String> superClasses = new HashSet<>(Arrays.asList(
                 Object.class.getCanonicalName(), Serializable.class.getCanonicalName())
         );
 
-        verify(pluginMock, times(1)).createActionIfSupported(
-                eq(new HoopoeMethodInfo(
-                        guineaPigClass.getCanonicalName(),
-                        "PluginGuineaPig(java.lang.Object)",
-                        superClasses
-                )));
-
-        verify(pluginMock, times(1)).createActionIfSupported(
-                eq(new HoopoeMethodInfo(
-                        guineaPigClass.getCanonicalName(),
-                        "PluginGuineaPig()",
-                        superClasses
-                )));
-
-        verify(pluginMock, times(1)).createActionIfSupported(
-                eq(new HoopoeMethodInfo(
+        List<HoopoeMethodInfo> expectedRequests = Arrays.asList(
+                new HoopoeMethodInfo(
                         guineaPigClass.getCanonicalName(),
                         "doStuff()",
-                        superClasses
-                )));
-
-        verify(pluginMock, times(1)).createActionIfSupported(
-                eq(new HoopoeMethodInfo(
+                        superClasses),
+                new HoopoeMethodInfo(
                         guineaPigClass.getCanonicalName(),
                         "testCache()",
                         superClasses
-                )));
-
-        verify(pluginMock, times(1)).createActionIfSupported(
-                eq(new HoopoeMethodInfo(
+                ),
+                new HoopoeMethodInfo(
                         guineaPigClass.getCanonicalName(),
                         "firstMethodInCacheTest()",
                         superClasses
-                )));
-
-        verify(pluginMock, times(1)).createActionIfSupported(
-                eq(new HoopoeMethodInfo(
+                ),
+                new HoopoeMethodInfo(
                         guineaPigClass.getCanonicalName(),
                         "secondMethodInCacheTest()",
                         superClasses
-                )));
-
-        verify(pluginMock, times(1)).createActionIfSupported(
-                eq(new HoopoeMethodInfo(
+                ),
+                new HoopoeMethodInfo(
                         guineaPigClass.getCanonicalName(),
                         "methodForAttributes(java.lang.Object)",
                         superClasses
-                )));
+                ));
 
-        verifyNoMoreInteractions(pluginMock);
+        assertThat("Expected request was not triggered", expectedRequests, everyItem(isIn(actualRequests)));
     }
 
     @Test
@@ -124,13 +114,12 @@ public class HoopoeProfilerImplPluginIntegrationTest {
         HoopoePlugin pluginMock = preparePluginMock();
         when(pluginMock.createActionIfSupported(any())).thenReturn(null);
 
-        TestClassLoader classLoader = new TestClassLoader(GUINEAPIGS_PACKAGE);
         Class guineaPigClass = PluginGuineaPig.class;
 
-        HoopoeTestHelper.executeWithAgentLoaded(() -> {
-            Class<?> instrumentedClass = classLoader.loadClass(guineaPigClass.getCanonicalName());
-            instrumentedClass.getConstructor().newInstance();
-        });
+        HoopoeTestExecutor.forClassInstance(guineaPigClass.getCanonicalName())
+                .withPackage(GUINEAPIGS_PACKAGE)
+                .executeWithAgentLoaded(context -> {
+                });
 
         // basically no verification, just valid execution
     }
@@ -142,17 +131,18 @@ public class HoopoeProfilerImplPluginIntegrationTest {
         when(pluginMock.createActionIfSupported(any())).thenReturn(pluginActionMock);
         when(pluginActionMock.getAttributes(any(), any(), any(), any())).thenReturn(Collections.emptyList());
 
-        TestClassLoader classLoader = new TestClassLoader(GUINEAPIGS_PACKAGE);
         Class guineaPigClass = PluginGuineaPig.class;
 
         Object argument = new Object();
         AtomicReference thisInMethod = new AtomicReference();
-        HoopoeTestHelper.executeWithAgentLoaded(() -> {
-            Class<?> instrumentedClass = classLoader.loadClass(guineaPigClass.getCanonicalName());
-            Object instance = instrumentedClass.getConstructor().newInstance();
-            instrumentedClass.getMethod("methodForAttributes", Object.class).invoke(instance, argument);
-            thisInMethod.set(instance);
-        });
+
+        HoopoeTestExecutor.forClassInstance(guineaPigClass.getCanonicalName())
+                .withPackage(GUINEAPIGS_PACKAGE)
+                .executeWithAgentLoaded(context -> {
+                    Object instance = context.getInstance();
+                    context.getClazz().getMethod("methodForAttributes", Object.class).invoke(instance, argument);
+                    thisInMethod.set(instance);
+                });
 
         HashSet<String> superClasses = new HashSet<>(Arrays.asList(
                 Object.class.getCanonicalName(), Serializable.class.getCanonicalName())
@@ -160,10 +150,10 @@ public class HoopoeProfilerImplPluginIntegrationTest {
         verify(pluginMock, times(1))
                 .createActionIfSupported(
                         eq(new HoopoeMethodInfo(
-                        guineaPigClass.getCanonicalName(),
-                        "methodForAttributes(java.lang.Object)",
-                        superClasses
-                )));
+                                guineaPigClass.getCanonicalName(),
+                                "methodForAttributes(java.lang.Object)",
+                                superClasses
+                        )));
         verify(pluginActionMock, times(1))
                 .getAttributes(
                         eq(new Object[] {argument}),
@@ -199,14 +189,15 @@ public class HoopoeProfilerImplPluginIntegrationTest {
                 .when(pluginsProviderMock)
                 .createPlugins();
 
-        TestClassLoader classLoader = new TestClassLoader(GUINEAPIGS_PACKAGE);
+        // todo make this class field
         Class guineaPigClass = PluginGuineaPig.class;
 
-        HoopoeTestHelper.executeWithAgentLoaded(() -> {
-            Class<?> instrumentedClass = classLoader.loadClass(guineaPigClass.getCanonicalName());
-            Object instance = instrumentedClass.newInstance();
-            instrumentedClass.getMethod("testCache").invoke(instance);
-        });
+        HoopoeTestExecutor.forClassInstance(guineaPigClass.getCanonicalName())
+                .withPackage(GUINEAPIGS_PACKAGE)
+                .executeWithAgentLoaded(context -> {
+                    Object instance = context.getInstance();
+                    context.getClazz().getMethod("testCache").invoke(instance);
+                });
 
         assertThat(pluginCalls.get(), equalTo(2));
     }

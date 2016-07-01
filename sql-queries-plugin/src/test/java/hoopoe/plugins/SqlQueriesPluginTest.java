@@ -13,8 +13,8 @@ import hoopoe.plugins.guineapigs.StatementExecuteBatchSqlGuineapig;
 import hoopoe.plugins.guineapigs.StatementExecuteQuerySqlGuineapig;
 import hoopoe.plugins.guineapigs.StatementExecuteSqlGuineapig;
 import hoopoe.plugins.guineapigs.StatementExecuteUpdateSqlGuineapig;
+import hoopoe.test.supplements.HoopoeTestExecutor;
 import hoopoe.test.supplements.HoopoeTestHelper;
-import hoopoe.test.supplements.TestClassLoader;
 import hoopoe.test.supplements.TestConfiguration;
 import hoopoe.test.supplements.TestConfigurationRule;
 import hoopoe.test.supplements.TestItem;
@@ -93,14 +93,17 @@ public class SqlQueriesPluginTest {
         when(TestConfiguration.getPluginsProviderMock().createPlugins())
                 .thenReturn(Collections.singleton(new SqlQueriesPlugin()));
 
-        TestClassLoader classLoader = new TestClassLoader("hoopoe.plugins.guineapigs", "org.h2");
-
-        HoopoeProfiledInvocation profiledInvocation = HoopoeTestHelper.getSingleProfiledInvocationWithAgentLoaded(() -> {
-            Class instrumentedClass = classLoader.loadClass(testItem.guineapigClass.getCanonicalName());
-            Object guineapig = instrumentedClass.newInstance();
-            Method method = instrumentedClass.getMethod("executeCodeUnderTest");
-            method.invoke(guineapig);
-        });
+        HoopoeProfiledInvocation profiledInvocation =
+                HoopoeTestExecutor.forClassInstance(testItem.guineapigClass.getCanonicalName())
+                        .withPackage("hoopoe.plugins.guineapigs")
+                        .withPackage("org.h2")
+                        .executeWithAgentLoaded(context -> {
+                            Class instrumentedClass = context.getClazz();
+                            Object guineapig = context.getInstance();
+                            Method method = instrumentedClass.getMethod("executeCodeUnderTest");
+                            method.invoke(guineapig);
+                        })
+                        .getSingleProfiledInvocation();
 
         Map<String, Set<String>> capturedData = new HashMap<>();
         profiledInvocation.flattened()
