@@ -1,0 +1,20 @@
+apply plugin: HoopoeAssemblyPlugin
+
+// todo do to generate for releases
+apply plugin: 'rebel'
+
+configurations {
+    compile.exclude module: "spring-boot-starter-tomcat"
+}
+
+dependencies {
+    provided project(':hoopoe-api')
+
+    compile('org.springframework.boot:spring-boot-starter-web:1.3.5.RELEASE')
+    compile("org.springframework.boot:spring-boot-starter-jetty:1.3.5.RELEASE")
+
+}
+
+hoopoeAssembly {
+    extensionClass = 'hoopoe.extensions.webview.HoopoeWebViewExtension'
+}

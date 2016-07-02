@@ -8,6 +8,8 @@ import hoopoe.api.HoopoePluginAction;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.api.HoopoeProfiler;
+import hoopoe.api.HoopoeProfilerExtension;
+import hoopoe.api.HoopoeProfilerExtensionsProvider;
 import hoopoe.api.HoopoeProfilerStorage;
 import hoopoe.api.HoopoeThreadLocalCache;
 import hoopoe.core.supplements.ConfigurationHelper;
@@ -58,6 +60,10 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         HoopoePluginsProvider pluginsProvider = configuration.createPluginsProvider();
         pluginsProvider.setupProfiler(this);
         plugins = pluginsProvider.createPlugins();
+
+        HoopoeProfilerExtensionsProvider extensionsProvider = configuration.createProfilerExtensionProvider();
+        extensionsProvider.setupProfiler(this);
+        extensionsProvider.createExtensions().forEach(HoopoeProfilerExtension::init);
 
         instrumentationHelper =
                 new InstrumentationHelper(configuration.getExcludedClassesPatterns(), this);

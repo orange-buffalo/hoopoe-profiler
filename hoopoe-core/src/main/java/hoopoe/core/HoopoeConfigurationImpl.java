@@ -2,6 +2,7 @@ package hoopoe.core;
 
 import hoopoe.api.HoopoeConfiguration;
 import hoopoe.api.HoopoePluginsProvider;
+import hoopoe.api.HoopoeProfilerExtensionsProvider;
 import hoopoe.api.HoopoeProfilerStorage;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,6 +20,11 @@ public class HoopoeConfigurationImpl implements HoopoeConfiguration {
     @Override
     public HoopoePluginsProvider createPluginsProvider() {
         return new HoopoePluginProviderImpl();
+    }
+
+    @Override
+    public HoopoeProfilerExtensionsProvider createProfilerExtensionProvider() {
+        return new HoopoeProfilerExtensionsProviderImpl();
     }
 
     @Override

@@ -9,6 +9,8 @@ public interface HoopoeConfiguration {
 
     HoopoePluginsProvider createPluginsProvider();
 
+    HoopoeProfilerExtensionsProvider createProfilerExtensionProvider();
+
     long getMinimumTrackedInvocationTimeInNs();
 
     Collection<String> getEnabledPlugins();

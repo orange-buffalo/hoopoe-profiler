@@ -58,7 +58,7 @@ public class HoopoePluginProviderImplTest {
                 .thenReturn(Collections.singleton("plugin-hoopoe-properties-missing"));
 
         exceptionExpectation.expectMessage(
-                "plugin-hoopoe-properties-missing.zip does not contain /META-INF/hoopoe.properties file.");
+                "plugin-hoopoe-properties-missing.zip does not contain META-INF/hoopoe.properties file.");
 
         pluginProvider.createPlugins();
     }
@@ -69,7 +69,7 @@ public class HoopoePluginProviderImplTest {
                 .thenReturn(Collections.singleton("plugin-missing-property"));
 
         exceptionExpectation.expectMessage(
-                "/META-INF/hoopoe.properties in plugin-missing-property.zip does not contain plugin.className property.");
+                "META-INF/hoopoe.properties in plugin-missing-property.zip does not contain plugin.className property.");
 
         pluginProvider.createPlugins();
     }
