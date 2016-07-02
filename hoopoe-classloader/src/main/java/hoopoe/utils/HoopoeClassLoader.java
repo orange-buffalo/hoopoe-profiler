@@ -1,44 +1,77 @@
 package hoopoe.utils;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.NoSuchElementException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public final class HoopoeClassLoader extends ClassLoader {
+public final class HoopoeClassLoader extends URLClassLoader {
 
     static {
         registerAsParallelCapable();
     }
 
-    private Map<String, byte[]> zipData = new HashMap<>();
-
-    public static HoopoeClassLoader fromStream(InputStream stream,
+    public static HoopoeClassLoader fromStream(InputStream inputStream,
                                                ClassLoader parentClassLoader) {
-        return new HoopoeClassLoader(stream, parentClassLoader);
-    }
 
-    public static HoopoeClassLoader fromResource(String absoluteZipResourcePath,
-                                                 ClassLoader parentClassLoader) {
-        return new HoopoeClassLoader(
-                HoopoeClassLoader.class.getResourceAsStream(absoluteZipResourcePath),
-                parentClassLoader);
-    }
-
-    private HoopoeClassLoader(InputStream inputStream,
-                              ClassLoader parentClassLoader) {
-        super(parentClassLoader);
-
+        Collection<URL> urls = new ArrayList<>();
         try (ZipInputStream stream = new ZipInputStream(inputStream)) {
-            initClassData(stream);
+
+            File rootDir = Files.createTempDirectory("hoopoe-cl-" + System.currentTimeMillis()).toFile();
+
+            File classesDir = new File(rootDir, "classes");
+            classesDir.mkdirs();
+            urls.add(classesDir.toURI().toURL());
+
+            ZipEntry nextEntry;
+            while ((nextEntry = stream.getNextEntry()) != null) {
+                if (!nextEntry.isDirectory()) {
+                    String name = nextEntry.getName();
+                    File targetFile = null;
+                    if (name.startsWith("classes/")) {
+                        targetFile = new File(classesDir, name.replaceFirst("classes", ""));
+                    }
+                    else if (name.startsWith("META-INF/")) {
+                        targetFile = new File(classesDir, name);
+                    }
+                    else if (name.startsWith("lib/") && name.endsWith(".jar")) {
+                        targetFile = new File(rootDir, name);
+                        urls.add(targetFile.toURI().toURL());
+                    }
+
+                    if (targetFile != null) {
+                        copyFile(stream, targetFile);
+                    }
+                }
+            }
         }
         catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
+
+        return new HoopoeClassLoader(urls.toArray(new URL[urls.size()]), parentClassLoader);
+    }
+
+    public static HoopoeClassLoader fromResource(String absoluteZipResourcePath,
+                                                 ClassLoader parentClassLoader) {
+        return fromStream(
+                HoopoeClassLoader.class.getResourceAsStream(absoluteZipResourcePath),
+                parentClassLoader);
+    }
+
+    private HoopoeClassLoader(URL[] urls, ClassLoader parent) {
+        super(urls, parent);
     }
 
     @Override
@@ -46,92 +79,82 @@ public final class HoopoeClassLoader extends ClassLoader {
         synchronized (getClassLoadingLock(name)) {
             Class<?> clazz = findLoadedClass(name);
             if (clazz == null) {
-
-                String zipDataName = "classes/" + name.replaceAll("\\.", "/") + ".class";
-                byte[] classBytes = zipData.get(zipDataName);
-                if (classBytes != null) {
-                    //zipData.remove(zipDataName);
-                    clazz = defineClass(name, classBytes, 0, classBytes.length);
+                try {
+                    clazz = findClass(name);
                 }
-
-                if (clazz == null) {
-                    ClassLoader parent = getParent();
-                    if (parent != null) {
-                        clazz = parent.loadClass(name);
-                    }
-                }
-
-                if (clazz == null) {
-                    throw new ClassNotFoundException(name);
+                catch (ClassNotFoundException e) {
+                    clazz = getParent().loadClass(name);
                 }
             }
-
             if (resolve) {
                 resolveClass(clazz);
             }
-
             return clazz;
         }
     }
 
-    @Override
-    public InputStream getResourceAsStream(String name) {
-        String zippedName = name;
-        if (zippedName.startsWith("/")) {
-            zippedName = zippedName.substring(1);
+    public Enumeration<URL> getResources(String name) throws IOException {
+        ClassLoader parent = getParent();
+        Enumeration<URL>[] tmp = (Enumeration<URL>[]) new Enumeration<?>[parent == null ? 1 : 2];
+        tmp[0] = findResources(name);
+        if (parent != null) {
+            tmp[1] = parent.getResources(name);
         }
-        if (!zippedName.startsWith("META-INF")) {
-            zippedName = "classes/" + zippedName;
-        }
-        byte[] bytes = zipData.get(zippedName);
-        if (bytes != null) {
-            return new ByteArrayInputStream(bytes);
-        }
-        else if (getParent() != null) {
-            return getParent().getResourceAsStream(name);
-        }
-        else {
-            return null;
-        }
+        return new CompoundEnumeration<>(tmp);
     }
 
-    private void initClassData(ZipInputStream stream) throws IOException {
-        ZipEntry nextEntry;
-        while ((nextEntry = stream.getNextEntry()) != null) {
-            if (!nextEntry.isDirectory()) {
-                String name = nextEntry.getName();
-                if (name.startsWith("classes/") || name.startsWith("META-INF/")) {
-                    byte[] entryData = getZipEntryBytes(stream, nextEntry);
-                    zipData.put(name, entryData);
-                }
-                else if (name.startsWith("lib/") && name.endsWith(".jar")) {
-                    byte[] jarBytes = getZipEntryBytes(stream, nextEntry);
-                    loadJarClasses(new ByteArrayInputStream(jarBytes));
-                }
-            }
+    public URL getResource(String name) {
+        URL url = findResource(name);
+        if (url == null && getParent() != null) {
+            url = getParent().getResource(name);
         }
+        return url;
     }
 
-    private void loadJarClasses(InputStream jarStream) throws IOException {
-        ZipEntry jarEntry;
-        try (ZipInputStream zipInputStream = new ZipInputStream(jarStream)) {
-            while ((jarEntry = zipInputStream.getNextEntry()) != null) {
-                if (!jarEntry.isDirectory()) {
-                    byte[] entryBytes = getZipEntryBytes(zipInputStream, jarEntry);
-                    zipData.put("classes/" + jarEntry.getName(), entryBytes);
-                }
-            }
-        }
-    }
+    private static void copyFile(ZipInputStream zipStream, File targetFile) throws IOException {
+        targetFile.getParentFile().mkdirs();
 
-    private byte[] getZipEntryBytes(ZipInputStream zipStream, ZipEntry streamEntry) throws IOException {
-        ByteArrayOutputStream entryStream = new ByteArrayOutputStream();
         int bytesRead;
         byte[] buffer = new byte[8192 * 2];
-        while ((bytesRead = zipStream.read(buffer)) != -1) {
-            entryStream.write(buffer, 0, bytesRead);
+        try (OutputStream fileStream = new BufferedOutputStream(new FileOutputStream(targetFile))) {
+            while ((bytesRead = zipStream.read(buffer)) != -1) {
+                fileStream.write(buffer, 0, bytesRead);
+            }
         }
-        return entryStream.toByteArray();
+    }
+
+    private class CompoundEnumeration<E> implements Enumeration<E> {
+        private Enumeration<E>[] enums;
+        private int index = 0;
+
+        public CompoundEnumeration(Enumeration<E>[] enums) {
+            this.enums = enums;
+        }
+
+        private boolean next() {
+            while (this.index < this.enums.length) {
+                if (this.enums[this.index] != null && this.enums[this.index].hasMoreElements()) {
+                    return true;
+                }
+
+                ++this.index;
+            }
+
+            return false;
+        }
+
+        public boolean hasMoreElements() {
+            return this.next();
+        }
+
+        public E nextElement() {
+            if (!this.next()) {
+                throw new NoSuchElementException();
+            }
+            else {
+                return this.enums[this.index].nextElement();
+            }
+        }
     }
 
 }

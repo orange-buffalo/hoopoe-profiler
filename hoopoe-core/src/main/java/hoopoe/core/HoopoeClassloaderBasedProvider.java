@@ -7,7 +7,7 @@ import java.util.Properties;
 
 public abstract class HoopoeClassloaderBasedProvider {
 
-    private static final String HOOPOE_CONFIG_FILE = "/META-INF/hoopoe.properties";
+    private static final String HOOPOE_CONFIG_FILE = "META-INF/hoopoe.properties";
 
     protected Object load(String extensionlessZipResourceName) {
         try {

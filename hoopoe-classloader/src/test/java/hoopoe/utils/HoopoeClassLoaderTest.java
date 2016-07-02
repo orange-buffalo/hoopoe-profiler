@@ -122,7 +122,7 @@ public class HoopoeClassLoaderTest {
     @Test
     public void testMetaInfResource() throws Exception {
         ClassLoader hoopoeClassLoader = getHoopoeClassLoader("meta-inf.zip");
-        InputStream stream = hoopoeClassLoader.getResourceAsStream("/META-INF/data.txt");
+        InputStream stream = hoopoeClassLoader.getResourceAsStream("META-INF/data.txt");
         assertThat(stream, notNullValue());
 
         String data = IOUtils.toString(stream, "utf-8");
@@ -132,7 +132,7 @@ public class HoopoeClassLoaderTest {
     @Test
     public void testResourceInClassesRoot() throws Exception {
         ClassLoader hoopoeClassLoader = getHoopoeClassLoader("resource-in-classes-root.zip");
-        InputStream stream = hoopoeClassLoader.getResourceAsStream("/data.txt");
+        InputStream stream = hoopoeClassLoader.getResourceAsStream("data.txt");
         assertThat(stream, notNullValue());
 
         String data = IOUtils.toString(stream, "utf-8");
