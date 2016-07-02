@@ -1,0 +1,11 @@
+apply plugin: 'java'
+
+repositories {
+    maven {
+        url 'https://repos.zeroturnaround.com/nexus/content/groups/zt-public/'
+    }
+}
+
+dependencies {
+    provided 'org.zeroturnaround:jr-utils:6.4.6'
+}
