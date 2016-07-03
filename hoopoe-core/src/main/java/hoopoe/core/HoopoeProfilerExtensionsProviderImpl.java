@@ -15,6 +15,7 @@ public class HoopoeProfilerExtensionsProviderImpl
     @Override
     public Collection<HoopoeProfilerExtension> createExtensions() {
         HoopoeProfilerExtension extension = (HoopoeProfilerExtension) load("hoopoe-web-view-extension");
+        extension.setupProfiler(profiler);
         return Collections.singleton(extension);
     }
 

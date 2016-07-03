@@ -37,6 +37,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     private static final ThreadLocal<Stack<ThreadProfileData>> threadProfileDataStack =
             ThreadLocal.withInitial(Stack::new);
 
+    @Getter
     private HoopoeProfilerStorage storage;
 
     @Getter

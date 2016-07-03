@@ -36,7 +36,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.MethodDelegation;
-import static net.bytebuddy.matcher.ElementMatchers.any;
+import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import net.bytebuddy.utility.JavaModule;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -60,7 +60,7 @@ public class InstrumentationHelper {
     public void createClassFileTransformer(Instrumentation instrumentation) {
         this.instrumentation = instrumentation;
         deployBootstrapJar(instrumentation);
-        intiProfilerBridge();
+        initProfilerBridge();
 
         AgentBuilder baseAgentConfig = new AgentBuilder.Default()
                 .with(new AgentListener());
@@ -140,11 +140,11 @@ public class InstrumentationHelper {
      * In case of anonymous / inner classes HoopoeProfilerBridge is requested during this class loading,
      * and it is not available as bootstrap jar is not yet deployed.
      */
-    private void intiProfilerBridge() {
+    private void initProfilerBridge() {
         try {
             HoopoeProfilerBridge.instance = new ByteBuddy()
                     .subclass(HoopoeProfilerBridge.class)
-                    .method(any())
+                    .method(isAbstract())
                     .intercept(MethodDelegation.to(profiler))
                     .make()
                     .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)

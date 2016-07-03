@@ -5,7 +5,7 @@ import hoopoe.api.HoopoeAttributeSummary;
 import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.api.HoopoeProfiledInvocationSummary;
 import hoopoe.api.HoopoeProfilerStorage;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,7 +28,7 @@ public class HoopoeStorageImpl implements HoopoeProfilerStorage {
 
     @Override
     public void addInvocation(Thread thread, HoopoeProfiledInvocation invocation) {
-        LocalDateTime profiledOn = LocalDateTime.now();
+        ZonedDateTime profiledOn = ZonedDateTime.now();
         String invocationId = String.valueOf(invocationsIdGenerator.incrementAndGet());
 
         List<HoopoeAttributeSummary> attributeSummaries = getAttributeSummaries(invocation);

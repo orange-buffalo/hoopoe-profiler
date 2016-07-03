@@ -1,6 +1,6 @@
 package hoopoe.api;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import lombok.AccessLevel;
@@ -14,7 +14,7 @@ public class HoopoeProfiledInvocationSummary {
     private String threadName;
 
     @Getter
-    private LocalDateTime profiledOn;
+    private ZonedDateTime profiledOn;
 
     @Getter
     private String id;
@@ -25,7 +25,7 @@ public class HoopoeProfiledInvocationSummary {
     private Collection<HoopoeAttributeSummary> attributeSummaries;
 
     public HoopoeProfiledInvocationSummary(String threadName,
-                                           LocalDateTime profiledOn,
+                                           ZonedDateTime profiledOn,
                                            String id,
                                            long totalTimeInNs,
                                            Collection<HoopoeAttributeSummary> attributeSummaries) {
