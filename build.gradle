@@ -26,7 +26,18 @@ allprojects {
 
 subprojects {
 
+    plugins.withType(JavaPlugin) {
+        plugins.apply(JacocoPlugin)
+    }
+
     gradle.projectsEvaluated {
+
+        tasks.withType(JacocoReport) {
+            it.reports.xml.enabled = true;
+            it.reports.html.enabled = false;
+            tasks.findByName('check').dependsOn(it)
+        }
+
         tasks.withType(Jar) {
             def generateRebelTask = project.tasks.findByName('generateRebel')
             if (generateRebelTask) {
