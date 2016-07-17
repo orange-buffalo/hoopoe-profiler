@@ -5,3 +5,8 @@ dependencies {
     testCompile project(':hoopoe-common-test')
     testCompile project(':hoopoe-core')
 }
+
+jacocoTestReport {
+    additionalSourceDirs = files(project(':hoopoe-core').sourceSets.main.allSource.srcDirs)
+    additionalClassDirs = files(project(':hoopoe-core').sourceSets.main.output)
+}
