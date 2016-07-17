@@ -1,0 +1,24 @@
+<div layout-fill layout="column" ng-controller="InvocationDetailsCtrl as invocationDetails">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <md-button aria-label="Go Back">
+        Go Back
+      </md-button>
+      <h2>
+        <span>Toolbar with Standard Buttons</span>
+      </h2>
+    </div>
+  </md-toolbar>
+  <md-content layout-padding flex layout="column">
+
+    <treecontrol class="tree-classic"
+                 tree-model="invocationDetails.data">
+      {{node.className}}.{{node.methodSignature}}
+      <hp-duration-label duration-in-ns="node.totalTimeInNs"></hp-duration-label>
+      <hp-duration-label duration-in-ns="node.ownTimeInNs"></hp-duration-label>
+      <span ng-repeat="attr in node.attributes">{{attr.name}}</span>
+    </treecontrol>
+
+
+  </md-content>
+</div>

@@ -1,0 +1,9 @@
+.hp-thread-name {
+    color: #5f9ea0;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+md-tooltip .md-content {
+    height: auto;
+}

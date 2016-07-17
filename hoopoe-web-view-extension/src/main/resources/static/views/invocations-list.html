@@ -1,0 +1,26 @@
+<md-toolbar>
+  <div class="md-toolbar-tools">
+    <md-button aria-label="Go Back">
+      Go Back
+    </md-button>
+    <h2>
+      <span>Toolbar with Standard Buttons</span>
+    </h2>
+  </div>
+</md-toolbar>
+<md-content layout-padding ng-controller="InvocationsListCtrl as invocationsList">
+
+  <md-list>
+    <md-subheader class="md-no-sticky">Profiled invocations</md-subheader>
+    <md-list-item ng-repeat="invocation in invocationsList.data" ng-click="invocationsList.showDetails(invocation.id)">
+      <div class="md-list-item-text">
+        <span class="hp-thread-name">{{ invocation.threadName }}</span>
+        <hp-duration-label duration-in-ns="invocation.totalTimeInNs"></hp-duration-label>
+        <span class="hp-profiled-on">profiled on {{ helperService.printTime(invocation.profiledOn) }}</span>
+      </div>
+      <md-divider></md-divider>
+    </md-list-item>
+  </md-list>
+
+
+</md-content>

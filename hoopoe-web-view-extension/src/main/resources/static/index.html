@@ -1,1 +1,34 @@
-Hello world! 23 - 44
+<html lang="en">
+<head>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet"
+        href="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.9/angular-material.min.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/tree-control.css">
+  <title>Hoopoe Profiler</title>
+</head>
+<body ng-app="HoopoeApp" ng-cloak>
+
+  <div ng-view layout="column" layout-fill>
+  </div>
+
+
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-animate.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-aria.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-messages.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-route.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.0.9/angular-material.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/numbro/1.8.1/numbro.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+  
+  <script src="app/directives/duration-label.js"></script>
+  <script src="app/services/helper.js"></script>
+  <script src="app/controllers/invocations-list.js"></script>
+  <script src="app/controllers/invocation-details.js"></script>
+  <script src="app/js/angular-tree-control.js"></script>
+  <script src="app/app.js"></script>
+
+</body>
+</html>

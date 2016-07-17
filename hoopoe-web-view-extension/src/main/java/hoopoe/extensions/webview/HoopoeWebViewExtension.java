@@ -15,6 +15,7 @@ public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
         Thread thread = new Thread(() -> {
             Thread.currentThread().setContextClassLoader(HoopoeWebViewExtension.class.getClassLoader());
 
+            //todo quick win, to be replaced with embedded jetty
             SpringApplication application = new SpringApplication();
             application.setBannerMode(Banner.Mode.OFF);
             application.setLogStartupInfo(false);
