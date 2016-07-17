@@ -1,2 +1,2 @@
-# hoopoe-profiler
-Pre-alpha version is still under construction. Stay tuned :) 
+# hoopoe-profiler [![Build Status](https://travis-ci.org/orange-buffalo/hoopoe-profiler.svg?branch=master)](https://travis-ci.org/orange-buffalo/hoopoe-profiler?branch=master)  [![Code Coverage](https://img.shields.io/codecov/c/github/orangle-buffalo/hoopoe-profiler/develop.svg?branch=master)](https://codecov.io/github/orangle-buffalo/hoopoe-profiler?branch=master)  
+Pre-alpha version is still under construction. Stay tuned :)
