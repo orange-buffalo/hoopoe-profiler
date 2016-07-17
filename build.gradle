@@ -43,13 +43,6 @@ subprojects {
             it.reports.xml.enabled = true;
             it.reports.html.enabled = false;
             tasks.findByName('check').dependsOn(it)
-
-            tasks.withType(Test) {
-                jacoco {
-                    excludeClassLoaders ['hoopoe.test.supplements.TestClassLoader']
-                }
-            }
-
         }
 
         tasks.withType(Jar) {
