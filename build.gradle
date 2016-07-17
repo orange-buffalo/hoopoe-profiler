@@ -27,7 +27,7 @@ allprojects {
 subprojects {
 
     plugins.withType(JavaPlugin) {
-        plugins.apply(JacocoPlugin)
+        //plugins.apply(JacocoPlugin)
     }
 
     gradle.projectsEvaluated {
