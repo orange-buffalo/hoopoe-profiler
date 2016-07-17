@@ -27,15 +27,29 @@ allprojects {
 subprojects {
 
     plugins.withType(JavaPlugin) {
-        //plugins.apply(JacocoPlugin)
+        plugins.apply(JacocoPlugin)
     }
 
     gradle.projectsEvaluated {
+
+        tasks.withType(Test) {
+            testLogging {
+                exceptionFormat 'full'
+                events 'failed'
+            }
+        }
 
         tasks.withType(JacocoReport) {
             it.reports.xml.enabled = true;
             it.reports.html.enabled = false;
             tasks.findByName('check').dependsOn(it)
+
+            tasks.withType(Test) {
+                jacoco {
+                    excludeClassLoaders ['hoopoe.test.supplements.TestClassLoader']
+                }
+            }
+
         }
 
         tasks.withType(Jar) {
