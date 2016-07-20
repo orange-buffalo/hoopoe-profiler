@@ -4,25 +4,32 @@ import hoopoe.api.HoopoeProfiledInvocation;
 import hoopoe.api.HoopoeProfiledInvocationSummary;
 import hoopoe.api.HoopoeProfilerStorage;
 import java.util.Collection;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
-@RestController
-@RequestMapping("/api")
+@Path("/")
+@Singleton
 public class ProfiledInvocationsController {
 
-    @Autowired
+    @Inject
     private HoopoeProfilerStorage storage;
 
-    @RequestMapping("invocations")
+    @Path("invocations")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public Collection<HoopoeProfiledInvocationSummary> getInvocations() {
         return storage.getProfiledInvocationSummaries();
     }
 
-    @RequestMapping("invocations/{id}")
-    public HoopoeProfiledInvocation getInvocation(@PathVariable String id) {
+    @Path("invocations/{id}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public HoopoeProfiledInvocation getInvocation(@PathParam("id") String id) {
         return storage.getProfiledInvocation(id);
     }
 
