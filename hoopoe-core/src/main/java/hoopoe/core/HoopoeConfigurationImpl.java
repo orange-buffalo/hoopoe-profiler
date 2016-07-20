@@ -34,7 +34,7 @@ public class HoopoeConfigurationImpl implements HoopoeConfiguration {
 
     @Override
     public Collection<String> getEnabledPlugins() {
-        return Collections.singleton("sql-queries-plugin");
+        return Collections.singleton("hoopoe-sql-queries-plugin");
     }
 
     @Override
