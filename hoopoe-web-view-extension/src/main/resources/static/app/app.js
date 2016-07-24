@@ -3,8 +3,6 @@ angular
   .config(['$routeProvider', '$locationProvider', '$mdThemingProvider', '$mdIconProvider', AppConfig])
   .factory('HelperService', HelperService)
   .controller('InvocationsListCtrl', ['$http', '$location', InvocationsListController])
-  .controller('InvocationDetailsCtrl', ['$http', '$routeParams', InvocationDetailsController])
+  .controller('InvocationDetailsCtrl', ['$scope', '$http', '$routeParams', InvocationDetailsController])
   .directive('hpDurationLabel', ['$rootScope', DurationLabel])
-  .run(['$rootScope', 'HelperService', function ($rootScope, helperService) {
-    $rootScope.helperService = helperService;
-  }])
+  .run(['$rootScope', 'HelperService', AppRunner]);

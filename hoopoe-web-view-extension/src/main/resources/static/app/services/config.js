@@ -37,3 +37,11 @@ function AppConfig($routeProvider, $locationProvider, $mdThemingProvider, $mdIco
 
   $mdIconProvider.defaultIconSet('/img/hoopoe-icons.svg');
 }
+
+function AppRunner($rootScope, helperService) {
+  $rootScope.helperService = helperService;
+
+  $rootScope.hoopoeConfig = {
+    expandDirectPaths : true
+  }
+}

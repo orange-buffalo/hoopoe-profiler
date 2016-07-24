@@ -12,7 +12,9 @@
   <md-content flex layout="column">
     <div class="treecontrol-container" flex>
       <treecontrol tree-model="invocationDetails.data"
-                   on-node-toggle="node.expanded = expanded"
+                   expanded-nodes="invocationDetails.expandedInvocations"
+                   on-node-toggle="invocationDetails.onInvocationNodeToggle(node, expanded)"
+                   selected-node="invocationDetails.selectedInvocation"
                    options="invocationDetails.invocationsTreeOptions">
         {{node.className}}.{{node.methodSignature}}
         <hp-duration-label duration-in-ns="node.totalTimeInNs"></hp-duration-label>
