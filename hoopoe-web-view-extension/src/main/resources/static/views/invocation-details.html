@@ -17,8 +17,10 @@
                    selected-node="invocationDetails.selectedInvocation"
                    options="invocationDetails.invocationsTreeOptions">
         {{node.className}}.{{node.methodSignature}}
-        <hp-duration-label duration-in-ns="node.totalTimeInNs"></hp-duration-label>
-        <hp-duration-label duration-in-ns="node.ownTimeInNs"></hp-duration-label>
+        <span class="hp-invocation-duration"
+              ng-bind="helperService.getSmartDuration(node.totalTimeInNs)"></span>
+        <span class="hp-invocation-duration"
+              ng-bind="helperService.getSmartDuration(node.ownTimeInNs)"></span>
         <span ng-repeat="attr in node.attributes">{{attr.name}}</span>
       </treecontrol>
     </div>
@@ -33,7 +35,9 @@
         ng-class="headClass(node)"
         set-node-to-data>
 
-      <span ng-click="selectNodeHead(node)" ng-show="!isLeaf(node)">
+      <span ng-click="selectNodeHead(node)"
+            class="hp-tree-handle"
+            ng-show="!isLeaf(node)">
          <md-icon md-svg-icon="{{nodeExpanded() ? 'minus' : 'plus'}}"
                   class="small">
          </md-icon>

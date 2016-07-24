@@ -1,9 +1,14 @@
+body, html, md-content {
+    color: #d2d1d1;
+}
+
 .hp-thread-name {
     color: #5f9ea0;
     font-weight: bold;
     font-size: 1.2em;
 }
 
+/*todo currently not in use, remove?*/
 md-tooltip .md-content {
     height: auto;
 }
@@ -21,14 +26,12 @@ md-icon.small {
 }
 
 treecontrol {
-    /* prevent user selection */
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
 
-    /* default */
     font-family: 'Source Code Pro', monospace;
     font-size: 13px;
     text-decoration: none;
@@ -52,15 +55,11 @@ treecontrol li span {
     outline: none;
 }
 
-treecontrol li.tree-expanded i.tree-leaf-head, treecontrol li.tree-collapsed i.tree-leaf-head {
-    display: none;
-}
-
 treecontrol li.tree-expanded i.tree-branch-head, treecontrol li.tree-collapsed i.tree-branch-head {
     display: inline;
 }
 
-treecontrol li i.tree-branch-head {
+treecontrol li .hp-tree-handle {
     cursor: pointer;
 }
 
@@ -71,11 +70,19 @@ treecontrol li .tree-label {
     outline: none;
 }
 
-treecontrol li .tree-unselectable {
-    cursor: not-allowed;
-}
-
 treecontrol li .tree-selected {
     font-weight: bold;
     background-color: rgba(255, 255, 255, 0.2)
+}
+
+.hp-invocation-duration {
+    display: inline-block;
+    padding: 1px 3px;
+    background-color: #698788;
+    box-sizing: border-box;
+    line-height: 13px;
+    color: rgb(47, 45, 45);
+    border-radius: 1px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 13px;
 }
