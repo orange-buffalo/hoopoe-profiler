@@ -7,3 +7,101 @@
 md-tooltip .md-content {
     height: auto;
 }
+
+.treecontrol-container {
+    overflow-x: scroll;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+}
+
+md-icon.small {
+    height: 13px;
+    width: 13px;
+}
+
+treecontrol {
+    /* prevent user selection */
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    /* default */
+    font-family: 'Source Code Pro', monospace;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+treecontrol ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: none;
+}
+
+treecontrol li {
+    position: relative;
+    padding: 0 0 0 20px;
+    line-height: 20px;
+    white-space: nowrap;
+}
+
+treecontrol li span {
+    outline: none;
+}
+
+treecontrol li.tree-expanded i.tree-leaf-head, treecontrol li.tree-collapsed i.tree-leaf-head {
+    display: none;
+}
+
+treecontrol li.tree-expanded i.tree-branch-head, treecontrol li.tree-collapsed i.tree-branch-head {
+    display: inline;
+}
+
+treecontrol li.tree-leaf i.tree-branch-head {
+    display: none;
+}
+
+treecontrol li.tree-leaf i.tree-leaf-head {
+    display: inline;
+}
+
+treecontrol li i.tree-branch-head {
+    cursor: pointer;
+}
+
+treecontrol li .tree-label {
+    cursor: pointer;
+    display: inline;
+    white-space: nowrap;
+}
+
+treecontrol li .tree-unselectable {
+    cursor: not-allowed;
+}
+
+treecontrol li.tree-expanded i.tree-branch-head {
+    padding: 1px 10px;
+    background: url("../images/folder.png") no-repeat;
+}
+
+treecontrol li.tree-collapsed i.tree-branch-head {
+    padding: 1px 10px;
+    background: url("../images/folder-closed.png") no-repeat;
+}
+
+treecontrol li.tree-leaf i.tree-leaf-head {
+    padding: 1px 10px;
+    background: url("../images/file.png") no-repeat;
+}
+
+treecontrol li .tree-selected {
+    background-color: #aaddff;
+    font-weight: bold;
+}
+
+treecontrol li .tree-unselectable {
+    color: #ddd;
+}

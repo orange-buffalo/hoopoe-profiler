@@ -148,6 +148,10 @@ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.ex
                         }
                     }
 
+                    $scope.isLeaf = function(node) {
+                        return $scope.options.isLeaf(node, this);
+                    };
+
                     $scope.headClass = function(node) {
                         var liSelectionClass = classIfDefined($scope.options.injectClasses.liSelected, false);
                         var injectSelectionClass = "";
@@ -304,7 +308,7 @@ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.ex
                             '</ul>';
                     }
 
-                    this.template = $compile($interpolate(template)({options: templateOptions}));
+                    this.template = $compile(template);
                 }],
                 compile: function(element, attrs, childTranscludeFn) {
                     return function ( scope, element, attrs, treemodelCntr ) {
