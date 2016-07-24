@@ -60,14 +60,6 @@ treecontrol li.tree-expanded i.tree-branch-head, treecontrol li.tree-collapsed i
     display: inline;
 }
 
-treecontrol li.tree-leaf i.tree-branch-head {
-    display: none;
-}
-
-treecontrol li.tree-leaf i.tree-leaf-head {
-    display: inline;
-}
-
 treecontrol li i.tree-branch-head {
     cursor: pointer;
 }
@@ -76,32 +68,14 @@ treecontrol li .tree-label {
     cursor: pointer;
     display: inline;
     white-space: nowrap;
+    outline: none;
 }
 
 treecontrol li .tree-unselectable {
     cursor: not-allowed;
 }
 
-treecontrol li.tree-expanded i.tree-branch-head {
-    padding: 1px 10px;
-    background: url("../images/folder.png") no-repeat;
-}
-
-treecontrol li.tree-collapsed i.tree-branch-head {
-    padding: 1px 10px;
-    background: url("../images/folder-closed.png") no-repeat;
-}
-
-treecontrol li.tree-leaf i.tree-leaf-head {
-    padding: 1px 10px;
-    background: url("../images/file.png") no-repeat;
-}
-
 treecontrol li .tree-selected {
-    background-color: #aaddff;
     font-weight: bold;
-}
-
-treecontrol li .tree-unselectable {
-    color: #ddd;
+    background-color: rgba(255, 255, 255, 0.2)
 }
