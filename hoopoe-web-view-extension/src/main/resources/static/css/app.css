@@ -3,9 +3,16 @@ body, html, md-content {
 }
 
 .hp-thread-name {
-    color: #5f9ea0;
     font-weight: bold;
-    font-size: 1.2em;
+}
+
+.hp-invocations-list {
+    font-family: 'Source Code Pro', monospace;
+}
+
+.hp-profiled-on {
+    font-size: 12px;
+    line-height: 12px;
 }
 
 /*todo currently not in use, remove?*/

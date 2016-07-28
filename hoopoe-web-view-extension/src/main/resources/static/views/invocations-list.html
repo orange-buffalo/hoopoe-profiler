@@ -7,14 +7,15 @@
 </md-toolbar>
 <md-content layout-padding ng-controller="InvocationsListCtrl as invocationsList" flex>
 
-  <md-list>
+  <md-list class="hp-invocations-list">
     <md-subheader class="md-no-sticky">Profiled invocations</md-subheader>
-    <md-list-item ng-repeat="invocation in invocationsList.data" ng-click="invocationsList.showDetails(invocation.id)">
+    <md-list-item ng-repeat="invocation in invocationsList.data | orderBy: 'profiledOn': true "
+                  ng-click="invocationsList.showDetails(invocation.id)">
       <div class="md-list-item-text">
-        <span class="hp-thread-name">{{ invocation.threadName }}</span>
+        <span class="hp-thread-name">[{{ invocation.threadName }}]</span>
         <span class="hp-invocation-duration"
               ng-bind="helperService.getSmartDuration(invocation.totalTimeInNs)"></span>
-        <span class="hp-profiled-on">profiled on {{ helperService.printTime(invocation.profiledOn) }}</span>
+        <span class="hp-profiled-on">{{ helperService.timeAgoFromEpochTime(invocation.profiledOn) }} (at {{ helperService.printTime(invocation.profiledOn) }})</span>
       </div>
       <md-divider></md-divider>
     </md-list-item>
