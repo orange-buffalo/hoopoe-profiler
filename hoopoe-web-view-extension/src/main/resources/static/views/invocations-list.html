@@ -13,9 +13,16 @@
                   ng-click="invocationsList.showDetails(invocation.id)">
       <div class="md-list-item-text">
         <span class="hp-thread-name">[{{ invocation.threadName }}]</span>
-        <span class="hp-invocation-duration"
+        <span class="hp-badge hp-duration"
               ng-bind="helperService.getSmartDuration(invocation.totalTimeInNs)"></span>
-        <span class="hp-profiled-on">{{ helperService.timeAgoFromEpochTime(invocation.profiledOn) }} (at {{ helperService.printTime(invocation.profiledOn) }})</span>
+        <span class="hp-profiled-on">
+          {{ helperService.timeAgoFromEpochTime(invocation.profiledOn) }}
+          (at {{ helperService.printTime(invocation.profiledOn) }})
+        </span>
+         <span class="hp-badge hp-attribute"
+              ng-repeat="attr in invocation.attributeSummaries">
+          {{ attr.totalOccurrences }} {{attr.name}}
+        </span>
       </div>
       <md-divider></md-divider>
     </md-list-item>

@@ -2,19 +2,6 @@ body, html, md-content {
     color: #d2d1d1;
 }
 
-.hp-thread-name {
-    font-weight: bold;
-}
-
-.hp-invocations-list {
-    font-family: 'Source Code Pro', monospace;
-}
-
-.hp-profiled-on {
-    font-size: 12px;
-    line-height: 12px;
-}
-
 /*todo currently not in use, remove?*/
 md-tooltip .md-content {
     height: auto;
@@ -82,10 +69,22 @@ treecontrol li .tree-selected {
     background-color: rgba(255, 255, 255, 0.2)
 }
 
-.hp-invocation-duration {
+.hp-thread-name {
+    font-weight: bold;
+}
+
+.hp-invocations-list {
+    font-family: 'Source Code Pro', monospace;
+}
+
+.hp-profiled-on {
+    font-size: 12px;
+    line-height: 12px;
+}
+
+.hp-badge {
     display: inline-block;
     padding: 1px 3px;
-    background-color: #698788;
     box-sizing: border-box;
     line-height: 13px;
     color: rgb(47, 45, 45);
@@ -94,14 +93,14 @@ treecontrol li .tree-selected {
     font-size: 13px;
 }
 
+.hp-duration {
+    background-color: #698788;
+}
+
 .hp-invocations-count {
-    display: inline-block;
-    padding: 1px 3px;
     background-color: #6c8672;
-    box-sizing: border-box;
-    line-height: 13px;
-    color: rgb(47, 45, 45);
-    border-radius: 1px;
-    font-family: 'Source Code Pro', monospace;
-    font-size: 13px;
+}
+
+.hp-attribute {
+    background-color: #c4b34b;
 }

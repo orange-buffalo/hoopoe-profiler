@@ -17,12 +17,15 @@
                    selected-node="invocationDetails.selectedInvocation"
                    options="invocationDetails.invocationsTreeOptions">
         {{node.className}}.{{node.methodSignature}}
-        <span class="hp-invocation-duration"
+        <span class="hp-badge hp-duration"
               ng-bind="helperService.getSmartDuration(node.totalTimeInNs)"></span>
-        <span class="hp-invocation-duration"
+        <span class="hp-badge hp-duration"
               ng-bind="helperService.getSmartDuration(node.ownTimeInNs)"></span>
-        <span class="hp-invocations-count">{{ node.invocationsCount }} inv</span>
-        <span ng-repeat="attr in node.attributes">{{attr.name}}</span>
+        <span class="hp-badge hp-invocations-count">{{ node.invocationsCount }} inv</span>
+        <span class="hp-badge hp-attribute"
+              ng-repeat="attr in node.attributes">
+          {{attr.name}}
+        </span>
       </treecontrol>
     </div>
 
