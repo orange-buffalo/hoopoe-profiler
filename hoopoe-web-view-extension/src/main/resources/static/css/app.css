@@ -93,3 +93,15 @@ treecontrol li .tree-selected {
     font-family: 'Source Code Pro', monospace;
     font-size: 13px;
 }
+
+.hp-invocations-count {
+    display: inline-block;
+    padding: 1px 3px;
+    background-color: #6c8672;
+    box-sizing: border-box;
+    line-height: 13px;
+    color: rgb(47, 45, 45);
+    border-radius: 1px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 13px;
+}
