@@ -15,6 +15,7 @@
                    expanded-nodes="invocationDetails.expandedInvocations"
                    on-node-toggle="invocationDetails.onInvocationNodeToggle(node, expanded)"
                    selected-node="invocationDetails.selectedInvocation"
+                   on-selection="invocationDetails.selectMethod(node, selected)"
                    options="invocationDetails.invocationsTreeOptions">
         {{node.className}}.{{node.methodSignature}}
         <span class="hp-badge hp-duration"

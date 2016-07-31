@@ -1,4 +1,4 @@
-function InvocationDetailsController($scope, $http, $routeParams) {
+function InvocationDetailsController($scope, $http, $routeParams, $mdDialog, helperService) {
   var $controller = this;
 
   function _expandNode(node) {
@@ -29,6 +29,26 @@ function InvocationDetailsController($scope, $http, $routeParams) {
     $controller.selectedInvocation = null;
   };
 
+  $controller.selectMethod = function (invocation, selected) {
+    if (!selected) {
+      return;
+    }
+    $mdDialog.show({
+      templateUrl: 'views/method-details.html',
+      clickOutsideToClose: true,
+      controller: function ($scope, $mdDialog) {
+        $scope.invocation = invocation;
+        $scope.helperService = helperService;
+
+        $scope.closeDialog = function () {
+           $mdDialog.hide();
+        }
+
+      }
+    }).then(null, function () {
+       $controller.selectedInvocation = null;
+    })
+  };
 
   $http.get('api/invocations/' + $routeParams.invocationId)
     .then(

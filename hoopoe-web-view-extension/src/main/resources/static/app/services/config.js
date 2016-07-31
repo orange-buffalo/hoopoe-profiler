@@ -3,20 +3,20 @@ function AppConfig($routeProvider, $locationProvider, $mdThemingProvider, $mdIco
   //https://angular-md-color.com/#/
 
   var hoopoePrimaryPalette = {
-    '50': '#30303f',
-    '100': '#3b3b4e',
-    '200': '#46465c',
-    '300': '#51526b',
-    '400': '#5c5d79',
-    '500': '#676888',
-    '600': '#8182a0',
-    '700': '#9091ab',
-    '800': '#9f9fb6',
-    '900': '#adaec1',
-    'A100': '#8182a0',
-    'A200': '#737495',
-    'A400': '#676888',
-    'A700': '#bcbccc'
+    '50': '#c79f9b',
+    '100': '#be8f8b',
+    '200': '#b5807a',
+    '300': '#ac706a',
+    '400': '#a2615a',
+    '500': '#925751',
+    '600': '#824d48',
+    '700': '#71433f',
+    '800': '#613a36',
+    '900': '#50302d',
+    'A100': '#d1afab',
+    'A200': '#dabfbc',
+    'A400': '#e3cecc',
+    'A700': '#402623'
   };
   $mdThemingProvider.definePalette('hoopoePrimaryPalette', hoopoePrimaryPalette);
 

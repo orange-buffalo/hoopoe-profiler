@@ -19,6 +19,14 @@ md-icon.small {
     width: 13px;
 }
 
+md-toolbar:not(.md-menu-toolbar) {
+    color: #e7e7e7;
+}
+
+md-toolbar:not(.md-menu-toolbar) md-icon {
+    color: rgba(255,255,255,0.75);
+}
+
 treecontrol {
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
@@ -103,4 +111,19 @@ treecontrol li .tree-selected {
 
 .hp-attribute {
     background-color: #c4b34b;
+}
+
+.hp-monospaced {
+   font-family: 'Source Code Pro', monospace;
+}
+
+.hp-small-font {
+    font-size: 13px;
+}
+
+.hp-details-label {
+    display: block;
+    font-weight: bold;
+    color: #b5b1b1;
+    font-size: 12px;
 }
