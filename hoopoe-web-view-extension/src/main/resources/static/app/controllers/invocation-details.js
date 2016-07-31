@@ -1,18 +1,41 @@
 function InvocationDetailsController($scope, $http, $routeParams, $mdDialog, helperService, $location) {
   var $controller = this;
 
-  function _expandNode(node) {
-    if ($controller.expandedInvocations.indexOf(node) == -1) {
-      $controller.expandedInvocations.push(node);
+  function _expandInvocation(invocation) {
+    if ($controller.expandedInvocations.indexOf(invocation) == -1) {
+      $controller.expandedInvocations.push(invocation);
+      if (invocation.parent) {
+        _expandInvocation(invocation.parent);
+      }
     }
   }
 
-  function _expandDirectPaths(node) {
+  function _expandDirectPaths(invocation) {
     if ($scope.hoopoeConfig.expandDirectPaths) {
-      _expandNode(node);
-      if (node.children && node.children.length == 1) {
-        _expandDirectPaths(node.children[0]);
+      _expandInvocation(invocation);
+      if (invocation.children && invocation.children.length == 1) {
+        _expandDirectPaths(invocation.children[0]);
       }
+    }
+  }
+
+  function _expandInvocationsWithAttributes(invocation) {
+    if (invocation.attributes && invocation.attributes.length > 0) {
+      _expandInvocation(invocation);
+    }
+    if (invocation.children) {
+      invocation.children.forEach(function (childInvocation) {
+        _expandInvocationsWithAttributes(childInvocation);
+      });
+    }
+  }
+
+  function _enrichInvocationsData(invocation) {
+    if (invocation.children) {
+      invocation.children.forEach(function (childInvocation) {
+        childInvocation.parent = invocation;
+        _enrichInvocationsData(childInvocation);
+      });
     }
   }
 
@@ -58,7 +81,10 @@ function InvocationDetailsController($scope, $http, $routeParams, $mdDialog, hel
     .then(
       function (invocation) {
         $controller.data = invocation.data;
+        _enrichInvocationsData($controller.data);
         _expandDirectPaths($controller.data);
+        // todo this should be a button
+        _expandInvocationsWithAttributes($controller.data);
       },
       function () {
         //todo handle errors
