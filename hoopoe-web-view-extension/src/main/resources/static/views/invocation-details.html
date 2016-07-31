@@ -1,12 +1,11 @@
 <div layout-fill layout="column" ng-controller="InvocationDetailsCtrl as invocationDetails">
   <md-toolbar>
     <div class="md-toolbar-tools">
-      <md-button aria-label="Go Back">
-        Go Back
+      <md-button class="md-icon-button"
+                 ng-click="invocationDetails.backToList()"
+                 aria-label="Go Back">
+        <md-icon md-svg-icon="left-button"></md-icon>
       </md-button>
-      <h2>
-        <span>Toolbar with Standard Buttons</span>
-      </h2>
     </div>
   </md-toolbar>
   <md-content flex layout="column">

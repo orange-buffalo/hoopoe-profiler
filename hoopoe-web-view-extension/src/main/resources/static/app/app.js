@@ -4,5 +4,5 @@ angular
   .factory('HelperService', HelperService)
   .controller('InvocationsListCtrl', ['$http', '$location', InvocationsListController])
   .controller('InvocationDetailsCtrl',
-    ['$scope', '$http', '$routeParams', '$mdDialog', 'HelperService', InvocationDetailsController])
+    ['$scope', '$http', '$routeParams', '$mdDialog', 'HelperService', '$location', InvocationDetailsController])
   .run(['$rootScope', 'HelperService', AppRunner]);
