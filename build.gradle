@@ -17,7 +17,10 @@ scmVersion {
         initialVersion = { tag, position -> '0.1.0-alpha1' }
     }
     hooks {
-        pre {context -> project.ext.set('releaseVersion', context.currentVersion)}
+        pre {context ->
+            project.ext.set('releaseVersion', context.currentVersion)
+            println "Releasing $project.ext.releaseVersion"
+        }
     }
 }
 
@@ -115,8 +118,8 @@ tasks.releaseTag.doLast({
     subprojects.tasks.each {
         def binTrayTask = it.findByName('bintrayUpload')
         if (binTrayTask) {
-            binTrayTask.versionName = ext.releaseVersion
-            binTrayTask.versionVcsTag = ext.releaseVersion
+            binTrayTask.versionName = project.ext.releaseVersion
+            binTrayTask.versionVcsTag = project.ext.releaseVersion
         }
     }
 })
