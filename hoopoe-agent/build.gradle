@@ -1,6 +1,9 @@
+plugins {
+    id "com.jfrog.bintray" version "1.7"
+}
+
 apply plugin: HoopoeDependencyPlugin
 
-// todo do to generate for releases
 apply plugin: 'rebel'
 
 dependencies {
@@ -15,6 +18,7 @@ jar {
     manifest {
         attributes('Premain-Class': 'hoopoe.core.HoopoeAgent')
     }
+    archiveName = "${jar.baseName}.${jar.extension}"
 }
 
 rebel {
@@ -26,4 +30,19 @@ rebel {
     resource {}
 
   }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    configurations = ['archives']
+    pkg {
+        repo = 'hoopoe-profiler'
+        name = 'hoopoe-profiler'
+        version {
+            name = "$project.version"
+            released = new Date()
+            vcsTag = "hoopoe-profiler-$project.version"
+        }
+    }
 }

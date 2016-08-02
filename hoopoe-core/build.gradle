@@ -1,6 +1,5 @@
 apply plugin: HoopoeAssemblyPlugin
 
-// todo do to generate for releases
 apply plugin: 'rebel'
 
 dependencies {
