@@ -16,9 +16,10 @@ scmVersion {
         prefix = 'hoopoe-profiler'
         initialVersion = { tag, position -> '0.1.0-alpha1' }
     }
+    versionIncrementer 'incrementPrerelease'
     hooks {
         pre {context ->
-            project.ext.set('releaseVersion', context.currentVersion)
+            project.ext.set('releaseVersion', context.previousVersion)
             println "Releasing $project.ext.releaseVersion"
         }
     }
