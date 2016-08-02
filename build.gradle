@@ -74,10 +74,9 @@ subprojects {
             sourceCompatibility = 1.8
         }
 
-        project.tasks.withType(Assemble) {
-            project.parent.tasks.releaseAssemble.dependsOn(it)
-            it.dependsOn(project.parent.tasks.releaseClean)
-        }
+        def assembleTask = project.tasks.findByName('assemble')
+        project.parent.tasks.releaseAssemble.dependsOn(assembleTask)
+        assembleTask.dependsOn(project.parent.tasks.releaseClean)
 
         project.tasks.withType(Test) {
             project.parent.tasks.releaseTests.dependsOn(it)
