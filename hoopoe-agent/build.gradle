@@ -40,7 +40,7 @@ bintray {
         repo = 'hoopoe-profiler'
         name = 'hoopoe-profiler'
         version {
-            name = "$scmVersion.version"
+            name = "$project.version"
             released = new Date()
             vcsTag = "hoopoe-profiler-$project.version"
         }

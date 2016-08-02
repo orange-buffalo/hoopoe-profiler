@@ -16,6 +16,9 @@ scmVersion {
         prefix = 'hoopoe-profiler'
         initialVersion = { tag, position -> '0.1.0-alpha1' }
     }
+    hooks {
+        pre {context -> ext.releaseVersion = context.currentVersion}
+    }
 }
 
 ext.releasing = gradle.startParameter.taskNames.contains('release')
@@ -101,15 +104,23 @@ tasks.remove(tasks.findByName('release'));
 task releaseClean()
 task releaseAssemble()
 tasks.releaseAssemble.dependsOn(tasks.releaseClean)
+tasks.releaseAssemble.mustRunAfter(tasks.verifyRelease)
 task releaseTests() {
     dependsOn tasks.releaseAssemble
 }
 task releaseTag() {
     dependsOn tasks.releaseTests, tasks.createRelease
 }
-tasks.releaseAssemble.mustRunAfter(tasks.verifyRelease)
-tasks.createRelease.dependsOn(tasks.verifyRelease)
-tasks.createRelease.mustRunAfter(tasks.releaseTests)
+tasks.releaseTag.doLast({
+    subprojects.tasks.each {
+        def binTrayTask = it.findByName('bintrayUpload')
+        if (binTrayTask) {
+            binTrayTask.versionName = ext.releaseVersion
+            binTrayTask.versionVcsTag = ext.releaseVersion
+        }
+    }
+})
+tasks.createRelease.dependsOn(tasks.verifyRelease, tasks.releaseTests)
 task releasePush() {
    dependsOn tasks.releaseTag
 }
