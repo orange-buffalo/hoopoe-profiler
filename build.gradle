@@ -17,7 +17,7 @@ scmVersion {
         initialVersion = { tag, position -> '0.1.0-alpha1' }
     }
     hooks {
-        pre {context -> ext.releaseVersion = context.currentVersion}
+        pre {context -> project.ext.set('releaseVersion', context.currentVersion)}
     }
 }
 
