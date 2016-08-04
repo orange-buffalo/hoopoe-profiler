@@ -99,13 +99,6 @@ subprojects {
         if (binTrayTask) {
             binTrayTask.dependsOn(project.parent.tasks.releaseTag)
             project.parent.tasks.releaseUpload.dependsOn(binTrayTask)
-
-            binTrayTask.user = System.getenv('BINTRAY_USER')
-            binTrayTask.apiKey = System.getenv('BINTRAY_KEY')
-            binTrayTask.repoName = 'hoopoe-profiler'
-            binTrayTask.versionName = "$project.version"
-            binTrayTask.versionVcsTag = "hoopoe-profiler-$project.version"
-            binTrayTask.versionReleased = new Date()
         }
 
     }
