@@ -33,16 +33,8 @@ rebel {
 }
 
 bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_KEY')
     configurations = ['archives']
     pkg {
-        repo = 'hoopoe-profiler'
         name = 'hoopoe-profiler'
-        version {
-            name = "$project.version"
-            released = new Date()
-            vcsTag = "hoopoe-profiler-$project.version"
-        }
     }
 }

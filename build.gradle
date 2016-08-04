@@ -23,6 +23,10 @@ scmVersion {
             println "Releasing $project.ext.releaseVersion"
         }
     }
+    checks {
+        uncommittedChanges = true
+        aheadOfRemote = false
+    }
 }
 
 ext.releasing = gradle.startParameter.taskNames.contains('release')
@@ -94,7 +98,14 @@ subprojects {
         def binTrayTask = project.tasks.findByName('bintrayUpload');
         if (binTrayTask) {
             binTrayTask.dependsOn(project.parent.tasks.releaseTag)
-            project.parent.tasks.releasePush.dependsOn(binTrayTask)
+            project.parent.tasks.releaseUpload.dependsOn(binTrayTask)
+
+            binTrayTask.user = System.getenv('BINTRAY_USER')
+            binTrayTask.apiKey = System.getenv('BINTRAY_KEY')
+            binTrayTask.repoName = 'hoopoe-profiler'
+            binTrayTask.versionName = "$project.version"
+            binTrayTask.versionVcsTag = "hoopoe-profiler-$project.version"
+            binTrayTask.versionReleased = new Date()
         }
 
     }
@@ -106,29 +117,24 @@ task wrapper(type: Wrapper) {
 
 tasks.remove(tasks.findByName('release'));
 task releaseClean()
+tasks.verifyRelease.dependsOn(tasks.releaseClean)
 task releaseAssemble()
-tasks.releaseAssemble.dependsOn(tasks.releaseClean)
-tasks.releaseAssemble.mustRunAfter(tasks.verifyRelease)
-task releaseTests() {
-    dependsOn tasks.releaseAssemble
-}
-task releaseTag() {
-    dependsOn tasks.releaseTests, tasks.createRelease
-}
+tasks.releaseAssemble.dependsOn(tasks.verifyRelease)
+task releaseTests()
+tasks.releaseTests.dependsOn(tasks.releaseAssemble)
+task releaseTag()
+tasks.releaseTag.dependsOn(tasks.releaseTests, tasks.createRelease)
 tasks.releaseTag.doLast({
     subprojects.tasks.each {
         def binTrayTask = it.findByName('bintrayUpload')
         if (binTrayTask) {
             binTrayTask.versionName = project.ext.releaseVersion
-            binTrayTask.versionVcsTag = project.ext.releaseVersion
+            binTrayTask.versionVcsTag = "hoopoe-profiler-$project.ext.releaseVersion"
         }
     }
 })
 tasks.createRelease.dependsOn(tasks.verifyRelease, tasks.releaseTests)
-task releasePush() {
-   dependsOn tasks.releaseTag
-}
-tasks.pushRelease.dependsOn(tasks.releasePush)
-task release() {
-    dependsOn tasks.pushRelease
-}
+task releaseUpload()
+tasks.releaseUpload.dependsOn(tasks.releaseTag)
+task release()
+tasks.release.dependsOn(tasks.releaseUpload)
