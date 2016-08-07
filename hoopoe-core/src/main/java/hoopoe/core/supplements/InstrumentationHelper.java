@@ -63,6 +63,7 @@ public class InstrumentationHelper {
         initProfilerBridge();
 
         AgentBuilder baseAgentConfig = new AgentBuilder.Default()
+                .disableClassFormatChanges()
                 .with(new AgentListener());
 
         Advice.WithCustomMapping baseAdviceConfig = Advice
