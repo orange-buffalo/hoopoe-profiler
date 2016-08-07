@@ -1,5 +1,5 @@
 plugins {
-    id "com.jfrog.bintray" version "1.7"
+    id "com.jfrog.bintray" version "1.7.1"
 }
 
 apply plugin: HoopoeDependencyPlugin
@@ -33,8 +33,11 @@ rebel {
 }
 
 bintray {
-    configurations = ['archives']
     pkg {
         name = 'hoopoe-profiler'
     }
+    filesSpec {
+		from 'build/libs'
+		into '.'
+	}
 }
