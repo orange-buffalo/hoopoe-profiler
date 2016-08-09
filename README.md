@@ -1,6 +1,6 @@
 # hoopoe-profiler [![Build Status](https://travis-ci.org/orange-buffalo/hoopoe-profiler.svg)](https://travis-ci.org/orange-buffalo/hoopoe-profiler)  [![Code Coverage](https://img.shields.io/codecov/c/github/orange-buffalo/hoopoe-profiler.svg)](https://codecov.io/gh/orange-buffalo/hoopoe-profiler) [![Download](https://img.shields.io/bintray/v/orange-buffalo/hoopoe-profiler/hoopoe-profiler.svg) ](https://bintray.com/orange-buffalo/hoopoe-profiler/hoopoe-profiler/_latestVersion)  
 
-![hoopoe](https://raw.githubusercontent.com/wiki/orange-buffalo/hoopoe-profiler/img/banner.gif)
+![hoopoe](https://github.com/orange-buffalo/hoopoe-profiler/wiki/img/movie.gif)
 
 ## Why?
 Quick answer is that we did not find any java profiler with reasonable price, active development / support and human-friendly profiling results delivery. Check our [wiki page](https://github.com/orange-buffalo/hoopoe-profiler/wiki/Why-the-heck-another-profiler%3F) for more explanations. 
