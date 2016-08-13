@@ -1,0 +1,8 @@
+# Contributing to hoopoe-profiler
+We are currently in alpha-version phase and have not yet developed and established code-style, pull requests and other policies.
+
+The general advice is to contact us if you have any idea before implementing it. We can discuss and decide about the best way to integrate your contribution.
+
+Another way is just to file an issue, be it a bug, improvement or feature request.
+
+As soon as code is stabilized we will provide more detailed guidelines for contributions to hoopoe-profiler.
