@@ -16,7 +16,7 @@ Currently we are in alpha-version. This means two things: firstly, the absolute 
   -javaagent:<path-to-hoopoe-agent.jar>
   ```
   
-  If you are using JBoss servers (AS, WildFly, EAP), please check [additional instructions](https://github.com/orange-buffalo/hoopoe-profiler/wiki/Installation-Guide). 
+  If you are using JBoss servers (AS, WildFly, EAP), please check [additional instructions](https://github.com/orange-buffalo/hoopoe-profiler/wiki/Installation-Guide#jboss). 
     
 3. Start the application.
 Please note: we instrument a lot of code to give the best profiling results we can. It means the time to load any class will increase, as well as the total startup time of the application.
