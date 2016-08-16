@@ -3,7 +3,6 @@ package hoopoe.test.supplements;
 import hoopoe.api.HoopoeConfiguration;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfilerExtensionsProvider;
-import hoopoe.api.HoopoeProfilerStorage;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,10 +16,6 @@ public class TestConfiguration implements HoopoeConfiguration {
 
     @Mock
     @Getter
-    private static HoopoeProfilerStorage storageMock;
-
-    @Mock
-    @Getter
     private static HoopoePluginsProvider pluginsProviderMock;
 
     @Mock
@@ -30,11 +25,6 @@ public class TestConfiguration implements HoopoeConfiguration {
     @Getter
     @Setter
     private static long minimumTrackedInvocationTimeInNs;
-
-    @Override
-    public HoopoeProfilerStorage createProfilerStorage() {
-        return storageMock;
-    }
 
     @Override
     public HoopoePluginsProvider createPluginsProvider() {

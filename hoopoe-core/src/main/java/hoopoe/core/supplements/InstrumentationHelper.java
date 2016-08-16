@@ -78,7 +78,6 @@ public class InstrumentationHelper {
                 .bind(MinimumTrackedTime.class, (instrumentedMethod, target, annotation, initialized) ->
                         profiler.getConfiguration().getMinimumTrackedInvocationTimeInNs());
 
-        // first add profiling bytecode
         transformers.add(baseAgentConfig
                 .type(this::matchesProfiledClass)
                 .transform((builder, typeDescription, classLoader) -> {
@@ -89,28 +88,18 @@ public class InstrumentationHelper {
                             .visit(baseAdviceConfig
                                     .bind(PluginActions.class, (instrumentedMethod, target, annotation, initialized) ->
                                             getPluginActions(instrumentedMethod))
-                                    .to(PluginsAwareAdvice.class)
+                                    .to(EnterAdvice.class, PluginsAwareAdvice.class)
                                     .on(this::matchesPluginAwareMethod)
                             )
                             .visit(baseAdviceConfig
-                                    .to(PluginsUnawareAdvice.class)
+                                    .to(EnterAdvice.class, PluginsUnawareAdvice.class)
                                     .on(this::matchesPluginUnawareMethod)
                             )
                             .visit(baseAdviceConfig
-                                    .to(ConstructorAdvice.class)
+                                    .to(EnterAdvice.class, ConstructorAdvice.class)
                                     .on(this::matchesConstructor)
                             );
                 })
-                .installOn(instrumentation));
-
-        // wrap profiling byte code into initialization code
-        transformers.add(baseAgentConfig
-                .type(this::isRunnable)
-                .transform((builder, typeDescription, classLoader) ->
-                        builder.visit(Advice
-                                .to(RunnableAdvice.class)
-                                .on(this::matchesRunMethod)
-                        ))
                 .installOn(instrumentation));
     }
 
@@ -260,25 +249,6 @@ public class InstrumentationHelper {
         return true;
     }
 
-    private boolean isRunnable(TypeDescription target) {
-        if (target.isInterface()) {
-            return false;
-        }
-
-        TypeDescription.Generic clazz = target.asGenericType();
-        while (clazz != null) {
-            TypeList.Generic interfaces = clazz.getInterfaces();
-            for (TypeDescription.Generic next : interfaces) {
-                if ("java.lang.Runnable".equals(next.getTypeName())) {
-                    return true;
-                }
-            }
-            clazz = clazz.getSuperClass();
-        }
-
-        return false;
-    }
-
     private boolean matchesPluginAwareMethod(MethodDescription target) {
         return !target.isConstructor() && !target.isNative() && !target.isAbstract()
                 && !target.isTypeInitializer() && getPluginActions(target) != null;
@@ -291,10 +261,6 @@ public class InstrumentationHelper {
 
     private boolean matchesConstructor(MethodDescription target) {
         return target.isConstructor();
-    }
-
-    private boolean matchesRunMethod(MethodDescription target) {
-        return target.getName().equals("run") && target.getParameters().isEmpty();
     }
 
     @Retention(RetentionPolicy.RUNTIME)
@@ -317,24 +283,15 @@ public class InstrumentationHelper {
     @interface PluginActions {
     }
 
-    private static class RunnableAdvice {
-        @Advice.OnMethodEnter
-        public static void before() {
-            HoopoeProfilerBridge.instance.onRunnableEnter();
-        }
-
-        @Advice.OnMethodExit(onThrowable = Throwable.class)
-        public static void after() {
-            HoopoeProfilerBridge.instance.onRunnableExit();
-        }
-    }
-
-    private static class PluginsAwareAdvice {
+    private static class EnterAdvice {
 
         @Advice.OnMethodEnter
         public static long before() {
             return System.nanoTime();
         }
+    }
+
+    private static class PluginsAwareAdvice {
 
         @Advice.OnMethodExit
         public static void after(@Advice.Enter long startTime,
@@ -345,57 +302,56 @@ public class InstrumentationHelper {
                                  @Advice.This(optional = true) Object thisInMethod,
                                  @Advice.BoxedReturn Object returnValue,
                                  @PluginActions PluginActionIndicies pluginActionIndicies) throws Exception {
-            long endTime = System.nanoTime();
 
-            if (endTime - startTime >= minimumTrackedTimeInNs) {
-                HoopoeProfilerBridge.instance.profileCall(
-                        startTime, endTime, className, methodSignature,
-                        pluginActionIndicies.getIds(), arguments, returnValue, thisInMethod
-                );
+            if (HoopoeProfilerBridge.enabled) {
+                long endTime = System.nanoTime();
+
+                if (endTime - startTime >= minimumTrackedTimeInNs) {
+                    HoopoeProfilerBridge.instance.profileCall(
+                            startTime, endTime, className, methodSignature,
+                            pluginActionIndicies.getIds(), arguments, returnValue, thisInMethod
+                    );
+                }
             }
         }
     }
 
     private static class PluginsUnawareAdvice {
 
-        @Advice.OnMethodEnter
-        public static long before() {
-            return System.nanoTime();
-        }
-
         @Advice.OnMethodExit(onThrowable = Throwable.class)
         public static void after(@Advice.Enter long startTime,
                                  @ClassName String className,
                                  @MethodSignature String methodSignature,
                                  @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
-            long endTime = System.nanoTime();
 
-            if (endTime - startTime >= minimumTrackedTimeInNs) {
-                HoopoeProfilerBridge.instance.profileCall(
-                        startTime, endTime, className, methodSignature, null, null, null, null
-                );
+            if (HoopoeProfilerBridge.enabled) {
+                long endTime = System.nanoTime();
+
+                if (endTime - startTime >= minimumTrackedTimeInNs) {
+                    HoopoeProfilerBridge.instance.profileCall(
+                            startTime, endTime, className, methodSignature, null, null, null, null
+                    );
+                }
             }
         }
     }
 
     private static class ConstructorAdvice {
 
-        @Advice.OnMethodEnter
-        public static long before() {
-            return System.nanoTime();
-        }
-
         @Advice.OnMethodExit
         public static void after(@Advice.Enter long startTime,
                                  @ClassName String className,
                                  @MethodSignature String methodSignature,
                                  @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
-            long endTime = System.nanoTime();
 
-            if (endTime - startTime >= minimumTrackedTimeInNs) {
-                HoopoeProfilerBridge.instance.profileCall(
-                        startTime, endTime, className, methodSignature, null, null, null, null
-                );
+            if (HoopoeProfilerBridge.enabled) {
+                long endTime = System.nanoTime();
+
+                if (endTime - startTime >= minimumTrackedTimeInNs) {
+                    HoopoeProfilerBridge.instance.profileCall(
+                            startTime, endTime, className, methodSignature, null, null, null, null
+                    );
+                }
             }
         }
     }

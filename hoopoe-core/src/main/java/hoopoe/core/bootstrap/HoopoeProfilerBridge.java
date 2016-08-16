@@ -5,6 +5,8 @@ public abstract class HoopoeProfilerBridge {
 
     public static HoopoeProfilerBridge instance;
 
+    public static boolean enabled;
+
     public abstract void profileCall(long startTimeInNs,
                                      long endTimeInNs,
                                      String className,
@@ -13,9 +15,5 @@ public abstract class HoopoeProfilerBridge {
                                      Object[] args,
                                      Object returnValue,
                                      Object thisInMethod);
-
-    public abstract void onRunnableEnter();
-
-    public abstract void onRunnableExit();
 
 }

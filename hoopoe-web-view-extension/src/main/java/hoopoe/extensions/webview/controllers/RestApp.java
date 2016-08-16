@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import hoopoe.api.HoopoeProfiler;
-import hoopoe.api.HoopoeProfilerStorage;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import javax.ws.rs.ApplicationPath;
@@ -36,8 +35,7 @@ public class RestApp extends ResourceConfig {
 
         @Override
         protected void configure() {
-            bind(profiler.getStorage())
-                    .to(HoopoeProfilerStorage.class);
+            bind(profiler).to(HoopoeProfiler.class);
         }
 
     }

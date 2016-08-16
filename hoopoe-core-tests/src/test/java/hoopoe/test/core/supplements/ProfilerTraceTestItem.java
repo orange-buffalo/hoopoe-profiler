@@ -31,8 +31,8 @@ public abstract class ProfilerTraceTestItem extends TestItem {
 
     public abstract void executeTest() throws Exception;
 
-    public abstract void assertCapturedData(String originalThreadName,
-                                            Map<String, HoopoeProfiledInvocation> capturedData);
+    public abstract void assertProfiledResult(String originalThreadName,
+                                              Map<String, HoopoeProfiledInvocation> profiledResult);
 
     protected void assertInvocationSequence(HoopoeProfiledInvocation actualInvocationsRoot,
                                             Object... expectedSequenceCalls) {

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class HoopoeProfiledInvocation {
 
-    private List<HoopoeProfiledInvocation> children;
+    private List<HoopoeProfiledInvocation> children = new ArrayList<>(); //todo lazy;
 
     @Getter
     private long totalTimeInNs;

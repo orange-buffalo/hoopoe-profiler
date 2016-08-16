@@ -1,8 +1,8 @@
 package hoopoe.extensions.webview.controllers;
 
 import hoopoe.api.HoopoeProfiledInvocation;
-import hoopoe.api.HoopoeProfiledInvocationSummary;
-import hoopoe.api.HoopoeProfilerStorage;
+import hoopoe.api.HoopoeProfiledResult;
+import hoopoe.api.HoopoeProfiler;
 import java.util.Collection;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -17,20 +17,22 @@ import javax.ws.rs.core.MediaType;
 public class ProfiledInvocationsController {
 
     @Inject
-    private HoopoeProfilerStorage storage;
+    private HoopoeProfiler profiler;
 
     @Path("invocations")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<HoopoeProfiledInvocationSummary> getInvocations() {
-        return storage.getProfiledInvocationSummaries();
+    public Collection<HoopoeProfiledResult> getInvocations() {
+//        return storage.getProfiledInvocationSummaries();
+        return null;
     }
 
     @Path("invocations/{id}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public HoopoeProfiledInvocation getInvocation(@PathParam("id") String id) {
-        return storage.getProfiledInvocation(id);
+//        return storage.getProfiledInvocation(id);
+        return null;
     }
 
 }

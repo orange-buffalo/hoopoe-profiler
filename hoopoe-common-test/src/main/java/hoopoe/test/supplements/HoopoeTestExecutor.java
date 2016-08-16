@@ -1,17 +1,16 @@
 package hoopoe.test.supplements;
 
 import hoopoe.api.HoopoeProfiledInvocation;
-import java.lang.reflect.Constructor;
+import hoopoe.api.HoopoeProfiledResult;
+import hoopoe.core.HoopoeProfilerImpl;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import org.junit.Assert;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doAnswer;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class HoopoeTestExecutor<C> {
@@ -20,7 +19,7 @@ public final class HoopoeTestExecutor<C> {
     private TestContextProducer<C> testContextProducer;
 
     @Getter
-    private Map<String, HoopoeProfiledInvocation> capturedData = new HashMap<>();
+    private HoopoeProfiledResult profiledResult;
 
     public static <C> HoopoeTestExecutor<C> create() {
         return new HoopoeTestExecutor<>();
@@ -47,33 +46,21 @@ public final class HoopoeTestExecutor<C> {
     }
 
     public HoopoeTestExecutor<C> executeWithAgentLoaded(TestCode<C> testCode, String dedicatedThreadName) throws Exception {
-
-        doAnswer(invocation ->
-                capturedData.put(
-                        ((Thread) invocation.getArguments()[0]).getName(),
-                        (HoopoeProfiledInvocation) invocation.getArguments()[1]))
-                .when(TestConfiguration.getStorageMock())
-                .addInvocation(any(), any());
-
-        TestClassLoader runnableLoader = new TestClassLoader();
-        runnableLoader.includeClass(TestCodeRunnable.class);
-
         try {
             TestAgent.load("hoopoe.configuration.class=" + TestConfiguration.class.getCanonicalName());
 
             C testContext = testContextProducer.getTestContext(testClassLoader);
 
-            Class testCodeRunnableClass = runnableLoader.loadClass(TestCodeRunnable.class.getName());
-            Constructor<?> constructor = testCodeRunnableClass.getDeclaredConstructor(TestCode.class, Object.class);
-            Runnable testCodeRunnable = (Runnable) constructor.newInstance(testCode, testContext);
+            HoopoeProfilerImpl profiler = TestAgent.getProfiler();
+            profiler.startProfiling();
 
             if (dedicatedThreadName == null) {
-                testCodeRunnable.run();
+                testCode.execute(testContext);
             }
             else {
                 Thread thread = new Thread(() -> {
                     try {
-                        testCodeRunnable.run();
+                        testCode.execute(testContext);
                     }
                     catch (Exception e) {
                         throw new IllegalStateException(e);
@@ -82,33 +69,33 @@ public final class HoopoeTestExecutor<C> {
                 thread.start();
                 thread.join();
             }
+
+            profiledResult = profiler.stopProfiling();
         }
         finally {
             TestAgent.unload();
-        }
-
-        for (Map.Entry<String, HoopoeProfiledInvocation> capturedDataEntry : capturedData.entrySet()) {
-            HoopoeProfiledInvocation profiledInvocation = capturedDataEntry.getValue();
-            if (profiledInvocation.getClassName().equals(TestCodeRunnable.class.getName())) {
-                int subInvocationsCount = profiledInvocation.getChildren().size();
-                if (subInvocationsCount == 0) {
-                    capturedDataEntry.setValue(null);
-                }
-                else if (subInvocationsCount == 1) {
-                    capturedDataEntry.setValue(profiledInvocation.getChildren().get(0));
-                }
-                else {
-                    Assert.fail("Do not know what to do with multiple calls from TestCodeRunnable. Looks like mystery.");
-                }
-            }
         }
 
         return this;
     }
 
     public HoopoeProfiledInvocation getSingleProfiledInvocation() {
-        assertThat(capturedData.size(), equalTo(1));
-        return capturedData.values().iterator().next();
+        assertThat("There is nothing profiled", profiledResult, notNullValue());
+        assertThat("Expected single invocation profiled", profiledResult.getInvocations().size(), equalTo(1));
+        return profiledResult.getInvocations().iterator().next().getInvocation();
+    }
+
+    public Map<String, HoopoeProfiledInvocation> toThreadInvocationMap() {
+        Map<String, HoopoeProfiledInvocation> threadMap = new HashMap<>();
+        if (profiledResult != null) {
+            profiledResult.getInvocations().forEach(invocationRoot -> {
+                String threadName = invocationRoot.getThreadName();
+                assertThat("More than one invocation for thread " + threadName + " profiled",
+                        !threadMap.containsKey(threadName));
+                threadMap.put(threadName, invocationRoot.getInvocation());
+            });
+        }
+        return threadMap;
     }
 
     public interface TestContextProducer<C> {
@@ -132,28 +119,6 @@ public final class HoopoeTestExecutor<C> {
             this.clazz = clazz;
             this.instance = instance;
         }
-    }
-
-    public static class TestCodeRunnable implements Runnable {
-
-        private TestCode testCode;
-        private Object testContext;
-
-        public TestCodeRunnable(TestCode testCode, Object testContext) {
-            this.testCode = testCode;
-            this.testContext = testContext;
-        }
-
-        @Override
-        public void run() {
-            try {
-                testCode.execute(testContext);
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
-
     }
 
 }

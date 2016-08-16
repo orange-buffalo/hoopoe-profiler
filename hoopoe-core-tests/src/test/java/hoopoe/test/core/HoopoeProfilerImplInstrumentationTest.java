@@ -4,6 +4,8 @@ import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 import hoopoe.api.HoopoeProfiledInvocation;
+import hoopoe.api.HoopoeProfiledInvocationRoot;
+import hoopoe.api.HoopoeProfiledResult;
 import hoopoe.test.core.guineapigs.ApprenticeGuineaPig;
 import hoopoe.test.core.guineapigs.BaseGuineaPig;
 import hoopoe.test.core.guineapigs.RunnableGuineaPig;
@@ -15,6 +17,8 @@ import hoopoe.test.supplements.HoopoeTestHelper;
 import static hoopoe.test.supplements.HoopoeTestHelper.msToNs;
 import hoopoe.test.supplements.TestConfiguration;
 import hoopoe.test.supplements.TestConfigurationRule;
+import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Map;
 import lombok.experimental.Delegate;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -173,17 +177,17 @@ public class HoopoeProfilerImplInstrumentationTest {
                             new MethodEntryTestItemDelegate(BaseGuineaPig.class, "startNewThread", this);
 
                     @Override
-                    public void assertCapturedData(String originalThreadName,
-                                                   Map<String, HoopoeProfiledInvocation> capturedData) {
-                        assertThat(capturedData.size(), equalTo(2));
+                    public void assertProfiledResult(String originalThreadName,
+                                                     Map<String, HoopoeProfiledInvocation> profiledResult) {
+                        assertThat(profiledResult.size(), equalTo(2));
 
-                        HoopoeProfiledInvocation mainThreadInvocation = capturedData.get(originalThreadName);
+                        HoopoeProfiledInvocation mainThreadInvocation = profiledResult.get(originalThreadName);
                         assertThat(mainThreadInvocation, notNullValue());
                         assertInvocationSequence(mainThreadInvocation,
                                 BaseGuineaPig.class, "startNewThread()",
                                 RunnableGuineaPig.class, "RunnableGuineaPig()");
 
-                        HoopoeProfiledInvocation childThreadInvocation = capturedData.get("RunnableGuineaPig");
+                        HoopoeProfiledInvocation childThreadInvocation = profiledResult.get("RunnableGuineaPig");
                         assertThat(mainThreadInvocation, notNullValue());
                         assertInvocationSequence(childThreadInvocation,
                                 RunnableGuineaPig.class, "run()",
@@ -215,9 +219,9 @@ public class HoopoeProfilerImplInstrumentationTest {
                     }
 
                     @Override
-                    public void assertCapturedData(String originalThreadName,
-                                                   Map<String, HoopoeProfiledInvocation> capturedData) {
-                        assertThat(capturedData.size(), equalTo(0));
+                    public void assertProfiledResult(String originalThreadName,
+                                                     Map<String, HoopoeProfiledInvocation> profiledResult) {
+                        assertThat(profiledResult.size(), equalTo(0));
                     }
                 }
         );
@@ -230,7 +234,7 @@ public class HoopoeProfilerImplInstrumentationTest {
 
         String threadName = "testThread" + System.nanoTime();
 
-        Map<String, HoopoeProfiledInvocation> capturedData =
+        Map<String, HoopoeProfiledInvocation> profiledResult =
                 HoopoeTestExecutor.<ProfilerTraceTestItem>create()
                         .withPackage("hoopoe.test.core.guineapigs")
                         .withPackage("hoopoe.test.supplements")
@@ -241,11 +245,37 @@ public class HoopoeProfilerImplInstrumentationTest {
                             return inputTestItem;
                         })
                         .executeWithAgentLoaded(ProfilerTraceTestItem::executeTest, threadName)
-                        .getCapturedData();
+                        .toThreadInvocationMap();
 
-        // all captured executions in this thread are preparations and should be ignored during assertion
-        capturedData.remove(Thread.currentThread().getName());
-        inputTestItem.assertCapturedData(threadName, capturedData);
+        inputTestItem.assertProfiledResult(threadName, profiledResult);
+    }
+
+    @Test
+    public void testMultipleRootsFromOneThread() throws Exception {
+        HoopoeProfiledResult profiledResult =
+                HoopoeTestExecutor.create()
+                        .withPackage("hoopoe.test.core.guineapigs")
+                        .withPackage("hoopoe.test.supplements")
+                        .withContext(testClassLoader -> {
+                            Class<?> instrumentedClass = testClassLoader.loadClass(BaseGuineaPig.class.getCanonicalName());
+                            return instrumentedClass.newInstance();
+                        })
+                        .executeWithAgentLoaded(instrumentedInstance -> {
+                            Method method = instrumentedInstance.getClass().getMethod("simpleMethod");
+                            method.invoke(instrumentedInstance);
+                            method.invoke(instrumentedInstance);
+                        })
+                        .getProfiledResult();
+
+        Collection<HoopoeProfiledInvocationRoot> actualInvocations = profiledResult.getInvocations();
+        assertThat(actualInvocations.size(), equalTo(2));
+        for (HoopoeProfiledInvocationRoot actualRoot : actualInvocations) {
+            assertThat(actualRoot.getThreadName(), equalTo(Thread.currentThread().getName()));
+            HoopoeProfiledInvocation actualInvocation = actualRoot.getInvocation();
+            assertThat(actualInvocation.getClassName(), equalTo(BaseGuineaPig.class.getCanonicalName()));
+            assertThat(actualInvocation.getMethodSignature(), equalTo("simpleMethod()"));
+            assertThat(actualInvocation.getChildren().size(), equalTo(0));
+        }
     }
 
 }

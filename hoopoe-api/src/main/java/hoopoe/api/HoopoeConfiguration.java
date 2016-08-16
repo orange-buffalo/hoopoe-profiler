@@ -5,8 +5,6 @@ import java.util.regex.Pattern;
 
 public interface HoopoeConfiguration {
 
-    HoopoeProfilerStorage createProfilerStorage();
-
     HoopoePluginsProvider createPluginsProvider();
 
     HoopoeProfilerExtensionsProvider createProfilerExtensionProvider();

@@ -4,6 +4,8 @@ public interface HoopoeProfiler {
 
     HoopoeConfiguration getConfiguration();
 
-    HoopoeProfilerStorage getStorage();
+    void startProfiling();
+
+    HoopoeProfiledResult stopProfiling();
 
 }

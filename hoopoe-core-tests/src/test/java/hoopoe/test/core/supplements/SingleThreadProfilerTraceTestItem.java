@@ -12,10 +12,10 @@ public abstract class SingleThreadProfilerTraceTestItem extends ProfilerTraceTes
     }
 
     @Override
-    public void assertCapturedData(String originalThreadName,
-                                   Map<String, HoopoeProfiledInvocation> capturedData) {
-        assertThat(capturedData.size(), equalTo(1));
-        Map.Entry<String, HoopoeProfiledInvocation> dataEntry = capturedData.entrySet().iterator().next();
+    public void assertProfiledResult(String originalThreadName,
+                                     Map<String, HoopoeProfiledInvocation> profiledResult) {
+        assertThat(profiledResult.size(), equalTo(1));
+        Map.Entry<String, HoopoeProfiledInvocation> dataEntry = profiledResult.entrySet().iterator().next();
         assertThat(dataEntry.getKey(), equalTo(originalThreadName));
         assertCapturedInvocation(dataEntry.getValue());
     }
