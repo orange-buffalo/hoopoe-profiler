@@ -1,4 +1,4 @@
-function AppConfig($routeProvider, $locationProvider, $mdThemingProvider, $mdIconProvider) {
+function AppConfig($routeProvider, $locationProvider, $mdThemingProvider, $mdIconProvider, jsonrpcConfigProvider) {
 
   //https://angular-md-color.com/#/
 
@@ -30,12 +30,20 @@ function AppConfig($routeProvider, $locationProvider, $mdThemingProvider, $mdIco
       templateUrl: '/views/invocation-details.html'
     })
     .otherwise({
-      templateUrl: '/views/invocations-list.html'
+      templateUrl: '/views/invocations-tree.html'
     });
 
   $locationProvider.html5Mode(true);
 
   $mdIconProvider.defaultIconSet('/img/hoopoe-icons.svg');
+
+  jsonrpcConfigProvider.set({
+    servers: [{
+        name: 'profiler',
+        url: '/rpc/profiler'
+      }
+    ]
+  });
 }
 
 function AppRunner($rootScope, helperService) {

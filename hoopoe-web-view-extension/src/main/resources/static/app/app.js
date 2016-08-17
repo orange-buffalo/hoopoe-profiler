@@ -1,8 +1,33 @@
 angular
-  .module('HoopoeApp', ['ngMaterial', 'ngRoute', 'treeControl'])
-  .config(['$routeProvider', '$locationProvider', '$mdThemingProvider', '$mdIconProvider', AppConfig])
-  .factory('HelperService', HelperService)
-  .controller('InvocationsListCtrl', ['$http', '$location', InvocationsListController])
-  .controller('InvocationDetailsCtrl',
-    ['$scope', '$http', '$routeParams', '$mdDialog', 'HelperService', '$location', InvocationDetailsController])
-  .run(['$rootScope', 'HelperService', AppRunner]);
+  .module('HoopoeApp', [
+    'ngMaterial', 'ngRoute', 'treeControl', 'angular-jsonrpc-client'
+  ])
+  .config([
+    '$routeProvider', '$locationProvider', '$mdThemingProvider', '$mdIconProvider', 'jsonrpcConfigProvider',
+    AppConfig
+  ])
+  .factory('helperService', [
+    HelperService
+  ])
+  .factory('errorHelper', [
+    ErrorHelper
+  ])
+  .factory('operationsProgressService', [
+    OperationsProgressService
+  ])
+  .factory('profilerRpc', [
+    'jsonrpc', 'errorHelper', '$q',
+    ProfilerRpc
+  ])
+  .controller('BaseCtrl', [
+    'operationsProgressService',
+    BaseCtrl
+  ])
+  .controller('ProfilerCtrl', [
+    'profilerRpc', 'operationsProgressService', '$scope', '$mdDialog', 'helperService',
+    ProfilerCtrl
+  ])
+  .run([
+    '$rootScope', 'helperService',
+    AppRunner
+  ]);

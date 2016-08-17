@@ -8,4 +8,8 @@ public interface HoopoeProfiler {
 
     HoopoeProfiledResult stopProfiling();
 
+    HoopoeProfiledResult getLastProfiledResult();
+
+    boolean isProfiling();
+
 }

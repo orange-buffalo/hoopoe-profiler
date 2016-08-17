@@ -7,10 +7,12 @@ dependencies {
 
     compile 'org.eclipse.jetty:jetty-server:9.3.10.v20160621'          //todo manage versions
     compile 'org.eclipse.jetty:jetty-servlet:9.3.10.v20160621'
-    compile 'org.glassfish.jersey.media:jersey-media-json-processing:2.23.1'
-    compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.23.1'
-    compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.23.1'
     compile 'commons-io:commons-io:2.5'
+    compile ('com.github.briandilley.jsonrpc4j:jsonrpc4j:1.4.6') {
+        exclude module: 'slf4j-api'    // todo check why this dependency fails
+    }
+
+    provided 'javax.portlet:portlet-api:2.0'
 
 }
 

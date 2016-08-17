@@ -1,0 +1,106 @@
+<div ng-controller="ProfilerCtrl as profilerCtrl" layout="column" layout-fill>
+  <md-toolbar>
+    <div class="md-toolbar-tools" ng-if="!profilerCtrl.isProfiled()">
+      <h2>
+        <span>hoopoe-profiler</span>
+      </h2>
+    </div>
+
+    <div class="md-toolbar-tools" ng-if="profilerCtrl.isProfiled()">
+      <h2>
+        <span>hoopoe-profiler</span>
+      </h2>
+      <span flex></span>
+      <md-button ng-click="profilerCtrl.startOver()">
+        Start over
+      </md-button>
+    </div>
+  </md-toolbar>
+  <md-content layout="column" flex>
+
+    <div class="hp-center-banner" ng-if="!profilerCtrl.isProfiled()">
+      <div ng-if="profilerCtrl.isInitializing()">
+        Initializing...
+      </div>
+
+      <div ng-if="profilerCtrl.isNotYetProfiled()">
+        We haven't profiled anything yet
+      </div>
+      <div ng-if="profilerCtrl.isNothingProfiled()">
+        It looks like nothing is profiled, methods were either too fast or not called..
+      </div>
+      <md-button class="md-primary md-raised"
+                 ng-if="profilerCtrl.isNotYetProfiled() || profilerCtrl.isNothingProfiled()"
+                 ng-click="profilerCtrl.startProfiling()">
+        Start profiling
+      </md-button>
+
+      <div ng-if="profilerCtrl.isInProgress()">
+        We are recording application activity. Stop us when you are done
+      </div>
+      <md-button class="md-primary md-raised"
+                 ng-if="profilerCtrl.isInProgress()"
+                 ng-click="profilerCtrl.stopProfiling()">
+        Finish profiling
+      </md-button>
+
+      <div ng-if="profilerCtrl.isFinalizing()">
+        Finalizing...
+      </div>
+
+      <div ng-if="profilerCtrl.isError()">
+        Oops, something went wrong... We would appreciate if you could report a problem
+        at <a href="https://github.com/orange-buffalo/hoopoe-profiler/issues" target="_blank">our issue tracker</a>.
+        Please provide the output of JS console.
+      </div>
+    </div>
+
+    <div class="hp-invocations-tree-container" flex ng-if="profilerCtrl.isProfiled()">
+      <treecontrol tree-model="profilerCtrl.invocationsTree.data"
+                   expanded-nodes="profilerCtrl.invocationsTree.expandedNodes"
+                   on-node-toggle="profilerCtrl.invocationsTree.onNodeToggle(node, expanded)"
+                   selected-node="profilerCtrl.invocationsTree.selectedNode"
+                   on-selection="profilerCtrl.selectInvocation(node, selected)"
+                   options="profilerCtrl.invocationsTree.options">
+        {{node.className}}.{{node.methodSignature}}
+        <span class="hp-badge hp-duration"
+              ng-bind="helperService.getSmartDuration(node.totalTimeInNs)"></span>
+        <span class="hp-badge hp-duration"
+              ng-bind="helperService.getSmartDuration(node.ownTimeInNs)"></span>
+        <span class="hp-badge hp-invocations-count">{{ node.invocationsCount }} inv</span>
+        <span class="hp-badge hp-attribute"
+              ng-repeat="attr in node.attributes">
+          {{attr.name}}
+        </span>
+      </treecontrol>
+    </div>
+
+  </md-content>
+</div>
+
+<script type="text/ng-template" id="invocations-tree-template.html">
+  <ul>
+    <li ng-repeat="node in node.children"
+        ng-class="headClass(node)"
+        set-node-to-data>
+
+      <span ng-click="selectNodeHead(node)"
+            class="hp-tree-handle"
+            ng-show="!isLeaf(node)">
+         <md-icon md-svg-icon="{{nodeExpanded() ? 'minus' : 'plus'}}"
+                  class="small">
+         </md-icon>
+      </span>
+
+      <md-icon md-svg-icon="empty-square"
+               ng-show="isLeaf(node)"
+               class="small">
+      </md-icon>
+
+      <div class="tree-label"
+           ng-class="[selectedClass(), unselectableClass()]"
+           ng-click="selectNodeLabel(node)" tree-transclude></div>
+      <treeitem ng-if="nodeExpanded()"></treeitem>
+    </li>
+  </ul>
+</script>

@@ -7,13 +7,6 @@ md-tooltip .md-content {
     height: auto;
 }
 
-.treecontrol-container {
-    overflow-x: scroll;
-    padding-top: 10px;
-    padding-right: 10px;
-    padding-bottom: 10px;
-}
-
 md-icon.small {
     height: 13px;
     width: 13px;
@@ -24,7 +17,7 @@ md-toolbar:not(.md-menu-toolbar) {
 }
 
 md-toolbar:not(.md-menu-toolbar) md-icon {
-    color: rgba(255,255,255,0.75);
+    color: rgba(255, 255, 255, 0.75);
 }
 
 treecontrol {
@@ -114,7 +107,7 @@ treecontrol li .tree-selected {
 }
 
 .hp-monospaced {
-   font-family: 'Source Code Pro', monospace;
+    font-family: 'Source Code Pro', monospace;
 }
 
 .hp-small-font {
@@ -126,4 +119,36 @@ treecontrol li .tree-selected {
     font-weight: bold;
     color: #b5b1b1;
     font-size: 12px;
+}
+
+.hp-center-banner {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    width: 100%;
+}
+
+.hp-center-banner div {
+    margin-bottom: 20px;
+    color: rgba(138, 138, 138, 0.4);
+    font-size: 22px;
+    font-family: 'Source Code Pro', monospace;
+}
+
+.hp-center-banner div a {
+    color: #867472;
+}
+
+.hp-progress-indicator {
+    position: fixed;
+    width: 100%;
+    left: 0;
+    top: 59px;
+    z-index: 1000;
+}
+
+.hp-invocations-tree-container {
+    overflow-x: auto;
+    padding: 10px 0;
 }

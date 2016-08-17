@@ -48,6 +48,9 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     private ProfiledResultHelper profiledResultHelper = new ProfiledResultHelper();
 
+    @Getter
+    private HoopoeProfiledResult lastProfiledResult;
+
     public HoopoeProfilerImpl(String rawArgs, Instrumentation instrumentation) {
         log.info("starting profiler");
 
@@ -74,16 +77,22 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     @Override
     public void startProfiling() {
         HoopoeProfilerBridge.enabled = true;
+        lastProfiledResult = null;
     }
 
     @Override
     public HoopoeProfiledResult stopProfiling() {
         HoopoeProfilerBridge.enabled = false;
 
-        HoopoeProfiledResult profiledResult = profiledResultHelper.calculateProfiledResult(profiledTraceNodeWrappers);
+        lastProfiledResult = profiledResultHelper.calculateProfiledResult(profiledTraceNodeWrappers);
         profiledTraceNodeWrappers.clear();
 
-        return profiledResult;
+        return lastProfiledResult;
+    }
+
+    @Override
+    public boolean isProfiling() {
+        return HoopoeProfilerBridge.enabled;
     }
 
     public void profileCall(long startTimeInNs,
