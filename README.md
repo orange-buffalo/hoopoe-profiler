@@ -12,6 +12,10 @@ Hoopoe is a java agent deployed to JVM of profiled application. It instruments t
 Currently we are in alpha-version. This means two things: firstly, the absolute minimum set of fetures is developed and is under active real-life testing; secondly, early adopters are welcome as well as any constructive critics and contributions.
 [Our roadmap](https://github.com/orange-buffalo/hoopoe-profiler/wiki/Roadmap) explains the plans of future development.  
 
+## Requirements
+
+The only requirement is Java 8.
+
 ## Installation
 1. Download [the latest release](https://bintray.com/orange-buffalo/hoopoe-profiler/hoopoe-profiler/_latestVersion).
 2. Register the agent for your application:
