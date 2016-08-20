@@ -36,6 +36,7 @@ allprojects {
 
     repositories {
         mavenCentral()
+        mavenLocal()
     }
 
     project.version = scmVersion.version
