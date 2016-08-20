@@ -180,7 +180,10 @@ public class InstrumentationHelper {
 
     private static void collectSuperclasses(TypeDefinition classDescription, Set<String> superclasses) {
         classDescription.getInterfaces().asErasures().forEach(
-                interfaceDescription -> superclasses.add(getClassName(interfaceDescription))
+                interfaceDescription -> {
+                    superclasses.add(getClassName(interfaceDescription));
+                    collectSuperclasses(interfaceDescription, superclasses);
+                }
         );
 
         TypeDescription.Generic superClassGeneric = classDescription.getSuperClass();

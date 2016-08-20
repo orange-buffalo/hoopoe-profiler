@@ -6,6 +6,9 @@ import hoopoe.api.HoopoePluginAction;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeThreadLocalCache;
 import hoopoe.test.core.guineapigs.PluginGuineaPig;
+import hoopoe.test.core.guineapigs.hierarchy.ConcreteGuineaPig;
+import hoopoe.test.core.guineapigs.hierarchy.ISubGuineaPig;
+import hoopoe.test.core.guineapigs.hierarchy.ITopGuineaPig;
 import hoopoe.test.supplements.HoopoeTestExecutor;
 import hoopoe.test.supplements.TestConfiguration;
 import hoopoe.test.supplements.TestConfigurationRule;
@@ -21,6 +24,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.isIn;
 import org.junit.Rule;
 import org.junit.Test;
@@ -200,6 +204,37 @@ public class HoopoeProfilerImplPluginIntegrationTest {
                 });
 
         assertThat(pluginCalls.get(), equalTo(2));
+    }
+
+    @Test
+    public void testProvidedSuperClassesContainAllInterfacesHierarchy() throws Exception {
+        HoopoePlugin pluginMock = preparePluginMock();
+
+        Class guineaPigClass = ConcreteGuineaPig.class;
+
+        Collection<String> actualSuperclasses = new HashSet<>();
+        doAnswer(invocation -> {
+            HoopoeMethodInfo methodInfo = (HoopoeMethodInfo) invocation.getArguments()[0];
+            if (methodInfo.getCanonicalClassName().equals(guineaPigClass.getCanonicalName())) {
+                actualSuperclasses.addAll(methodInfo.getSuperclasses());
+            }
+            return null;
+        }).when(pluginMock).createActionIfSupported(any());
+
+        HoopoeTestExecutor.create()
+                .withPackage("hoopoe.test.core.guineapigs.hierarchy")
+                .withContext(testClassLoader -> testClassLoader.loadClass(guineaPigClass.getCanonicalName()))
+                .executeWithAgentLoaded(context -> {
+                });
+
+        assertThat(
+                actualSuperclasses,
+                containsInAnyOrder(
+                        ISubGuineaPig.class.getCanonicalName(),
+                        ITopGuineaPig.class.getCanonicalName(),
+                        Object.class.getCanonicalName()
+                )
+        );
     }
 
     private HoopoePlugin preparePluginMock() {
