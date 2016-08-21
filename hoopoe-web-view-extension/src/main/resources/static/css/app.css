@@ -41,8 +41,8 @@ treecontrol ul {
 
 treecontrol li {
     position: relative;
-    padding: 0 0 0 20px;
-    line-height: 20px;
+    padding: 0 0 0 10px;
+    line-height: 19px;
     white-space: nowrap;
 }
 
@@ -70,19 +70,6 @@ treecontrol li .tree-selected {
     background-color: rgba(255, 255, 255, 0.2)
 }
 
-.hp-thread-name {
-    font-weight: bold;
-}
-
-.hp-invocations-list {
-    font-family: 'Source Code Pro', monospace;
-}
-
-.hp-profiled-on {
-    font-size: 12px;
-    line-height: 12px;
-}
-
 .hp-badge {
     display: inline-block;
     padding: 1px 3px;
@@ -92,6 +79,10 @@ treecontrol li .tree-selected {
     border-radius: 1px;
     font-family: 'Source Code Pro', monospace;
     font-size: 13px;
+}
+
+.hp-thread-name {
+    background-color: #5d5b61;
 }
 
 .hp-duration {

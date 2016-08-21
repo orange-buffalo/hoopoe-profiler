@@ -62,6 +62,9 @@
                    selected-node="profilerCtrl.invocationsTree.selectedNode"
                    on-selection="profilerCtrl.selectInvocation(node, selected)"
                    options="profilerCtrl.invocationsTree.options">
+        <span class="hp-badge hp-thread-name"
+              ng-if="node.threadName"
+              ng-bind="node.threadName"></span>
         {{node.className}}.{{node.methodSignature}}
         <span class="hp-badge hp-duration"
               ng-bind="helperService.getSmartDuration(node.totalTimeInNs)"></span>
@@ -81,7 +84,6 @@
 <script type="text/ng-template" id="invocations-tree-template.html">
   <ul>
     <li ng-repeat="node in node.children"
-        ng-class="headClass(node)"
         set-node-to-data>
 
       <span ng-click="selectNodeHead(node)"
@@ -99,7 +101,8 @@
 
       <div class="tree-label"
            ng-class="[selectedClass(), unselectableClass()]"
-           ng-click="selectNodeLabel(node)" tree-transclude></div>
+           ng-click="selectNodeLabel(node)"
+           tree-transclude></div>
       <treeitem ng-if="nodeExpanded()"></treeitem>
     </li>
   </ul>
