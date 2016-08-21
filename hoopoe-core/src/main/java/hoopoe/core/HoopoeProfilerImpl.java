@@ -76,7 +76,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     @Override
     public void startProfiling() {
-        HoopoeProfilerBridge.enabled = true;
+        HoopoeProfilerBridge.startProfiling();
         lastProfiledResult = null;
     }
 

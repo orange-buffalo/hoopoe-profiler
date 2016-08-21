@@ -306,7 +306,7 @@ public class InstrumentationHelper {
                                  @Advice.BoxedReturn Object returnValue,
                                  @PluginActions PluginActionIndicies pluginActionIndicies) throws Exception {
 
-            if (HoopoeProfilerBridge.enabled) {
+            if (HoopoeProfilerBridge.enabled && HoopoeProfilerBridge.profilingStartTime <= startTime) {
                 // if plugin is attached to method, always report it
                 HoopoeProfilerBridge.instance.profileCall(
                         startTime, System.nanoTime(), className, methodSignature,
@@ -324,7 +324,7 @@ public class InstrumentationHelper {
                                  @MethodSignature String methodSignature,
                                  @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
 
-            if (HoopoeProfilerBridge.enabled) {
+            if (HoopoeProfilerBridge.enabled && HoopoeProfilerBridge.profilingStartTime <= startTime) {
                 long endTime = System.nanoTime();
 
                 if (endTime - startTime >= minimumTrackedTimeInNs) {
@@ -344,7 +344,7 @@ public class InstrumentationHelper {
                                  @MethodSignature String methodSignature,
                                  @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
 
-            if (HoopoeProfilerBridge.enabled) {
+            if (HoopoeProfilerBridge.enabled && HoopoeProfilerBridge.profilingStartTime <= startTime) {
                 long endTime = System.nanoTime();
 
                 if (endTime - startTime >= minimumTrackedTimeInNs) {
