@@ -307,14 +307,11 @@ public class InstrumentationHelper {
                                  @PluginActions PluginActionIndicies pluginActionIndicies) throws Exception {
 
             if (HoopoeProfilerBridge.enabled) {
-                long endTime = System.nanoTime();
-
-                if (endTime - startTime >= minimumTrackedTimeInNs) {
-                    HoopoeProfilerBridge.instance.profileCall(
-                            startTime, endTime, className, methodSignature,
-                            pluginActionIndicies.getIds(), arguments, returnValue, thisInMethod
-                    );
-                }
+                // if plugin is attached to method, always report it
+                HoopoeProfilerBridge.instance.profileCall(
+                        startTime, System.nanoTime(), className, methodSignature,
+                        pluginActionIndicies.getIds(), arguments, returnValue, thisInMethod
+                );
             }
         }
     }
