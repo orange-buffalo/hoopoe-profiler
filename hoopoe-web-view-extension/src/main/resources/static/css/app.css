@@ -70,6 +70,10 @@ treecontrol li .tree-selected {
     background-color: rgba(255, 255, 255, 0.2)
 }
 
+treecontrol .tree-label:hover {
+    background-color: rgba(255, 255, 255, 0.2)
+}
+
 .hp-badge {
     display: inline-block;
     padding: 1px 3px;
