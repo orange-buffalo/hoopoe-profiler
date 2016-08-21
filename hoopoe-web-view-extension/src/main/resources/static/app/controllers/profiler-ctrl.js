@@ -72,20 +72,24 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
     }
   }
 
-  $controller.invocationsTree = {
-    options: {
-      templateUrl: 'invocations-tree-template.html'  //todo prefetch it and move to separate file
-    },
-    data: [],
-    expandedNodes: [],
-    onNodeToggle: function (node, expanded) {
-      if (expanded) {
-        _expandDirectPaths(node);
-      }
-      $controller.invocationsTree.selectedNode = null;
-    },
-    selectedNode: null
-  };
+  function _resetInvocationsTree() {
+    $controller.invocationsTree = {
+      options: {
+        templateUrl: 'invocations-tree-template.html'  //todo prefetch it and move to separate file
+      },
+      data: [],
+      expandedNodes: [],
+      onNodeToggle: function (node, expanded) {
+        if (expanded) {
+          _expandDirectPaths(node);
+        }
+        this.selectedNode = null;
+      },
+      selectedNode: null
+    };
+  }
+
+  _resetInvocationsTree();
 
   $controller.selectInvocation = function (invocation, selected) {
     if (!selected) {
@@ -110,6 +114,8 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
 
   $controller.startProfiling = function () {
     operationsProgressService.startOperation();
+
+    _resetInvocationsTree();
 
     profilerRpc.startProfiling().then(
       function () {
