@@ -13,11 +13,40 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
 
   var _profilingState = ProfilingState.INITIALIZING;
 
+  function _addAttributeSummary(invocation, summary) {
+    var currentSummary = invocation.childrenAttributesSummary[summary.name];
+    if (currentSummary) {
+      currentSummary.count += summary.count;
+    }
+    else {
+      invocation.childrenAttributesSummary[summary.name] = {
+        name: summary.name,
+        count: summary.count
+      };
+    }
+  }
+
   function _enrichInvocationsData(invocation) {
+    invocation.childrenAttributesSummary = {};
     if (invocation.children) {
       invocation.children.forEach(function (childInvocation) {
         childInvocation.parent = invocation;
+
         _enrichInvocationsData(childInvocation);
+
+        if (childInvocation.attributes) {
+          childInvocation.attributes.forEach(function (childAttribute) {
+            _addAttributeSummary(invocation, {
+              name: childAttribute.name,
+              count: 1
+            });
+          })
+        }
+
+        for (var key in childInvocation.childrenAttributesSummary) {
+           _addAttributeSummary(invocation, childInvocation.childrenAttributesSummary[key]);
+        }
+
       });
     }
   }

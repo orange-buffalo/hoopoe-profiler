@@ -101,6 +101,10 @@ treecontrol .tree-label:hover {
     background-color: #c4b34b;
 }
 
+.hp-child-attribute {
+    background-color: #d2bf93;
+}
+
 .hp-monospaced {
     font-family: 'Source Code Pro', monospace;
 }

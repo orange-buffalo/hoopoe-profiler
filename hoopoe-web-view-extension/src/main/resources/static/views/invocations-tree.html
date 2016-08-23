@@ -75,6 +75,10 @@
               ng-repeat="attr in node.attributes">
           {{attr.name}}
         </span>
+        <span class="hp-badge hp-child-attribute"
+              ng-repeat="(key, summary) in node.childrenAttributesSummary">
+          {{summary.count}} {{summary.name}}
+        </span>
       </treecontrol>
     </div>
 
