@@ -104,7 +104,8 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
   function _resetInvocationsTree() {
     $controller.invocationsTree = {
       options: {
-        templateUrl: 'invocations-tree-template.html'  //todo prefetch it and move to separate file
+        templateUrl: 'invocations-tree-template.html',  //todo prefetch it and move to separate file
+        allowDeselect: false
       },
       data: [],
       expandedNodes: [],
@@ -120,25 +121,19 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
 
   _resetInvocationsTree();
 
-  $controller.selectInvocation = function (invocation, selected) {
-    if (!selected) {
-      return;
-    }
+  $controller.showMethodDetailsPopup = function () {
     $mdDialog.show({
       templateUrl: 'views/method-details.html',
       clickOutsideToClose: true,
       controller: function ($scope, $mdDialog) {
-        $scope.invocation = invocation;
+        $scope.invocation = $controller.invocationsTree.selectedNode;
         $scope.helperService = helperService;
 
         $scope.closeDialog = function () {
           $mdDialog.hide();
         }
-
       }
-    }).then(null, function () {
-      $controller.invocationsTree.selectedNode = null;
-    })
+    });
   };
 
   $controller.startProfiling = function () {

@@ -7,13 +7,10 @@
     </div>
 
     <div class="md-toolbar-tools" ng-if="profilerCtrl.isProfiled()">
-      <h2>
-        <span>hoopoe-profiler</span>
-      </h2>
-      <span flex></span>
-      <md-button ng-click="profilerCtrl.startOver()">
+      <md-button class="md-raised md-primary md-hue-1" ng-click="profilerCtrl.startOver()">
         Start over
       </md-button>
+      <span flex></span>
     </div>
   </md-toolbar>
   <md-content layout="column" flex>
@@ -60,12 +57,13 @@
                    expanded-nodes="profilerCtrl.invocationsTree.expandedNodes"
                    on-node-toggle="profilerCtrl.invocationsTree.onNodeToggle(node, expanded)"
                    selected-node="profilerCtrl.invocationsTree.selectedNode"
-                   on-selection="profilerCtrl.selectInvocation(node, selected)"
                    options="profilerCtrl.invocationsTree.options">
         <span class="hp-badge hp-thread-name"
               ng-if="node.threadName"
               ng-bind="node.threadName"></span>
-        {{node.className}}.{{node.methodSignature}}
+        <span ng-dblclick="profilerCtrl.showMethodDetailsPopup()">
+          {{node.className}}.{{node.methodSignature}}
+        </span>
         <span class="hp-badge hp-duration"
               ng-bind="helperService.getSmartDuration(node.totalTimeInNs)"></span>
         <span class="hp-badge hp-duration"
