@@ -151,3 +151,9 @@ treecontrol .tree-label:hover {
     overflow-x: auto;
     padding: 10px 0;
 }
+
+.hp-search-panel {
+    margin-right: 20px;
+    font-size: 12px;
+    font-family: 'Source Code Pro', monospace;
+}

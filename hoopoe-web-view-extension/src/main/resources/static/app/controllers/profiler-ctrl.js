@@ -1,14 +1,18 @@
-var ProfilingState = {
-  INITIALIZING: 0,
-  NOT_YET_PROFILED: 1,
-  IN_PROGRESS: 2,
-  FINALIZING: 3,
-  NOTHING_PROFILED: 4,
-  PROFILED: 5,
-  ERROR: 6
-};
-
 function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog, helperService) {
+  var ProfilingState = {
+    INITIALIZING: 0,
+    NOT_YET_PROFILED: 1,
+    IN_PROGRESS: 2,
+    FINALIZING: 3,
+    NOTHING_PROFILED: 4,
+    PROFILED: 5,
+    ERROR: 6
+  };
+
+  var SearchType = {
+    ATTRIBUTES: 0
+  };
+
   var $controller = this;
 
   var _profilingState = ProfilingState.INITIALIZING;
@@ -28,27 +32,29 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
 
   function _enrichInvocationsData(invocation) {
     invocation.childrenAttributesSummary = {};
-    if (invocation.children) {
-      invocation.children.forEach(function (childInvocation) {
-        childInvocation.parent = invocation;
-
-        _enrichInvocationsData(childInvocation);
-
-        if (childInvocation.attributes) {
-          childInvocation.attributes.forEach(function (childAttribute) {
-            _addAttributeSummary(invocation, {
-              name: childAttribute.name,
-              count: 1
-            });
-          })
-        }
-
-        for (var key in childInvocation.childrenAttributesSummary) {
-           _addAttributeSummary(invocation, childInvocation.childrenAttributesSummary[key]);
-        }
-
-      });
+    if (!invocation.children) {
+      invocation.children = [];
     }
+    if (!invocation.attributes) {
+      invocation.attributes = [];
+    }
+
+    invocation.children.forEach(function (childInvocation) {
+      childInvocation.parent = invocation;
+
+      _enrichInvocationsData(childInvocation);
+
+      childInvocation.attributes.forEach(function (childAttribute) {
+        _addAttributeSummary(invocation, {
+          name: childAttribute.name,
+          count: 1
+        });
+      });
+
+      for (var key in childInvocation.childrenAttributesSummary) {
+        _addAttributeSummary(invocation, childInvocation.childrenAttributesSummary[key]);
+      }
+    });
   }
 
   function _consumeProfiledResult(profiledResult) {
@@ -58,13 +64,9 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
     else {
       profiledResult.invocations.forEach(function (invocationRoot) {
         _enrichInvocationsData(invocationRoot.invocation);
-        _expandDirectPaths(invocationRoot.invocation);
-        _expandInvocationsTreeNodeWithAttributes(invocationRoot.invocation); // todo this should be a button
         invocationRoot.invocation.threadName = invocationRoot.threadName;
-        $controller.invocationsTree.data.push(invocationRoot.invocation);
-        $controller.invocationsTree.data.sort(function (a, b) {
-          return b.totalTimeInNs - a.totalTimeInNs;
-        })
+        $controller.invocationsTree.rootNodes.push(invocationRoot.invocation);
+        $controller.invocationsTree.sortRootNodes();
       });
 
       _profilingState = ProfilingState.PROFILED;
@@ -72,54 +74,33 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
     operationsProgressService.finishOperation();
   }
 
-  function _expandInvocationsTreeNode(node) {
-    if ($controller.invocationsTree.expandedNodes.indexOf(node) == -1) {
-      $controller.invocationsTree.expandedNodes.push(node);
-      if (node.parent) {
-        _expandInvocationsTreeNode(node.parent);
-      }
-    }
-  }
-
-  function _expandInvocationsTreeNodeWithAttributes(node) {
-    if (node.attributes && node.attributes.length > 0) {
-      _expandInvocationsTreeNode(node);
-    }
-    if (node.children) {
-      node.children.forEach(function (childNode) {
-        _expandInvocationsTreeNodeWithAttributes(childNode);
-      });
-    }
-  }
-
-  function _expandDirectPaths(node) {
-    if ($scope.hoopoeConfig.expandDirectPaths) {
-      _expandInvocationsTreeNode(node);
-      if (node.children && node.children.length == 1) {
-        _expandDirectPaths(node.children[0]);
-      }
-    }
-  }
-
   function _resetInvocationsTree() {
-    $controller.invocationsTree = {
-      options: {
-        templateUrl: 'invocations-tree-template.html',  //todo prefetch it and move to separate file
-        allowDeselect: false
-      },
-      data: [],
-      expandedNodes: [],
-      onNodeToggle: function (node, expanded) {
-        if (expanded) {
-          _expandDirectPaths(node);
-        }
-        this.selectedNode = null;
-      },
-      selectedNode: null
-    };
+    $controller.invocationsTree = new InvocationsTree($scope.hoopoeConfig.expandDirectPaths);
   }
 
   _resetInvocationsTree();
+
+  $controller.searchAttributes = function () {
+    $controller.currentSearch = new InvocationTreeSearch(
+      $controller.invocationsTree,
+      SearchType.ATTRIBUTES,
+      function (invocation) {
+        return invocation.attributes.length > 0;
+      }
+    );
+  };
+
+  $controller.isSearchingAttributes = function () {
+    return $controller.currentSearch && $controller.currentSearch.type === SearchType.ATTRIBUTES;
+  };
+
+  $controller.isSearchInProgress = function () {
+    return $controller.currentSearch;
+  };
+
+  $controller.cancelSearch = function () {
+    $controller.currentSearch = null;
+  };
 
   $controller.showMethodDetailsPopup = function () {
     $mdDialog.show({

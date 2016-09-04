@@ -11,7 +11,35 @@
         Start over
       </md-button>
       <span flex></span>
+
+      <div ng-if="profilerCtrl.isSearchingAttributes()" class="hp-search-panel">
+        <span ng-if="profilerCtrl.currentSearch.totalFound == 0">
+          No attributes found.
+        </span>
+        <span ng-if="profilerCtrl.currentSearch.totalFound > 0">
+          <span>
+          {{ profilerCtrl.currentSearch.currentPosition }} of {{ profilerCtrl.currentSearch.totalFound}}
+          </span>
+
+          <md-button ng-click="profilerCtrl.currentSearch.next()">
+            Next
+          </md-button>
+        </span>
+
+        <md-button ng-click="profilerCtrl.cancelSearch()">
+          Cancel
+        </md-button>
+      </div>
+
+      <div ng-if="!profilerCtrl.isSearchInProgress()">
+        <md-button class="md-icon-button"
+                   ng-click="profilerCtrl.searchAttributes()"
+                   aria-label="search attributes">
+          <md-icon md-svg-icon="attributes"></md-icon>
+        </md-button>
+      </div>
     </div>
+
   </md-toolbar>
   <md-content layout="column" flex>
 
@@ -53,7 +81,7 @@
     </div>
 
     <div class="hp-invocations-tree-container" flex ng-if="profilerCtrl.isProfiled()">
-      <treecontrol tree-model="profilerCtrl.invocationsTree.data"
+      <treecontrol tree-model="profilerCtrl.invocationsTree.rootNodes"
                    expanded-nodes="profilerCtrl.invocationsTree.expandedNodes"
                    on-node-toggle="profilerCtrl.invocationsTree.onNodeToggle(node, expanded)"
                    selected-node="profilerCtrl.invocationsTree.selectedNode"
