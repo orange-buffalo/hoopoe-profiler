@@ -69,6 +69,17 @@ var InvocationTreeSearch = function (invocationsTree, type, searchPredicate) {
 
   this.currentPosition = 0;
 
+  this.prev = function () {
+    if (this.totalFound === 0) {
+      return;
+    }
+    invocationsTree.selectedNode = _findPreviousInvocation(invocationsTree.selectedNode);
+
+    this.currentPosition = _calculateCurrentPosition();
+
+    invocationsTree.expandNode(invocationsTree.selectedNode);
+  };
+
   this.next = function () {
     if (this.totalFound === 0) {
       return;
@@ -106,6 +117,20 @@ var InvocationTreeSearch = function (invocationsTree, type, searchPredicate) {
     return false;
   }
 
+  function _findLastInChildrenHierarchy(node) {
+    for (var i = node.children.length - 1; i >= 0; i--) {
+      var childNode = node.children[i];
+      var result = _findLastInChildrenHierarchy(childNode);
+      if (result) {
+        return result;
+      }
+      if (searchPredicate(childNode)) {
+        return childNode;
+      }
+    }
+    return null;
+  }
+
   function _findFirstInChildrenHierarchy(node) {
     for (var i = 0; i < node.children.length; i++) {
       var childNode = node.children[i];
@@ -120,7 +145,7 @@ var InvocationTreeSearch = function (invocationsTree, type, searchPredicate) {
     return null;
   }
 
-  function _findInSiblingsHierarchy(node) {
+  function _findNextInSiblingsHierarchy(node) {
     if (!node) {
       return null;
     }
@@ -136,7 +161,38 @@ var InvocationTreeSearch = function (invocationsTree, type, searchPredicate) {
         return searchResultInSiblingsChildrenHierarchy;
       }
     }
-    return _findInSiblingsHierarchy(node.parent);
+    return _findNextInSiblingsHierarchy(node.parent);
+  }
+
+  function _findPreviousInSiblingsHierarchy(node) {
+    if (!node) {
+      return null;
+    }
+    var siblings = node.parent ? node.parent.children : invocationsTree.rootNodes;
+    var startingNodeIndex = siblings.indexOf(node);
+    for (var i = startingNodeIndex - 1; i >= 0; i--) {
+      var siblingNode = siblings[i];
+      var searchResultInSiblingsChildrenHierarchy = _findLastInChildrenHierarchy(siblingNode);
+      if (searchResultInSiblingsChildrenHierarchy) {
+        return searchResultInSiblingsChildrenHierarchy;
+      }
+      if (searchPredicate(siblingNode)) {
+        return siblingNode;
+      }
+    }
+    return _findPreviousInSiblingsHierarchy(node.parent);
+  }
+
+  function _findPreviousInvocation(invocationNode) {
+    var startingNode = invocationNode ? invocationNode : invocationsTree.rootNodes[invocationsTree.rootNodes.length - 1];
+    var result = _findPreviousInSiblingsHierarchy(startingNode);
+    if (result) {
+      return result;
+    }
+    if (invocationNode) {
+      return _findPreviousInvocation();
+    }
+    return null;
   }
 
   function _findNextInvocation(invocationNode) {
@@ -145,7 +201,7 @@ var InvocationTreeSearch = function (invocationsTree, type, searchPredicate) {
     if (result) {
       return result;
     }
-    result = _findInSiblingsHierarchy(startingNode);
+    result = _findNextInSiblingsHierarchy(startingNode);
     if (!result && invocationNode) {
       return _findNextInvocation();
     }

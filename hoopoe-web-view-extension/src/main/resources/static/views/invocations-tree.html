@@ -21,6 +21,10 @@
           {{ profilerCtrl.currentSearch.currentPosition }} of {{ profilerCtrl.currentSearch.totalFound}}
           </span>
 
+          <md-button ng-click="profilerCtrl.currentSearch.prev()">
+            Previous
+          </md-button>
+
           <md-button ng-click="profilerCtrl.currentSearch.next()">
             Next
           </md-button>
