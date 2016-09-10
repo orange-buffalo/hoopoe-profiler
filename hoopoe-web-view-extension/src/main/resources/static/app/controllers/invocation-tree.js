@@ -61,7 +61,7 @@ var InvocationsTree = function (expandDirectPaths) {
 
 };
 
-var InvocationTreeSearch = function (invocationsTree, type, searchPredicate) {
+var InvocationTreeSearch = function (invocationsTree, type, searchPredicate, broadcast) {
 
   this.type = type;
 
@@ -78,6 +78,8 @@ var InvocationTreeSearch = function (invocationsTree, type, searchPredicate) {
     this.currentPosition = _calculateCurrentPosition();
 
     invocationsTree.expandNode(invocationsTree.selectedNode);
+
+    broadcast('scrollToExpandedNodeRequest');
   };
 
   this.next = function () {
@@ -89,6 +91,8 @@ var InvocationTreeSearch = function (invocationsTree, type, searchPredicate) {
     this.currentPosition = _calculateCurrentPosition();
 
     invocationsTree.expandNode(invocationsTree.selectedNode);
+
+    broadcast('scrollToExpandedNodeRequest');
   };
 
   this.next();

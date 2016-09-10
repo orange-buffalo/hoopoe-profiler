@@ -86,6 +86,9 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
       SearchType.ATTRIBUTES,
       function (invocation) {
         return invocation.attributes.length > 0;
+      },
+      function (message) {
+        $scope.$broadcast(message);
       }
     );
   };

@@ -84,11 +84,12 @@
       </div>
     </div>
 
-    <div class="hp-invocations-tree-container" flex ng-if="profilerCtrl.isProfiled()">
+    <div class="hp-invocations-tree-container" flex ng-if="profilerCtrl.isProfiled()" id="tree-container">
       <treecontrol tree-model="profilerCtrl.invocationsTree.rootNodes"
                    expanded-nodes="profilerCtrl.invocationsTree.expandedNodes"
                    on-node-toggle="profilerCtrl.invocationsTree.onNodeToggle(node, expanded)"
                    selected-node="profilerCtrl.invocationsTree.selectedNode"
+                   scroll-container-id="tree-container"
                    options="profilerCtrl.invocationsTree.options">
         <span class="hp-badge hp-thread-name"
               ng-if="node.threadName"

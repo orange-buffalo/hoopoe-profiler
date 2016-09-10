@@ -81,7 +81,7 @@ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.ex
         ensureDefault($scope.options, "isSelectable", defaultIsSelectable);
     }
     
-    angular.module( 'treeControl', [] )
+    angular.module( 'treeControl', ['smoothScroll'] )
         .constant('treeConfig', {
             templateUrl: null
         })
@@ -118,10 +118,13 @@ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.ex
                     orderBy: "=?",
                     reverseOrder: "@",
                     filterExpression: "=?",
-                    filterComparator: "=?"
+                    filterComparator: "=?",
+                    scrollContainerId: "@"
                 },
-                controller: ['$scope', '$templateCache', '$interpolate', 'treeConfig', function ($scope, $templateCache, $interpolate, treeConfig) {
-                    
+                controller: ['$scope', '$templateCache', '$interpolate', 'treeConfig', 'smoothScroll',
+                  function ($scope, $templateCache, $interpolate, treeConfig, smoothScroll) {
+
+                    $scope.smoothScroll = smoothScroll;
                     $scope.options = $scope.options || {};
                     
                     ensureAllDefaultOptions($scope);
@@ -360,9 +363,23 @@ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.ex
                             scope.expandedNodesMap = newExpandedNodesMap;
                         });
 
-//                        scope.$watch('expandedNodesMap', function(newValue) {
-//
-//                        });
+                        scope.$on('scrollToExpandedNodeRequest', function () {
+                          setTimeout(function () {
+                            var selectedNodes = document.getElementsByClassName('tree-selected');
+                            if (selectedNodes.length > 0) {
+                              var selectedNode = selectedNodes[0];
+                              var offsetH = selectedNode.offsetWidth < window.innerWidth
+                                  ? (window.innerWidth - selectedNode.offsetWidth) / 2  - selectedNode.offsetWidth / 3
+                                  : window.innerWidth * 0.3;
+                              scope.smoothScroll(selectedNode, {
+                                containerId: scope.scrollContainerId,
+                                offsetV: window.innerHeight * 0.3,
+                                offsetH: offsetH,
+                                duration: 250
+                              })
+                            }
+                          }, 0);
+                        });
 
                         //Rendering template for a root node
                         treemodelCntr.template( scope, function(clone) {
