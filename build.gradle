@@ -138,7 +138,7 @@ subprojects {
 }
 
 task wrapper(type: Wrapper) {
-  distributionUrl = 'https://services.gradle.org/distributions/gradle-2.14-bin.zip'
+  distributionUrl = 'https://services.gradle.org/distributions/gradle-3.3-bin.zip'
 }
 
 tasks.remove(tasks.findByName('release'));
