@@ -1,7 +1,7 @@
 apply plugin: HoopoeAssemblyPlugin
 
 ext.librariesVersions = [
-        h2: '1.4.192'
+        h2: '1.4.193'
 ]
 
 dependencies {
