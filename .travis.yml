@@ -3,6 +3,12 @@ language: java
 jdk:
   - oraclejdk8
 
+before_install:
+  # codacy coverage
+  - curl -sL https://github.com/jpm4j/jpm4j.installers/raw/master/dist/biz.aQute.jpm.run.jar >jpm4j.jar
+  - java -jar jpm4j.jar -u init
+  - ~/jpm/bin/jpm install com.codacy:codacy-coverage-reporter:assembly
+
 script:
 - ./gradlew clean
 - ./gradlew assemble
@@ -20,8 +26,4 @@ after_success:
   # codecov coverage
   - bash <(curl -s https://codecov.io/bash)
   # codacy coverage
-  - curl -sL https://github.com/jpm4j/jpm4j.installers/raw/master/dist/biz.aQute.jpm.run.jar >jpm4j.jar
-  - java -jar jpm4j.jar -u init
-  - rm jpm4j.jar
-  - ~/jpm/bin/jpm install com.codacy:codacy-coverage-reporter:assembly
-  - ~/jpm/bin/codacy-coverage-reporter -l Java -r hoopoe-core-tests/build/reports/jacoco/test/jacocoTestReport.xml
+  - ~/jpm/bin/codacy-coverage-reporter -l Java -r build/reports/jacoco/test/jacocoTestReport.xml
