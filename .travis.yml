@@ -26,4 +26,6 @@ after_success:
   # codecov coverage
   - bash <(curl -s https://codecov.io/bash)
   # codacy coverage
-  - ~/jpm/bin/codacy-coverage-reporter -l Java -r build/reports/jacoco/test/jacocoTestReport.xml
+  - ~/jpm/bin/codacy-coverage-reporter -l Java -r hoopoe-core-tests/build/reports/jacoco/test/jacocoTestReport.xml
+  - ~/jpm/bin/codacy-coverage-reporter -l Java -r hoopoe-sql-queries-plugin/build/reports/jacoco/test/jacocoTestReport.xml
+  - ~/jpm/bin/codacy-coverage-reporter -l Java -r hoopoe-classloader/build/reports/jacoco/test/jacocoTestReport.xml
