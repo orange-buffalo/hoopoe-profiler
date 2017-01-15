@@ -17,7 +17,11 @@ cache:
     - $HOME/.gradle/wrapper/
 
 after_success:
+  # codecov coverage
   - bash <(curl -s https://codecov.io/bash)
-  - curl https://www.jpm4j.org/install/script | sh
+  # codacy coverage
+  - curl -sL https://github.com/jpm4j/jpm4j.installers/raw/master/dist/biz.aQute.jpm.run.jar >jpm4j.jar
+  - java -jar jpm4j.jar -u init
+  - rm jpm4j.jar
   - jpm install com.codacy:codacy-coverage-reporter:assembly
   - codacy-coverage-reporter -l Java -r hoopoe-core-tests/build/reports/jacoco/test/jacocoTestReport.xml
