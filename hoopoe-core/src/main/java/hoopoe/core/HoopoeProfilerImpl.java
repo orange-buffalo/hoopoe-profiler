@@ -65,8 +65,8 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         extensionsProvider.setupProfiler(this);
         extensionsProvider.createExtensions().forEach(HoopoeProfilerExtension::init);
 
-        instrumentationHelper =
-                new InstrumentationHelper(configuration.getExcludedClassesPatterns(), this);
+        instrumentationHelper = new InstrumentationHelper(
+                configuration.getExcludedClassesPatterns(), configuration.getIncludedClassesPatterns(), this);
         instrumentationHelper.createClassFileTransformer(instrumentation);
     }
 

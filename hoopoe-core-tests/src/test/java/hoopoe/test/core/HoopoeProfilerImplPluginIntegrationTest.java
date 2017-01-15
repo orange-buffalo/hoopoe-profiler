@@ -5,6 +5,7 @@ import hoopoe.api.HoopoePlugin;
 import hoopoe.api.HoopoePluginAction;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeThreadLocalCache;
+import hoopoe.test.core.guineapigs.PluginAttributesGuineaPig;
 import hoopoe.test.core.guineapigs.PluginGuineaPig;
 import hoopoe.test.core.guineapigs.hierarchy.ConcreteGuineaPig;
 import hoopoe.test.core.guineapigs.hierarchy.ISubGuineaPig;
@@ -20,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -135,16 +137,19 @@ public class HoopoeProfilerImplPluginIntegrationTest {
         when(pluginMock.createActionIfSupported(any())).thenReturn(pluginActionMock);
         when(pluginActionMock.getAttributes(any(), any(), any(), any())).thenReturn(Collections.emptyList());
 
-        Class guineaPigClass = PluginGuineaPig.class;
+        TestConfiguration.getIncludeClassesPatterns().add(Pattern.compile(".*PluginAttributesGuineaPig.*"));
+        TestConfiguration.setExcludeClassesPatterns(Collections.singleton(Pattern.compile(".*")));
+
+        Class guineaPigClass = PluginAttributesGuineaPig.class;
 
         Object argument = new Object();
         AtomicReference thisInMethod = new AtomicReference();
 
         HoopoeTestExecutor.forClassInstance(guineaPigClass.getCanonicalName())
-                .withPackage(GUINEAPIGS_PACKAGE)
+                .withPackage(guineaPigClass.getPackage().getName())
                 .executeWithAgentLoaded(context -> {
                     Object instance = context.getInstance();
-                    context.getClazz().getMethod("methodForAttributes", Object.class).invoke(instance, argument);
+                    instance.getClass().getMethod("methodForAttributes", Object.class).invoke(instance, argument);
                     thisInMethod.set(instance);
                 });
 

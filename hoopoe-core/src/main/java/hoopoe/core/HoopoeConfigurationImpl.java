@@ -32,6 +32,11 @@ public class HoopoeConfigurationImpl implements HoopoeConfiguration {
     }
 
     @Override
+    public Collection<Pattern> getIncludedClassesPatterns() {
+        return Collections.emptyList();
+    }
+
+    @Override
     public Collection<Pattern> getExcludedClassesPatterns() {
         return Collections.emptyList();
     }

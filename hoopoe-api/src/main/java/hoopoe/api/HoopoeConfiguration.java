@@ -13,5 +13,9 @@ public interface HoopoeConfiguration {
 
     Collection<String> getEnabledPlugins();
 
+    // todo include/exclude should be merged to "matches" method
+
+    Collection<Pattern> getIncludedClassesPatterns();
+
     Collection<Pattern> getExcludedClassesPatterns();
 }

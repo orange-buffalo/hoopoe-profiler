@@ -36,6 +36,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
+import net.bytebuddy.implementation.bytecode.constant.LongConstant;
+import net.bytebuddy.implementation.bytecode.constant.SerializedConstant;
+import net.bytebuddy.implementation.bytecode.constant.TextConstant;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import net.bytebuddy.utility.JavaModule;
 import org.apache.commons.io.IOUtils;
@@ -45,6 +49,7 @@ import org.apache.commons.lang3.ArrayUtils;
 public class InstrumentationHelper {
 
     private Collection<Pattern> excludedClassesPatterns;
+    private Collection<Pattern> includedClassesPatterns;
     private HoopoeProfilerImpl profiler;
     // todo multithreading
     // todo cleanup
@@ -52,8 +57,11 @@ public class InstrumentationHelper {
     private Instrumentation instrumentation;
     private Collection<ClassFileTransformer> transformers = new ArrayList<>(2);
 
-    public InstrumentationHelper(Collection<Pattern> excludedClassesPatterns, HoopoeProfilerImpl profiler) {
+    public InstrumentationHelper(Collection<Pattern> excludedClassesPatterns,
+                                 Collection<Pattern> includedClassesPatterns,
+                                 HoopoeProfilerImpl profiler) {
         this.excludedClassesPatterns = excludedClassesPatterns;
+        this.includedClassesPatterns = includedClassesPatterns;
         this.profiler = profiler;
     }
 
@@ -69,25 +77,31 @@ public class InstrumentationHelper {
         Advice.WithCustomMapping baseAdviceConfig = Advice
                 .withCustomMapping()
 
-                .bind(MethodSignature.class, (instrumentedMethod, target, annotation, initialized) ->
-                        getMethodSignature(instrumentedMethod))
+                .bind(MethodSignature.class,
+                        (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
+                                new TextConstant(getMethodSignature(instrumentedMethod)))
 
-                .bind(ClassName.class, (instrumentedMethod, target, annotation, initialized) ->
-                        getClassName(instrumentedMethod.getDeclaringType()))
+                .bind(ClassName.class,
+                        (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
+                                new TextConstant(getClassName(instrumentedMethod.getDeclaringType())))
 
-                .bind(MinimumTrackedTime.class, (instrumentedMethod, target, annotation, initialized) ->
-                        profiler.getConfiguration().getMinimumTrackedInvocationTimeInNs());
+                .bind(MinimumTrackedTime.class,
+                        (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
+                                LongConstant.forValue(
+                                        profiler.getConfiguration().getMinimumTrackedInvocationTimeInNs()));
 
         transformers.add(baseAgentConfig
                 .type(this::matchesProfiledClass)
-                .transform((builder, typeDescription, classLoader) -> {
+                .transform((builder, typeDescription, classLoader, module) -> {
                     if (classLoader != null && classLoader.getClass().getName().equals("hoopoe.utils.HoopoeClassLoader")) {
                         return builder;
                     }
                     return builder
                             .visit(baseAdviceConfig
-                                    .bind(PluginActions.class, (instrumentedMethod, target, annotation, initialized) ->
-                                            getPluginActions(instrumentedMethod))
+                                    .bind(PluginActions.class,
+                                            (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
+                                                     SerializedConstant.of(getPluginActions(instrumentedMethod))
+                                    )
                                     .to(EnterAdvice.class, PluginsAwareAdvice.class)
                                     .on(this::matchesPluginAwareMethod)
                             )
@@ -243,6 +257,12 @@ public class InstrumentationHelper {
             return false;
         }
 
+        for (Pattern includedClassesPattern : includedClassesPatterns) {
+            if (includedClassesPattern.matcher(className).matches()) {
+                return true;
+            }
+        }
+
         for (Pattern excludedClassesPattern : excludedClassesPatterns) {
             if (excludedClassesPattern.matcher(className).matches()) {
                 return false;
@@ -301,16 +321,16 @@ public class InstrumentationHelper {
                                  @ClassName String className,
                                  @MethodSignature String methodSignature,
                                  @MinimumTrackedTime long minimumTrackedTimeInNs,
-                                 @Advice.BoxedArguments Object[] arguments,
+                                 @Advice.AllArguments Object[] arguments,
                                  @Advice.This(optional = true) Object thisInMethod,
-                                 @Advice.BoxedReturn Object returnValue,
-                                 @PluginActions PluginActionIndicies pluginActionIndicies) throws Exception {
+                                 @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
+                                 @PluginActions Object pluginActionIndicies) throws Exception {
 
             if (HoopoeProfilerBridge.enabled && HoopoeProfilerBridge.profilingStartTime <= startTime) {
                 // if plugin is attached to method, always report it
                 HoopoeProfilerBridge.instance.profileCall(
                         startTime, System.nanoTime(), className, methodSignature,
-                        pluginActionIndicies.getIds(), arguments, returnValue, thisInMethod
+                        ((PluginActionIndicies) pluginActionIndicies).getIds(), arguments, returnValue, thisInMethod
                 );
             }
         }
@@ -357,28 +377,22 @@ public class InstrumentationHelper {
     }
 
     private static class AgentListener extends AgentBuilder.Listener.Adapter {
-
         @Override
-        public void onIgnored(TypeDescription typeDescription,
-                              ClassLoader classLoader,
-                              JavaModule module) {
+        public void onIgnored(TypeDescription typeDescription, ClassLoader classLoader,
+                              JavaModule module, boolean loaded) {
             if (log.isTraceEnabled()) {
                 log.trace("{} is skipped", typeDescription.getName());
             }
         }
 
         @Override
-        public void onError(String typeName,
-                            ClassLoader classLoader,
-                            JavaModule module,
-                            Throwable throwable) {
+        public void onError(String typeName, ClassLoader classLoader,
+                            JavaModule module, boolean loaded, Throwable throwable) {
             log.debug("error while transforming {}: {}", typeName, throwable.getMessage());
         }
 
         @Override
-        public void onComplete(String typeName,
-                               ClassLoader classLoader,
-                               JavaModule module) {
+        public void onComplete(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
             log.trace("{} is instrumented", typeName);
         }
     }

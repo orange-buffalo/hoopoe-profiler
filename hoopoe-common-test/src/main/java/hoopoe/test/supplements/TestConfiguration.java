@@ -3,6 +3,7 @@ package hoopoe.test.supplements;
 import hoopoe.api.HoopoeConfiguration;
 import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfilerExtensionsProvider;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,6 +27,14 @@ public class TestConfiguration implements HoopoeConfiguration {
     @Setter
     private static long minimumTrackedInvocationTimeInNs;
 
+    @Getter
+    @Setter
+    private static Collection<Pattern> includeClassesPatterns;
+
+    @Getter
+    @Setter
+    private static Collection<Pattern> excludeClassesPatterns;
+
     @Override
     public HoopoePluginsProvider createPluginsProvider() {
         return pluginsProviderMock;
@@ -47,17 +56,24 @@ public class TestConfiguration implements HoopoeConfiguration {
     }
 
     @Override
+    public Collection<Pattern> getIncludedClassesPatterns() {
+        return includeClassesPatterns;
+    }
+
+    @Override
     public Collection<Pattern> getExcludedClassesPatterns() {
-        return Arrays.asList(
-                Pattern.compile("hoopoe\\.core\\..*"),
-                Pattern.compile("org\\.mockito\\..*"),
-                Pattern.compile("org\\.hamcrest\\..*")
-        );
+        return excludeClassesPatterns;
     }
 
     public static void resetMocks() {
         MockitoAnnotations.initMocks(new TestConfiguration());
         minimumTrackedInvocationTimeInNs = 0;
+        includeClassesPatterns = new ArrayList<>();
+        excludeClassesPatterns =  Arrays.asList(
+                Pattern.compile("hoopoe\\.core\\..*"),
+                Pattern.compile("org\\.mockito\\..*"),
+                Pattern.compile("org\\.hamcrest\\..*")
+        );
     }
 
 }
