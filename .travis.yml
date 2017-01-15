@@ -18,3 +18,4 @@ cache:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+  - curl https://www.jpm4j.org/install/script | sh
