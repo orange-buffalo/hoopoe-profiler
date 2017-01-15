@@ -1,5 +1,4 @@
 apply plugin: 'java'
-apply plugin: "com.github.kt3k.coveralls"
 
 dependencies {
     provided libraries.lombok
@@ -11,8 +10,4 @@ dependencies {
 jacocoTestReport {
     additionalSourceDirs = files(project(':hoopoe-core').sourceSets.main.allSource.srcDirs)
     additionalClassDirs = files(project(':hoopoe-core').sourceSets.main.output)
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
 }
