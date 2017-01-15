@@ -1,5 +1,5 @@
 apply plugin: 'java'
 
 dependencies {
-    provided 'org.projectlombok:lombok:1.14.8'
+    provided libraries.lombok
 }

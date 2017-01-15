@@ -2,18 +2,22 @@ apply plugin: HoopoeAssemblyPlugin
 
 apply plugin: 'rebel'
 
-dependencies {
-    provided project(':hoopoe-api')
+ext.librariesVersions = [
+        jetty     : '9.3.10.v20160621',
+        jsonRpc   : '1.4.6',
+        portletApi: '2.0'
+]
 
-    compile 'org.eclipse.jetty:jetty-server:9.3.10.v20160621'          //todo manage versions
-    compile 'org.eclipse.jetty:jetty-servlet:9.3.10.v20160621'
-    compile 'commons-io:commons-io:2.5'
-    compile ('com.github.briandilley.jsonrpc4j:jsonrpc4j:1.4.6') {
+dependencies {
+    compile "org.eclipse.jetty:jetty-server:${librariesVersions.jetty}"
+    compile "org.eclipse.jetty:jetty-servlet:${librariesVersions.jetty}"
+    compile libraries.commonsIo
+    compile("com.github.briandilley.jsonrpc4j:jsonrpc4j:${librariesVersions.jsonRpc}") {
         exclude module: 'slf4j-api'    // todo check why this dependency fails
     }
 
-    provided 'javax.portlet:portlet-api:2.0'
-
+    provided project(':hoopoe-api')
+    provided "javax.portlet:portlet-api:${librariesVersions.portletApi}"
 }
 
 hoopoeAssembly {

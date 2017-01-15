@@ -1,7 +1,8 @@
 apply plugin: 'java'
 
 dependencies {
-    provided 'org.projectlombok:lombok:1.14.8'
+    provided libraries.lombok
+
     testCompile project(':hoopoe-common-test')
     testCompile project(':hoopoe-core')
 }
