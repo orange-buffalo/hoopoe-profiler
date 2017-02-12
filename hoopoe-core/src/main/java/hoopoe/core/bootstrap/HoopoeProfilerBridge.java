@@ -17,7 +17,7 @@ public abstract class HoopoeProfilerBridge {
                                      long endTimeInNs,
                                      String className,
                                      String methodSignature,
-                                     int[] pluginActionIndicies,
+                                     Object pluginActionIndicies,
                                      Object[] args,
                                      Object returnValue,
                                      Object thisInMethod);

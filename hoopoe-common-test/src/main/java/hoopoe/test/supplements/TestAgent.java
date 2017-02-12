@@ -18,7 +18,7 @@ public class TestAgent {
     public static void agentmain(String args, Instrumentation instrumentation)
             throws NoSuchFieldException, IllegalAccessException {
 
-        profiler = new HoopoeProfilerImpl(args, instrumentation);
+//        profiler = new HoopoeProfilerImpl(args, instrumentation);
     }
 
     public static void unload() {

@@ -1,5 +1,6 @@
 package hoopoe.api;
 
+import hoopoe.api.plugins.HoopoeInvocationAttribute;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,7 +29,7 @@ public class HoopoeProfiledInvocation {
     @Getter
     private int invocationsCount;
 
-    private Collection<HoopoeAttribute> attributes = new ArrayList<>(); //todo lazy
+    private Collection<HoopoeInvocationAttribute> attributes = new ArrayList<>(); //todo lazy
 
     public HoopoeProfiledInvocation(String className,
                                     String methodSignature,
@@ -36,7 +37,7 @@ public class HoopoeProfiledInvocation {
                                     long totalTimeInNs,
                                     long ownTimeInNs,
                                     int invocationsCount,
-                                    Collection<HoopoeAttribute> attributes) {
+                                    Collection<HoopoeInvocationAttribute> attributes) {
         this.invocationsCount = invocationsCount;
         this.className = className;
         this.methodSignature = methodSignature;
@@ -56,7 +57,7 @@ public class HoopoeProfiledInvocation {
                 children.stream().flatMap(HoopoeProfiledInvocation::flattened));
     }
 
-    public Collection<HoopoeAttribute> getAttributes() {
+    public Collection<HoopoeInvocationAttribute> getAttributes() {
         return new ArrayList<>(attributes);
     }
 

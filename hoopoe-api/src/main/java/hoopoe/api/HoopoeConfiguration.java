@@ -3,11 +3,9 @@ package hoopoe.api;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
+// todo rewrite
 public interface HoopoeConfiguration {
 
-    HoopoePluginsProvider createPluginsProvider();
-
-    HoopoeProfilerExtensionsProvider createProfilerExtensionProvider();
 
     long getMinimumTrackedInvocationTimeInNs();
 

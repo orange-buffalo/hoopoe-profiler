@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import hoopoe.api.HoopoeProfiler;
-import hoopoe.api.HoopoeProfilerExtension;
+import hoopoe.api.extensions.HoopoeProfilerExtension;
 import hoopoe.extensions.webview.controllers.JsonRpcServletHolder;
 import hoopoe.extensions.webview.controllers.ProfilerService;
 import hoopoe.extensions.webview.controllers.ProfilerServiceImpl;
@@ -128,7 +128,8 @@ public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
     }
 
     // todo common code should be reusable
-    @Override
+    //@Override
+    //todo rewrite
     public void setupProfiler(HoopoeProfiler profiler) {
         this.profiler = profiler;
     }

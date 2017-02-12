@@ -1,8 +1,6 @@
 package hoopoe.core;
 
 import hoopoe.api.HoopoeConfiguration;
-import hoopoe.api.HoopoePluginsProvider;
-import hoopoe.api.HoopoeProfilerExtensionsProvider;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.regex.Pattern;
@@ -11,15 +9,15 @@ public class HoopoeConfigurationImpl implements HoopoeConfiguration {
 
     private static final long TRIM_THRESHOLD_IN_NS = 1_000_000;
 
-    @Override
-    public HoopoePluginsProvider createPluginsProvider() {
-        return new HoopoePluginProviderImpl();
-    }
-
-    @Override
-    public HoopoeProfilerExtensionsProvider createProfilerExtensionProvider() {
-        return new HoopoeProfilerExtensionsProviderImpl();
-    }
+//    @Override
+//    public HoopoePluginsProvider createPluginsProvider() {
+//        return new HoopoePluginProviderImpl();
+//    }
+//
+//    @Override
+//    public HoopoeProfilerExtensionsProvider createProfilerExtensionProvider() {
+//        return new HoopoeProfilerExtensionsProviderImpl();
+//    }
 
     @Override
     public long getMinimumTrackedInvocationTimeInNs() {

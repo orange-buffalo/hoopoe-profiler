@@ -37,7 +37,7 @@ bintray {
         name = 'hoopoe-profiler'
     }
     filesSpec {
-		from 'build/libs'
-		into '.'
-	}
+        from 'build/libs'
+        into '.'
+    }
 }
