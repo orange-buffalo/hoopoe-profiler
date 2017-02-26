@@ -21,12 +21,12 @@ public class HoopoeBootstrapper {
     public void bootstrapHoopoe(String agentArgs, Instrumentation instrumentation) {
         JavaAgentArguments javaAgentArguments = new JavaAgentArguments(agentArgs);
         Configuration configuration = new Configuration(javaAgentArguments.getCustomConfigFilePath());
-        NameResolver nameResolver = new NameResolver();
+        MetadataReader metadataReader = new MetadataReader();
 
-        PluginManager pluginManager = new PluginManager(configuration, nameResolver);
+        PluginManager pluginManager = new PluginManager(configuration, metadataReader);
 
 
-        InstrumentationHelper instrumentationHelper = new InstrumentationHelper(configuration, pluginManager, nameResolver);
+        InstrumentationHelper instrumentationHelper = new InstrumentationHelper(configuration, pluginManager, metadataReader);
 
         ProfiledResultHelper profiledResultHelper = new ProfiledResultHelper();
         HoopoeProfilerImpl profiler = new HoopoeProfilerImpl(configuration, pluginManager, instrumentationHelper, profiledResultHelper);

@@ -1,7 +1,7 @@
 package hoopoe.core.supplements;
 
 import hoopoe.core.HoopoeProfilerImpl;
-import hoopoe.core.NameResolver;
+import hoopoe.core.MetadataReader;
 import hoopoe.core.PluginManager;
 import hoopoe.core.bootstrap.HoopoeProfilerBridge;
 import hoopoe.core.configuration.Configuration;
@@ -49,16 +49,16 @@ public class InstrumentationHelper {
 
     private Configuration configuration;
     private PluginManager pluginManager;
-    private NameResolver nameResolver;
+    private MetadataReader metadataReader;
 
-    public InstrumentationHelper(Configuration configuration, PluginManager pluginManager, NameResolver nameResolver) {
+    public InstrumentationHelper(Configuration configuration, PluginManager pluginManager, MetadataReader metadataReader) {
         this.excludedClassesPatterns = excludedClassesPatterns;
         this.includedClassesPatterns = includedClassesPatterns;
         this.profiler = profiler;
 
         this.pluginManager = pluginManager;
         this.configuration = configuration;
-        this.nameResolver = nameResolver;
+        this.metadataReader = metadataReader;
     }
 
     public void createClassFileTransformer(Instrumentation instrumentation) {
@@ -75,11 +75,11 @@ public class InstrumentationHelper {
 
                 .bind(MethodSignature.class,
                         (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
-                                new TextConstant(nameResolver.getMethodSignature(instrumentedMethod)))
+                                new TextConstant(metadataReader.getMethodSignature(instrumentedMethod)))
 
                 .bind(ClassName.class,
                         (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
-                                new TextConstant(nameResolver.getClassName(instrumentedMethod.getDeclaringType())))
+                                new TextConstant(metadataReader.getClassName(instrumentedMethod.getDeclaringType())))
 
                 .bind(MinimumTrackedTime.class,
                         (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
