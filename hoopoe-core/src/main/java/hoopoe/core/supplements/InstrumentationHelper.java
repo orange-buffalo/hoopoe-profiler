@@ -1,7 +1,7 @@
 package hoopoe.core.supplements;
 
 import hoopoe.core.HoopoeProfilerImpl;
-import hoopoe.core.MetadataReader;
+import hoopoe.core.ClassMetadataReader;
 import hoopoe.core.PluginManager;
 import hoopoe.core.bootstrap.HoopoeProfilerBridge;
 import hoopoe.core.configuration.Configuration;
@@ -49,16 +49,16 @@ public class InstrumentationHelper {
 
     private Configuration configuration;
     private PluginManager pluginManager;
-    private MetadataReader metadataReader;
+    private ClassMetadataReader classMetadataReader;
 
-    public InstrumentationHelper(Configuration configuration, PluginManager pluginManager, MetadataReader metadataReader) {
+    public InstrumentationHelper(Configuration configuration, PluginManager pluginManager, ClassMetadataReader classMetadataReader) {
         this.excludedClassesPatterns = excludedClassesPatterns;
         this.includedClassesPatterns = includedClassesPatterns;
         this.profiler = profiler;
 
         this.pluginManager = pluginManager;
         this.configuration = configuration;
-        this.metadataReader = metadataReader;
+        this.classMetadataReader = classMetadataReader;
     }
 
     public void createClassFileTransformer(Instrumentation instrumentation) {
@@ -75,11 +75,11 @@ public class InstrumentationHelper {
 
                 .bind(MethodSignature.class,
                         (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
-                                new TextConstant(metadataReader.getMethodSignature(instrumentedMethod)))
+                                new TextConstant(classMetadataReader.getMethodSignature(instrumentedMethod)))
 
                 .bind(ClassName.class,
                         (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
-                                new TextConstant(metadataReader.getClassName(instrumentedMethod.getDeclaringType())))
+                                new TextConstant(classMetadataReader.getClassName(instrumentedMethod.getDeclaringType())))
 
                 .bind(MinimumTrackedTime.class,
                         (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->

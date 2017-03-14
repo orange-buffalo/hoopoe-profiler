@@ -8,10 +8,10 @@ import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
 
-public class MetadataReader {
+public class ClassMetadataReader {
 
     /**
-     * Returns a collection of distinct names (see {@link MetadataReader#getClassName(TypeDefinition)}) of provided
+     * Returns a collection of distinct names (see {@link ClassMetadataReader#getClassName(TypeDefinition)}) of provided
      * class. Includes all super classes and all implemented interfaces for target class (including indirect ones).
      *
      * @param classDescription class to find super classes for.
@@ -61,16 +61,19 @@ public class MetadataReader {
     /**
      * Returns method signature in format: {@code <method_name>(<argument1_type>,<argument2_type,...,<argumentN_type)}.
      * <p>
-     * For constructors, class name is used as method name.
+     * For constructors, simple class name is used as method name.
      * <p>
-     * Every argument type is a canonical Java class name or primitive type name. For array arguments {@code []} is
-     * added after type name. Argument types do not include generic parameters.
+     * Every argument type is a Java class name (as defined in {@link ClassMetadataReader#getClassName(TypeDefinition)})
+     * or primitive type name. For array arguments {@code []} is added after type name.
+     * Argument types do not include generic parameters.
+     * <p>
+     * Does not include return type.
      * <p>
      * Examples: <p> {@code stringMethod(java.lang.String)} <p> {@code intArrayMethod(int[])} <p> {@code
      * stringArrayMethod(java.lang.String[])} <p> {@code collectionMethod(java.util.List)} <p> {@code
-     * multipleArgumentsMethod(java.lang.String,int[])}
+     * multipleArgumentsMethod(java.lang.String,int[])}.
      *
-     * @param methodDescription description to build signature by
+     * @param methodDescription description to build signature by.
      * @return method signature.
      */
     public String getMethodSignature(MethodDescription methodDescription) {

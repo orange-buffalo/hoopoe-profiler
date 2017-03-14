@@ -23,13 +23,13 @@ public class PluginManager {
     // todo cleanup
     private Map<String, StackManipulation> pluginActionsCache = new HashMap<>();
 
-    private MetadataReader metadataReader;
+    private ClassMetadataReader classMetadataReader;
 
     private Collection<HoopoePlugin> plugins;
 
-    public PluginManager(Configuration configuration, MetadataReader metadataReader) {
+    public PluginManager(Configuration configuration, ClassMetadataReader classMetadataReader) {
 
-        this.metadataReader = metadataReader;
+        this.classMetadataReader = classMetadataReader;
 
         //todo
         plugins = new ArrayList<>();
@@ -60,8 +60,8 @@ public class PluginManager {
 
     public StackManipulation getPluginActions(MethodDescription method) {
         TypeDefinition declaringType = method.getDeclaringType();
-        String className = metadataReader.getClassName(declaringType);
-        String methodSignature = metadataReader.getMethodSignature(method);
+        String className = classMetadataReader.getClassName(declaringType);
+        String methodSignature = classMetadataReader.getMethodSignature(method);
 
         String methodKey = className + methodSignature;
         if (pluginActionsCache.containsKey(methodKey)) {
@@ -71,7 +71,7 @@ public class PluginManager {
         HoopoeMethodInfoImpl methodInfo = new HoopoeMethodInfoImpl(
                 className,
                 methodSignature,
-                metadataReader.getSuperClassesNames(declaringType));
+                classMetadataReader.getSuperClassesNames(declaringType));
 
         int[] rawPluginActionIndicies = addPluginActions(methodInfo);
         StackManipulation stackManipulation = SerializedConstant.of(rawPluginActionIndicies);
