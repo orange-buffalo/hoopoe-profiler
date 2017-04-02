@@ -8,6 +8,7 @@ dependencies {
     compile libraries.commonsLang3
     compile libraries.commonsIo
     compile libraries.byteBuddy
+    compile libraries.guava
 
     provided project(':hoopoe-api')
     provided libraries.lombok
