@@ -1,0 +1,3 @@
+my-property:
+  another-property: "42"
+camelStyleProperty: true

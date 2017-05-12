@@ -9,6 +9,7 @@ dependencies {
     compile libraries.commonsIo
     compile libraries.byteBuddy
     compile libraries.guava
+    compile libraries.snakeyaml
 
     provided project(':hoopoe-api')
     provided libraries.lombok
