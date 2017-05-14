@@ -36,14 +36,8 @@ public class YamlDocumentsReader {
         Map<String, Object> document = new HashMap<>();
         rawYaml.forEach((compositeRawYamlKey, value) -> {
             String[] rawYamlKeys = compositeRawYamlKey.split("\\.");
-            Map<String, Object> targetMap = document;
-            for (int i = 0; i < rawYamlKeys.length - 1; i++) {
-                String normalizedKey = normalizeYamlKey(rawYamlKeys[i]);
-                targetMap = (Map<String, Object>) targetMap.computeIfAbsent(
-                        normalizedKey,
-                        key -> new HashMap<String, Object>()
-                );
-            }
+            
+            Map<String, Object> targetMap = createNestedMapsAndGetTargetMap(document, rawYamlKeys);
 
             if (value instanceof Map) {
                 value = processRawYamlDocument((Map<String, Object>) value);
@@ -53,6 +47,18 @@ public class YamlDocumentsReader {
             targetMap.put(normalizedKey, value);
         });
         return document;
+    }
+
+    private Map<String, Object> createNestedMapsAndGetTargetMap(Map<String, Object> document, String[] rawYamlKeys) {
+        Map<String, Object> targetMap = document;
+        for (int i = 0; i < rawYamlKeys.length - 1; i++) {
+            String normalizedKey = normalizeYamlKey(rawYamlKeys[i]);
+            targetMap = (Map<String, Object>) targetMap.computeIfAbsent(
+                    normalizedKey,
+                    key -> new HashMap<String, Object>()
+            );
+        }
+        return targetMap;
     }
 
     private String normalizeYamlKey(String rawYamlKey) {
