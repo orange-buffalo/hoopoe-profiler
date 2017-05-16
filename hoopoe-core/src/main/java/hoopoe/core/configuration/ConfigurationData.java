@@ -2,15 +2,23 @@ package hoopoe.core.configuration;
 
 import hoopoe.core.HoopoeException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Effectively is a wrapper on a backing map for convenient read of configuration values.
  */
 public class ConfigurationData {
 
+    public static final String CORE_NAMESPACE = "core";
     public static final String PROFILE_KEY = "profile";
-    public static final String CORE_KEY = "core";
+
+    public static final String PLUGINS_NAMESPACE = "plugins";
+    public static final String ENABLED_KEY = "enabled";
+    public static final String PATH_KEY = "path";
 
     private final Map<String, Object> configurationData;
 
@@ -19,9 +27,44 @@ public class ConfigurationData {
     }
 
     /**
+     * Gets all plugins, enabled in current configuration.
+     * @return enabled plugins info or empty collection, if none is enabled.
+     */
+    public Collection<EnabledComponentData> getEnabledPlugins() {
+        return getEnabledComponentsData(PLUGINS_NAMESPACE);
+    }
+
+    private Collection<EnabledComponentData> getEnabledComponentsData(String componentsNamespace) {
+        Map<String, Object> data = getConfigurationValue(
+                configurationData,
+                Path.of(componentsNamespace),
+                Map.class,
+                new HashMap<String, Object>());
+
+        return data.keySet().stream()
+                .filter(componentId -> getConfigurationValue(
+                        configurationData,
+                        Path.of(componentsNamespace, componentId, ENABLED_KEY),
+                        Boolean.class,
+                        Boolean.FALSE)
+                )
+                .map(componentId -> {
+                    String binariesPath = getConfigurationValue(
+                            configurationData,
+                            Path.of(componentsNamespace, componentId, PATH_KEY),
+                            String.class,
+                            null);
+                    if (StringUtils.isBlank(binariesPath)) {
+                        throw new HoopoeException("Plugin " + componentId + " has no path defined in configuration");
+                    }
+                    return new EnabledComponentData(componentId, binariesPath);
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Reads the configuration value by provided path.
      * If value is {@code null} or node is missing in the middle of the path, returns {@code defaultValue}.
-     * If any intermediate node in the path is a collection, fails.
      * If any of the intermediate nodes is of any other type but map, fails.
      * If {@code expectedValueType} is not assignable from actual value type, fails.
      *
@@ -32,12 +75,13 @@ public class ConfigurationData {
      *
      * @return configuration value, default value or throws an exception.
      */
-    public <T> T getConfigurationValue(
-            String path,
+    private <T> T getConfigurationValue(
+            Map<String, Object> root,
+            Path path,
             Class<T> expectedValueType,
             T defaultValue) {
 
-        Object value = readPathValue(path);
+        Object value = readPathValue(root, path);
 
         if (value == null) {
             return defaultValue;
@@ -46,18 +90,20 @@ public class ConfigurationData {
             Class actualValueType = value.getClass();
             if (!expectedValueType.isAssignableFrom(actualValueType)) {
                 throw new HoopoeException("Expected type " + expectedValueType + " does not match actual type " +
-                        actualValueType + " for " + path);
+                        actualValueType + " for value of " + path);
             }
             return (T) value;
         }
     }
 
-    private Object readPathValue(String path) {
-        String[] pathElements = path.split("\\.");
-        Map<String, Object> nextElement = configurationData;
+    private Object readPathValue(
+            Map<String, Object> root,
+            Path path) {
+
+        Map<String, Object> nextElement = root;
         Object value = null;
-        for (int pathElementPos = 0; pathElementPos < pathElements.length; pathElementPos++) {
-            String pathElement = pathElements[pathElementPos];
+        for (int pathElementPos = 0; pathElementPos < path.pathElements.length; pathElementPos++) {
+            String pathElement = path.pathElements[pathElementPos];
             value = nextElement.get(pathElement);
             if (value == null) {
                 break;
@@ -65,14 +111,26 @@ public class ConfigurationData {
             } else if (value instanceof Map) {
                 nextElement = (Map<String, Object>) value;
 
-            } else if (value instanceof Collection) {
-                throw new HoopoeException("Cannot read " + path + " as it contains collection in the path");
-
-            } else if (pathElementPos < pathElements.length - 1) {
+            } else if (pathElementPos < path.pathElements.length - 1) {
                 throw new HoopoeException("Cannot read " + path + " as it is terminated on " + pathElement);
             }
         }
         return value;
+    }
+
+    private static class Path {
+        private String[] pathElements;
+
+        static Path of(String... pathElements) {
+            Path path = new Path();
+            path.pathElements = pathElements;
+            return path;
+        }
+
+        @Override
+        public String toString() {
+            return Stream.of(pathElements).collect(Collectors.joining("."));
+        }
     }
 
 }

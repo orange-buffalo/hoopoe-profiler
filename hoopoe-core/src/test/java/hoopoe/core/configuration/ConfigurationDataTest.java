@@ -2,14 +2,15 @@ package hoopoe.core.configuration;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class ConfigurationDataTest {
 
@@ -17,70 +18,99 @@ public class ConfigurationDataTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void testFallbackToDefaultValue() throws IOException {
-        ConfigurationData configurationData = new ConfigurationData(new HashMap<>());
-
-        Integer actualConfigValue = configurationData.getConfigurationValue("test", Integer.class, 2);
-        assertThat(actualConfigValue, equalTo(2));
-    }
-
-    @Test
-    public void testReadValueOfNestedProperties() throws IOException {
+    public void testExceptionWhenReadingWrongValueType() throws IOException {
         ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
-                "first", ImmutableMap.of(
-                        "second", ImmutableMap.of(
-                                "third", "my-value"
+                "plugins", ImmutableMap.of(
+                        "firstPlugin", ImmutableMap.of(
+                                // boolean expected for this field
+                                "enabled", 1,
+                                "path", "testPath"
                         )
                 )
         ));
 
-        String actualConfigValue = configurationData
-                .getConfigurationValue("first.second.third", String.class, "42");
-        assertThat(actualConfigValue, equalTo("my-value"));
-    }
+        expectedException.expectMessage("Expected type class java.lang.Boolean does not match " +
+                "actual type class java.lang.Integer for value of plugins.firstPlugin.enabled");
 
-    @Test
-    public void testExceptionWhenPathContainsCollection() throws IOException {
-        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
-                "first", ImmutableMap.of(
-                        "second", Arrays.asList(1, 2, 3)
-                )
-        ));
-
-        expectedException.expectMessage("Cannot read first.second.third as it contains collection in the path");
-
-        configurationData.getConfigurationValue("first.second.third", String.class, "42");
-    }
-
-    @Test
-    public void testReadValueOfSubclass() throws IOException {
-        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of("value", 42L));
-
-        Number actualConfigValue = configurationData.getConfigurationValue("value", Number.class, 35);
-        assertThat(actualConfigValue, equalTo(42L));
-    }
-
-    @Test
-    public void testExceptionWhenReadingWrongValueType() throws IOException {
-        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of("value", 42));
-
-        expectedException.expectMessage("Expected type class java.lang.String does not match " +
-                "actual type class java.lang.Integer for value");
-
-        configurationData.getConfigurationValue("value", String.class, "42");
+        configurationData.getEnabledPlugins();
     }
 
     @Test
     public void testExceptionWhenReadingTerminatedPath() throws IOException {
         ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
-                "first", ImmutableMap.of(
-                        "second", "string"
+                "plugins", ImmutableMap.of(
+                        // nested map expected here
+                        "firstPlugin", 1
                 )
         ));
 
-        expectedException.expectMessage("Cannot read first.second.third as it is terminated on second");
+        expectedException.expectMessage("Cannot read plugins.firstPlugin.enabled as it is terminated on firstPlugin");
 
-        configurationData.getConfigurationValue("first.second.third", String.class, "42");
+        configurationData.getEnabledPlugins();
+    }
+
+    @Test
+    public void testGetEnabledPluginsWhenConfigurationIsEmpty() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of());
+
+        Collection<EnabledComponentData> actualEnabledPlugins = configurationData.getEnabledPlugins();
+
+        assertThat(actualEnabledPlugins, notNullValue());
+        assertThat(actualEnabledPlugins, empty());
+    }
+
+    @Test
+    public void testGetEnabledPluginsWhenPluginsSectionIsEmpty() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "plugins", ImmutableMap.of()
+        ));
+
+        Collection<EnabledComponentData> actualEnabledPlugins = configurationData.getEnabledPlugins();
+
+        assertThat(actualEnabledPlugins, notNullValue());
+        assertThat(actualEnabledPlugins, empty());
+    }
+
+    @Test
+    public void testGetEnabledPlugins() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "plugins", ImmutableMap.of(
+                        "firstPlugin", ImmutableMap.of(
+                                "enabled", false,
+                                "path", "testPath"
+                        ),
+                        "secondPlugin", ImmutableMap.of(
+                                "enabled", true,
+                                "path", "secondPluginPath"
+                        ),
+                        "thirdPlugin", ImmutableMap.of(
+                                "enabled", true,
+                                "path", "thirdPluginPath"
+                        )
+                )
+        ));
+
+        Collection<EnabledComponentData> actualEnabledPlugins = configurationData.getEnabledPlugins();
+
+        assertThat(actualEnabledPlugins, notNullValue());
+        assertThat(actualEnabledPlugins, containsInAnyOrder(
+                new EnabledComponentData("secondPlugin", "secondPluginPath"),
+                new EnabledComponentData("thirdPlugin", "thirdPluginPath")));
+    }
+
+    @Test
+    public void testExceptionWhenPathIsMissingForPlugin() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "plugins", ImmutableMap.of(
+                        "firstPlugin", ImmutableMap.of(
+                                "enabled", true
+                        )
+                )
+        ));
+
+        expectedException.expectMessage("Plugin firstPlugin has no path defined in configuration");
+
+        configurationData.getEnabledPlugins();
     }
 
 }

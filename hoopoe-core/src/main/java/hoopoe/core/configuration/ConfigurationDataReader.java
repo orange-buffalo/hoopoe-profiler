@@ -99,7 +99,7 @@ public class ConfigurationDataReader {
 
     private String getConfigurationDocumentProfile(Map<String, Object> configurationDocument) {
         Map<String, Object> coreProperties = (Map<String, Object>) configurationDocument
-                .computeIfAbsent(ConfigurationData.CORE_KEY, key -> new HashMap<>());
+                .computeIfAbsent(ConfigurationData.CORE_NAMESPACE, key -> new HashMap<>());
         return (String) coreProperties.get(ConfigurationData.PROFILE_KEY);
     }
 
