@@ -99,6 +99,27 @@ public class ConfigurationDataTest {
     }
 
     @Test
+    public void testGetEnabledExtensions() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "extensions", ImmutableMap.of(
+                        "firstExtension", ImmutableMap.of(
+                                "enabled", false,
+                                "path", "no matter"
+                        ),
+                        "myExtension", ImmutableMap.of(
+                                "enabled", true,
+                                "path", "nice path"
+                        )
+                )
+        ));
+
+        Collection<EnabledComponentData> actualEnabledPlugins = configurationData.getEnabledExtensions();
+
+        assertThat(actualEnabledPlugins, notNullValue());
+        assertThat(actualEnabledPlugins, containsInAnyOrder(new EnabledComponentData("myExtension", "nice path")));
+    }
+
+    @Test
     public void testExceptionWhenPathIsMissingForPlugin() {
         ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
                 "plugins", ImmutableMap.of(

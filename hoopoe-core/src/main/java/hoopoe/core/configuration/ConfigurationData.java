@@ -17,6 +17,7 @@ public class ConfigurationData {
     public static final String PROFILE_KEY = "profile";
 
     public static final String PLUGINS_NAMESPACE = "plugins";
+    private static final String EXTENSIONS_NAMESPACE = "extensions";
     public static final String ENABLED_KEY = "enabled";
     public static final String PATH_KEY = "path";
 
@@ -32,6 +33,14 @@ public class ConfigurationData {
      */
     public Collection<EnabledComponentData> getEnabledPlugins() {
         return getEnabledComponentsData(PLUGINS_NAMESPACE);
+    }
+
+    /**
+     * Gets all extensions, enabled in current configuration.
+     * @return enabled extensions info or empty collection, if none is enabled.
+     */
+    public Collection<EnabledComponentData> getEnabledExtensions() {
+        return getEnabledComponentsData(EXTENSIONS_NAMESPACE);
     }
 
     private Collection<EnabledComponentData> getEnabledComponentsData(String componentsNamespace) {
