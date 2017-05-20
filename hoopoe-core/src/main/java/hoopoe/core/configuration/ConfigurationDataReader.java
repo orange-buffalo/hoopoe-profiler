@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * and merges default and custom files. As a result, produces final configuration to be used by Hoopoe.
  */
 @Slf4j(topic = "hoopoe.profiler")
-public class ConfigurationDataReader {
+class ConfigurationDataReader {
 
     private final Environment environment;
     private final YamlDocumentsReader yamlDocumentsReader;

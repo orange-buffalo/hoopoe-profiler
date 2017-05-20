@@ -1,6 +1,7 @@
 package hoopoe.core;
 
 import hoopoe.core.configuration.Configuration;
+import hoopoe.core.configuration.ConfigurationFactory;
 import hoopoe.core.supplements.InstrumentationHelper;
 import hoopoe.core.supplements.ProfiledResultHelper;
 import java.lang.instrument.Instrumentation;
@@ -20,7 +21,9 @@ public class HoopoeBootstrapper {
      */
     public void bootstrapHoopoe(String agentArgs, Instrumentation instrumentation) {
         JavaAgentArguments javaAgentArguments = new JavaAgentArguments(agentArgs);
-        Configuration configuration = new Configuration(javaAgentArguments.getCustomConfigFilePath());
+        Environment environment = new Environment();
+
+        Configuration configuration = ConfigurationFactory.createConfiguration(environment);
         ClassMetadataReader classMetadataReader = new ClassMetadataReader();
 
         PluginManager pluginManager = new PluginManager(configuration, classMetadataReader);

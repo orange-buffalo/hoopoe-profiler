@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Effectively is a wrapper on a backing map for convenient read of configuration values.
  */
-public class ConfigurationData {
+class ConfigurationData {
 
     public static final String CORE_NAMESPACE = "core";
     public static final String PROFILE_KEY = "profile";

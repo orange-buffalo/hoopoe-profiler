@@ -12,7 +12,7 @@ import lombok.experimental.Builder;
  * @param <T> type of the property.
  */
 @Getter
-public class ConfigurationBeanProperty<T> {
+class ConfigurationBeanProperty<T> {
 
     private final String name;
 

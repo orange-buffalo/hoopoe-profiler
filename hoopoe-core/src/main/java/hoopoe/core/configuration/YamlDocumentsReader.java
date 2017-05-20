@@ -11,7 +11,7 @@ import org.yaml.snakeyaml.Yaml;
 /**
  * Parses YAML documents to maps.
  */
-public class YamlDocumentsReader {
+class YamlDocumentsReader {
 
     /**
      * Reads and parses input data. For every document in the YAML source generates a map.

@@ -8,7 +8,7 @@ import java.util.Map;
  * Typical case of default configuration being overridden by custom values.
  * Supports nested merge.
  */
-public class MapsMerger {
+class MapsMerger {
 
     /**
      * Merges the maps.

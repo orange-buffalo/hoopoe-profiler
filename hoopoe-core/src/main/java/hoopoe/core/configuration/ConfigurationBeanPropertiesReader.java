@@ -19,7 +19,7 @@ import org.apache.commons.lang3.text.WordUtils;
  * Inspects the class for bean properties annotated with {@link HoopoeConfigurationProperty}.
  */
 @Slf4j(topic = "hoopoe.profiler")
-public class ConfigurationBeanPropertiesReader {
+class ConfigurationBeanPropertiesReader {
 
     public ConfigurationBeanPropertiesReader() {
     }
