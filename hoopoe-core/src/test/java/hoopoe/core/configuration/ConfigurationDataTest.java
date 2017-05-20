@@ -213,4 +213,44 @@ public class ConfigurationDataTest {
         );
     }
 
+    @Test
+    public void testUpdateExtensionConfiguration() throws InvocationTargetException, IllegalAccessException {
+        Method stringSetterMock = Mockito.mock(Method.class);
+        ConfigurationBeanProperty stringProperty = ConfigurationBeanProperty.<String>builder()
+                .valueType(String.class)
+                .key("string.property")
+                .setter(stringSetterMock)
+                .build();
+
+        Method emptyPropertySetterMock = Mockito.mock(Method.class);
+        ConfigurationBeanProperty emptyProperty = ConfigurationBeanProperty.<Integer>builder()
+                .valueType(Integer.class)
+                .key("int.property")
+                .setter(emptyPropertySetterMock)
+                .build();
+
+        Object extensionConfiguration = new Object();
+
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "extensions", ImmutableMap.of(
+                        "myExtension", ImmutableMap.of(
+                                "string", ImmutableMap.of(
+                                        "property", "42"
+                                )
+                                // no data for empty property
+                        )
+                )
+        ));
+
+        configurationData.updateExtensionConfiguration(
+                "myExtension",
+                extensionConfiguration,
+                Arrays.asList(stringProperty, emptyProperty)
+        );
+
+        verify(stringSetterMock).invoke(extensionConfiguration, "42");
+        verifyNoMoreInteractions(stringSetterMock);
+        verifyNoMoreInteractions(emptyPropertySetterMock);
+    }
+
 }

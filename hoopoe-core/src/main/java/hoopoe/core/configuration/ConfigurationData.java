@@ -63,6 +63,23 @@ public class ConfigurationData {
         updateComponentConfiguration(PLUGINS_NAMESPACE, pluginId, pluginConfiguration, properties);
     }
 
+    /**
+     * Updates {@code extensionConfiguration} with values of extensions configuration section for {@code extensionId},
+     * for all the {@code properties}. Does not set {@code null} values.
+     *
+     * @param extensionId            ID of extension to lookup values by.
+     * @param extensionConfiguration configuration object to update.
+     * @param properties             properties to lookup value for, corresponding setters will be used to update the
+     *                               {@code extensionConfiguration}
+     */
+    public void updateExtensionConfiguration(
+            String extensionId,
+            Object extensionConfiguration,
+            Collection<ConfigurationBeanProperty> properties) {
+
+        updateComponentConfiguration(EXTENSIONS_NAMESPACE, extensionId, extensionConfiguration, properties);
+    }
+
     private void updateComponentConfiguration(
             String componentsNamespace,
             String componentId,
