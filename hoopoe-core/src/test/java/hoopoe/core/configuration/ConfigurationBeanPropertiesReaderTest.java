@@ -55,11 +55,15 @@ public class ConfigurationBeanPropertiesReaderTest {
 
                 {new TestDataItem(ClassWithDefaultAnnotationAttributesOnSetter.class)
                         .expectProperty(
-                        prepareDefaultProperty(ClassWithDefaultAnnotationAttributesOnSetter.class, "value").build())},
+                        prepareDefaultProperty(ClassWithDefaultAnnotationAttributesOnSetter.class, "value")
+                                .valueType(String.class)
+                                .build())},
 
                 {new TestDataItem(ClassWithDefaultAnnotationAttributesOnGetter.class)
                         .expectProperty(
-                        prepareDefaultProperty(ClassWithDefaultAnnotationAttributesOnGetter.class, "value").build())},
+                        prepareDefaultProperty(ClassWithDefaultAnnotationAttributesOnGetter.class, "value")
+                                .valueType(String.class)
+                                .build())},
 
                 {new TestDataItem(ClassWithCustomAnnotationValues.class)
                         .expectProperty(
@@ -67,12 +71,14 @@ public class ConfigurationBeanPropertiesReaderTest {
                                 .key("propertyKey")
                                 .name("propertyName")
                                 .description("propertyDescription")
+                                .valueType(String.class)
                                 .build())},
 
                 {new TestDataItem(ClassWithCustomPropertyName.class)
                         .expectProperty(
                         prepareDefaultProperty(ClassWithCustomPropertyName.class, "value")
                                 .name("propertyName")
+                                .valueType(String.class)
                                 .build())},
 
                 {new TestDataItem(ClassWithCustomPropertyKey.class)
@@ -80,6 +86,7 @@ public class ConfigurationBeanPropertiesReaderTest {
                         prepareDefaultProperty(ClassWithCustomPropertyKey.class, "value")
                                 .key("propertyKey")
                                 .name("Property Key")
+                                .valueType(String.class)
                                 .build())},
 
                 {new TestDataItem(ClassWithCustomPropertyKeyAndName.class)
@@ -87,47 +94,55 @@ public class ConfigurationBeanPropertiesReaderTest {
                         prepareDefaultProperty(ClassWithCustomPropertyKeyAndName.class, "value")
                                 .key("propertyKey")
                                 .name("propertyName")
+                                .valueType(String.class)
                                 .build())},
 
                 {new TestDataItem(ClassWithMultiplesAnnotatedProperties.class)
                         .expectProperty(
-                                prepareDefaultProperty(ClassWithMultiplesAnnotatedProperties.class, "value").build())
+                                prepareDefaultProperty(ClassWithMultiplesAnnotatedProperties.class, "value")
+                                        .valueType(String.class)
+                                        .build())
                         .expectProperty(
-                                prepareDefaultProperty(ClassWithMultiplesAnnotatedProperties.class, "answer")
-                                        .build())},
+                        prepareDefaultProperty(ClassWithMultiplesAnnotatedProperties.class, "answer")
+                                .valueType(int.class)
+                                .build())},
 
                 {new TestDataItem(ChildClassWithAnnotatedProperty.class)
                         .expectProperty(
-                                prepareDefaultProperty(ChildClassWithAnnotatedProperty.class, "value").build())
+                                prepareDefaultProperty(ChildClassWithAnnotatedProperty.class, "value")
+                                        .valueType(String.class)
+                                        .build())
                         .expectProperty(
-                                prepareDefaultProperty(ChildClassWithAnnotatedProperty.class, "answer")
-                                        .build())},
+                        prepareDefaultProperty(ChildClassWithAnnotatedProperty.class, "answer")
+                                .valueType(int.class)
+                                .build())},
 
-                {new TestDataItem(ClassWithAllSupportedPropertyTypes.class)
+                {new TestDataItem(ClassWithVariousPropertyTypes.class)
                         .expectProperty(
-                                prepareDefaultProperty(ClassWithAllSupportedPropertyTypes.class, "stringValue")
+                                prepareDefaultProperty(ClassWithVariousPropertyTypes.class, "stringValue")
                                         .name("String Value")
+                                        .valueType(String.class)
                                         .build())
                         .expectProperty(
-                                prepareDefaultProperty(ClassWithAllSupportedPropertyTypes.class, "intValue")
+                                prepareDefaultProperty(ClassWithVariousPropertyTypes.class, "intValue")
                                         .name("Int Value")
+                                        .valueType(int.class)
                                         .build())
                         .expectProperty(
-                                prepareDefaultProperty(ClassWithAllSupportedPropertyTypes.class, "integerValue")
+                                prepareDefaultProperty(ClassWithVariousPropertyTypes.class, "integerValue")
                                         .name("Integer Value")
+                                        .valueType(Integer.class)
                                         .build())
                         .expectProperty(
-                                prepareDefaultProperty(ClassWithAllSupportedPropertyTypes.class, "objectLongValue")
+                                prepareDefaultProperty(ClassWithVariousPropertyTypes.class, "objectLongValue")
                                         .name("Object Long Value")
+                                        .valueType(Long.class)
                                         .build())
                         .expectProperty(
-                                prepareDefaultProperty(ClassWithAllSupportedPropertyTypes.class, "primitiveLongValue")
-                                        .name("Primitive Long Value")
-                                        .build())},
-
-                {new TestDataItem(ClassWithUnsupportedPropertyType.class)
-                        .expectException(ClassWithUnsupportedPropertyType.class.getCanonicalName() +
-                        " has annotated property 'value' for unsupported property type java.lang.Object")},
+                        prepareDefaultProperty(ClassWithVariousPropertyTypes.class, "primitiveLongValue")
+                                .name("Primitive Long Value")
+                                .valueType(long.class)
+                                .build())},
 
                 {new TestDataItem(ClassWithPropertyWithIndexedAccessOnly.class)
                         // no properties expected as property is not read-write
@@ -136,7 +151,8 @@ public class ConfigurationBeanPropertiesReaderTest {
     }
 
     private static ConfigurationBeanProperty.ConfigurationBeanPropertyBuilder prepareDefaultProperty(
-            Class configurationBeanClass, String propertyName) {
+            Class configurationBeanClass,
+            String propertyName) {
 
         String nameWithFirstLetterCapitalized = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
         return ConfigurationBeanProperty.builder()
@@ -147,7 +163,9 @@ public class ConfigurationBeanPropertiesReaderTest {
                 .setter(getMethod(configurationBeanClass, "set" + nameWithFirstLetterCapitalized));
     }
 
-    private static Method getMethod(Class clazz, String name) {
+    private static Method getMethod(
+            Class clazz,
+            String name) {
         return Stream.of(clazz.getMethods())
                 .filter(method -> method.getName().equals(name))
                 .findFirst()
@@ -197,8 +215,8 @@ public class ConfigurationBeanPropertiesReaderTest {
             assertThat("Property " + expectedPropertyKey + " has unexpected setter",
                     actualProperty.getSetter(), equalTo(expectedProperty.getSetter()));
 
-            assertThat("Property " + expectedPropertyKey + " has no converter",
-                    actualProperty.getConverter(), notNullValue());
+            assertThat("Property " + expectedPropertyKey + " has unexpected type",
+                    actualProperty.getValueType(), equalTo(expectedProperty.getValueType()));
         });
     }
 
@@ -379,7 +397,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
-    public static class ClassWithAllSupportedPropertyTypes {
+    public static class ClassWithVariousPropertyTypes {
         @HoopoeConfigurationProperty
         public void setStringValue(String value) {
         }
@@ -421,20 +439,11 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
-    public static class ClassWithUnsupportedPropertyType {
-        @HoopoeConfigurationProperty
-        public void setValue(Object value) {
-        }
-
-        public Object getValue() {
-            return null;
-        }
-
-    }
-
     public static class ClassWithPropertyWithIndexedAccessOnly {
         @HoopoeConfigurationProperty
-        public void setValue(String value, int index) {
+        public void setValue(
+                String value,
+                int index) {
         }
 
         public String getValue(int index) {

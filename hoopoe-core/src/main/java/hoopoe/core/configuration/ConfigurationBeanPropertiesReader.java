@@ -1,9 +1,5 @@
 package hoopoe.core.configuration;
 
-import com.google.common.base.Converter;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
 import hoopoe.api.configuration.HoopoeConfigurationProperty;
 import hoopoe.core.HoopoeException;
 import java.beans.BeanInfo;
@@ -13,7 +9,6 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,14 +23,6 @@ import org.apache.commons.lang3.text.WordUtils;
  */
 @Slf4j(topic = "hoopoe.profiler")
 public class ConfigurationBeanPropertiesReader {
-
-    private static final Map<Class, Converter> SUPPORTED_CONVERTERS = ImmutableMap.<Class, Converter>builder()
-            .put(String.class, Converter.identity())
-            .put(Integer.class, Ints.stringConverter())
-            .put(Integer.TYPE, Ints.stringConverter())
-            .put(Long.class, Longs.stringConverter())
-            .put(Long.TYPE, Longs.stringConverter())
-            .build();
 
     @Getter
     public final Collection<ConfigurationBeanProperty> properties;
@@ -56,7 +43,8 @@ public class ConfigurationBeanPropertiesReader {
     }
 
     private ConfigurationBeanProperty createConfigurationBeanProperty(
-            Class configurationBeanClass, PropertyDescriptor javaPropertyDescriptor) {
+            Class configurationBeanClass,
+            PropertyDescriptor javaPropertyDescriptor) {
 
         String javaPropertyName = javaPropertyDescriptor.getName();
 
@@ -98,8 +86,7 @@ public class ConfigurationBeanPropertiesReader {
                 .key(configPropertyKey)
                 .setter(setter)
                 .getter(getter)
-                .converter(getConverter(
-                        configurationBeanClass, javaPropertyName, javaPropertyDescriptor.getPropertyType()))
+                .valueType((Class<Object>) javaPropertyDescriptor.getPropertyType())
                 .build();
     }
 
@@ -111,16 +98,4 @@ public class ConfigurationBeanPropertiesReader {
                 )
         );
     }
-
-    private Converter getConverter(Class configurationBeanClass, String javaPropertyName, Class javaPropertyType) {
-        Converter supportedConverter = SUPPORTED_CONVERTERS.get(javaPropertyType);
-
-        if (supportedConverter == null) {
-            throw new HoopoeException(configurationBeanClass.getCanonicalName() + " has annotated property '" +
-                    javaPropertyName + "' for unsupported property type " + javaPropertyType.getCanonicalName());
-        }
-
-        return supportedConverter;
-    }
-
 }

@@ -1,6 +1,5 @@
 package hoopoe.core.configuration;
 
-import com.google.common.base.Converter;
 import java.lang.reflect.Method;
 import lombok.Getter;
 import lombok.experimental.Builder;
@@ -25,7 +24,7 @@ public class ConfigurationBeanProperty<T> {
 
     private final Method setter;
 
-    private final Converter<String, T> converter;
+    private final Class<T> valueType;
 
     @Builder
     public ConfigurationBeanProperty(
@@ -34,13 +33,13 @@ public class ConfigurationBeanProperty<T> {
             String description,
             Method getter,
             Method setter,
-            Converter<String, T> converter) {
+            Class<T> valueType) {
 
         this.name = name;
         this.key = key;
         this.description = description;
         this.getter = getter;
         this.setter = setter;
-        this.converter = converter;
+        this.valueType = valueType;
     }
 }

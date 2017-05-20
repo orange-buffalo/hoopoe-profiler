@@ -1,6 +1,7 @@
 package hoopoe.core.configuration;
 
 import hoopoe.core.HoopoeException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,7 @@ public class ConfigurationData {
 
     /**
      * Gets all plugins, enabled in current configuration.
+     *
      * @return enabled plugins info or empty collection, if none is enabled.
      */
     public Collection<EnabledComponentData> getEnabledPlugins() {
@@ -37,20 +39,61 @@ public class ConfigurationData {
 
     /**
      * Gets all extensions, enabled in current configuration.
+     *
      * @return enabled extensions info or empty collection, if none is enabled.
      */
     public Collection<EnabledComponentData> getEnabledExtensions() {
         return getEnabledComponentsData(EXTENSIONS_NAMESPACE);
     }
 
+    /**
+     * Updates {@code pluginConfiguration} with values of plugins configuration section for {@code pluginId},
+     * for all the {@code properties}. Does not set {@code null} values.
+     *
+     * @param pluginId            ID of plugins to lookup values by.
+     * @param pluginConfiguration configuration object to update.
+     * @param properties          properties to lookup value for, corresponding setters will be used to update the
+     *                            {@code pluginConfiguration}
+     */
+    public void updatePluginConfiguration(
+            String pluginId,
+            Object pluginConfiguration,
+            Collection<ConfigurationBeanProperty> properties) {
+
+        updateComponentConfiguration(PLUGINS_NAMESPACE, pluginId, pluginConfiguration, properties);
+    }
+
+    private void updateComponentConfiguration(
+            String componentsNamespace,
+            String componentId,
+            Object pluginConfiguration,
+            Collection<ConfigurationBeanProperty> properties) {
+
+        try {
+            for (ConfigurationBeanProperty property : properties) {
+                Object propertyValue = getConfigurationValue(configurationData,
+                        Path.of(componentsNamespace, componentId, property.getKey()),
+                        property.getValueType(),
+                        null);
+
+                if (propertyValue != null) {
+                    property.getSetter().invoke(pluginConfiguration, propertyValue);
+                }
+            }
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new HoopoeException("Error while updating component configuration", e);
+        }
+    }
+
     private Collection<EnabledComponentData> getEnabledComponentsData(String componentsNamespace) {
-        Map<String, Object> data = getConfigurationValue(
+        Collection<String> componentsIds = getConfigurationValue(
                 configurationData,
                 Path.of(componentsNamespace),
                 Map.class,
-                new HashMap<String, Object>());
+                new HashMap<String, Object>())
+                .keySet();
 
-        return data.keySet().stream()
+        return componentsIds.stream()
                 .filter(componentId -> getConfigurationValue(
                         configurationData,
                         Path.of(componentsNamespace, componentId, ENABLED_KEY),
@@ -132,7 +175,9 @@ public class ConfigurationData {
 
         static Path of(String... pathElements) {
             Path path = new Path();
-            path.pathElements = pathElements;
+            path.pathElements = Stream.of(pathElements)
+                    .flatMap(pathElement -> Stream.of(pathElement.split("\\.")))
+                    .toArray(String[]::new);
             return path;
         }
 
