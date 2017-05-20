@@ -3,17 +3,14 @@ package hoopoe.core.configuration;
 import hoopoe.api.configuration.HoopoeConfigurationProperty;
 import hoopoe.core.HoopoeException;
 import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.Getter;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
@@ -24,22 +21,22 @@ import org.apache.commons.lang3.text.WordUtils;
 @Slf4j(topic = "hoopoe.profiler")
 public class ConfigurationBeanPropertiesReader {
 
-    @Getter
-    public final Collection<ConfigurationBeanProperty> properties;
-
-    public ConfigurationBeanPropertiesReader(Class configurationBeanClass) {
-        this.properties = Collections.unmodifiableList(getConfigurationBeanProperties(configurationBeanClass));
+    public ConfigurationBeanPropertiesReader() {
     }
 
-    @SneakyThrows
-    private List<ConfigurationBeanProperty> getConfigurationBeanProperties(Class configurationBeanClass) {
-        BeanInfo configurationBeanInfo = Introspector.getBeanInfo(configurationBeanClass);
-        PropertyDescriptor[] javaBeanProperties = configurationBeanInfo.getPropertyDescriptors();
-        return Stream.of(javaBeanProperties)
-                .map(javaPropertyDescriptor ->
-                        createConfigurationBeanProperty(configurationBeanClass, javaPropertyDescriptor))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+    public Collection<ConfigurationBeanProperty> readProperties(Class configurationBeanClass) {
+        try {
+            BeanInfo configurationBeanInfo = Introspector.getBeanInfo(configurationBeanClass);
+            PropertyDescriptor[] javaBeanProperties = configurationBeanInfo.getPropertyDescriptors();
+            return Stream.of(javaBeanProperties)
+                    .map(javaPropertyDescriptor ->
+                            createConfigurationBeanProperty(configurationBeanClass, javaPropertyDescriptor))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+        } catch (IntrospectionException e) {
+            throw new HoopoeException("Cannot read configuration properties on " + configurationBeanClass, e);
+        }
     }
 
     private ConfigurationBeanProperty createConfigurationBeanProperty(

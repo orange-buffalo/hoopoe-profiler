@@ -20,7 +20,6 @@ import org.junit.runner.RunWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 
 @RunWith(DataProviderRunner.class)
 public class ConfigurationBeanPropertiesReaderTest {
@@ -31,93 +30,101 @@ public class ConfigurationBeanPropertiesReaderTest {
     @DataProvider
     public static Object[][] testGetProperties() {
         return new Object[][] {
-                {new TestDataItem(ClassWithoutProperties.class)
-                        .expectNoProperties()},
+                new TestDataItem(ClassWithoutProperties.class)
+                        .expectNoProperties(),
 
-                {new TestDataItem(ClassWithGetterOnly.class)
-                        .expectNoProperties()},
+                new TestDataItem(ClassWithGetterOnly.class)
+                        .expectNoProperties(),
 
-                {new TestDataItem(ClassWithAnnotatedGetterWithoutSetter.class)
-                        .expectNoProperties()},
+                new TestDataItem(ClassWithAnnotatedGetterWithoutSetter.class)
+                        .expectNoProperties(),
 
-                {new TestDataItem(ClassWithSetterOnly.class)
-                        .expectNoProperties()},
+                new TestDataItem(ClassWithSetterOnly.class)
+                        .expectNoProperties(),
 
-                {new TestDataItem(ClassWithAnnotatedSetterWithoutGetter.class)
-                        .expectNoProperties()},
+                new TestDataItem(ClassWithAnnotatedSetterWithoutGetter.class)
+                        .expectNoProperties(),
 
-                {new TestDataItem(ClassWithAnnotatedGetterAndSetter.class)
+                new TestDataItem(ClassWithAnnotatedGetterAndSetter.class)
                         .expectException(ClassWithAnnotatedGetterAndSetter.class.getCanonicalName() +
-                        " has annotated getter and setter for property 'value'. This is not supported.")},
+                        " has annotated getter and setter for property 'value'. This is not supported."),
 
-                {new TestDataItem(ClassWithGetterAndSetterWithoutAnnotation.class)
-                        .expectNoProperties()},
+                new TestDataItem(ClassWithGetterAndSetterWithoutAnnotation.class)
+                        .expectNoProperties(),
 
-                {new TestDataItem(ClassWithDefaultAnnotationAttributesOnSetter.class)
+                new TestDataItem(ClassWithDefaultAnnotationAttributesOnSetter.class)
                         .expectProperty(
-                        prepareDefaultProperty(ClassWithDefaultAnnotationAttributesOnSetter.class, "value")
-                                .valueType(String.class)
-                                .build())},
+                                prepareDefaultProperty(ClassWithDefaultAnnotationAttributesOnSetter.class, "value")
+                                        .valueType(String.class)
+                                        .build())
+                        .buildTestCase(),
 
-                {new TestDataItem(ClassWithDefaultAnnotationAttributesOnGetter.class)
+                new TestDataItem(ClassWithDefaultAnnotationAttributesOnGetter.class)
                         .expectProperty(
-                        prepareDefaultProperty(ClassWithDefaultAnnotationAttributesOnGetter.class, "value")
-                                .valueType(String.class)
-                                .build())},
+                                prepareDefaultProperty(ClassWithDefaultAnnotationAttributesOnGetter.class, "value")
+                                        .valueType(String.class)
+                                        .build())
+                        .buildTestCase(),
 
-                {new TestDataItem(ClassWithCustomAnnotationValues.class)
+                new TestDataItem(ClassWithCustomAnnotationValues.class)
                         .expectProperty(
-                        prepareDefaultProperty(ClassWithCustomAnnotationValues.class, "value")
-                                .key("propertyKey")
-                                .name("propertyName")
-                                .description("propertyDescription")
-                                .valueType(String.class)
-                                .build())},
+                                prepareDefaultProperty(ClassWithCustomAnnotationValues.class, "value")
+                                        .key("propertyKey")
+                                        .name("propertyName")
+                                        .description("propertyDescription")
+                                        .valueType(String.class)
+                                        .build())
+                        .buildTestCase(),
 
-                {new TestDataItem(ClassWithCustomPropertyName.class)
+                new TestDataItem(ClassWithCustomPropertyName.class)
                         .expectProperty(
-                        prepareDefaultProperty(ClassWithCustomPropertyName.class, "value")
-                                .name("propertyName")
-                                .valueType(String.class)
-                                .build())},
+                                prepareDefaultProperty(ClassWithCustomPropertyName.class, "value")
+                                        .name("propertyName")
+                                        .valueType(String.class)
+                                        .build())
+                        .buildTestCase(),
 
-                {new TestDataItem(ClassWithCustomPropertyKey.class)
+                new TestDataItem(ClassWithCustomPropertyKey.class)
                         .expectProperty(
-                        prepareDefaultProperty(ClassWithCustomPropertyKey.class, "value")
-                                .key("propertyKey")
-                                .name("Property Key")
-                                .valueType(String.class)
-                                .build())},
+                                prepareDefaultProperty(ClassWithCustomPropertyKey.class, "value")
+                                        .key("propertyKey")
+                                        .name("Property Key")
+                                        .valueType(String.class)
+                                        .build())
+                        .buildTestCase(),
 
-                {new TestDataItem(ClassWithCustomPropertyKeyAndName.class)
+                new TestDataItem(ClassWithCustomPropertyKeyAndName.class)
                         .expectProperty(
-                        prepareDefaultProperty(ClassWithCustomPropertyKeyAndName.class, "value")
-                                .key("propertyKey")
-                                .name("propertyName")
-                                .valueType(String.class)
-                                .build())},
+                                prepareDefaultProperty(ClassWithCustomPropertyKeyAndName.class, "value")
+                                        .key("propertyKey")
+                                        .name("propertyName")
+                                        .valueType(String.class)
+                                        .build())
+                        .buildTestCase(),
 
-                {new TestDataItem(ClassWithMultiplesAnnotatedProperties.class)
+                new TestDataItem(ClassWithMultiplesAnnotatedProperties.class)
                         .expectProperty(
                                 prepareDefaultProperty(ClassWithMultiplesAnnotatedProperties.class, "value")
                                         .valueType(String.class)
                                         .build())
                         .expectProperty(
-                        prepareDefaultProperty(ClassWithMultiplesAnnotatedProperties.class, "answer")
-                                .valueType(int.class)
-                                .build())},
+                                prepareDefaultProperty(ClassWithMultiplesAnnotatedProperties.class, "answer")
+                                        .valueType(int.class)
+                                        .build())
+                        .buildTestCase(),
 
-                {new TestDataItem(ChildClassWithAnnotatedProperty.class)
+                new TestDataItem(ChildClassWithAnnotatedProperty.class)
                         .expectProperty(
                                 prepareDefaultProperty(ChildClassWithAnnotatedProperty.class, "value")
                                         .valueType(String.class)
                                         .build())
                         .expectProperty(
-                        prepareDefaultProperty(ChildClassWithAnnotatedProperty.class, "answer")
-                                .valueType(int.class)
-                                .build())},
+                                prepareDefaultProperty(ChildClassWithAnnotatedProperty.class, "answer")
+                                        .valueType(int.class)
+                                        .build())
+                        .buildTestCase(),
 
-                {new TestDataItem(ClassWithVariousPropertyTypes.class)
+                new TestDataItem(ClassWithVariousPropertyTypes.class)
                         .expectProperty(
                                 prepareDefaultProperty(ClassWithVariousPropertyTypes.class, "stringValue")
                                         .name("String Value")
@@ -139,14 +146,15 @@ public class ConfigurationBeanPropertiesReaderTest {
                                         .valueType(Long.class)
                                         .build())
                         .expectProperty(
-                        prepareDefaultProperty(ClassWithVariousPropertyTypes.class, "primitiveLongValue")
-                                .name("Primitive Long Value")
-                                .valueType(long.class)
-                                .build())},
+                                prepareDefaultProperty(ClassWithVariousPropertyTypes.class, "primitiveLongValue")
+                                        .name("Primitive Long Value")
+                                        .valueType(long.class)
+                                        .build())
+                        .buildTestCase(),
 
-                {new TestDataItem(ClassWithPropertyWithIndexedAccessOnly.class)
+                new TestDataItem(ClassWithPropertyWithIndexedAccessOnly.class)
                         // no properties expected as property is not read-write
-                        .expectNoProperties()}
+                        .expectNoProperties()
         };
     }
 
@@ -179,12 +187,9 @@ public class ConfigurationBeanPropertiesReaderTest {
             thrownException.expectMessage(equalTo(testDataItem.expectedExceptionMessage));
         }
 
-        ConfigurationBeanPropertiesReader reader =
-                new ConfigurationBeanPropertiesReader(testDataItem.configurationBeanClass);
-
-        Collection<ConfigurationBeanProperty> actualProperties = reader.getProperties();
-
-        assertThat("Exception is expected but not thrown", testDataItem.expectedExceptionMessage, nullValue());
+        ConfigurationBeanPropertiesReader reader = new ConfigurationBeanPropertiesReader();
+        Collection<ConfigurationBeanProperty> actualProperties =
+                reader.readProperties(testDataItem.configurationBeanClass);
 
         assertThat("Calculated properties should never be null",
                 actualProperties, notNullValue());
@@ -229,9 +234,9 @@ public class ConfigurationBeanPropertiesReaderTest {
             this.configurationBeanClass = configurationBeanClass;
         }
 
-        public TestDataItem expectException(String errorMessage) {
+        public Object[] expectException(String errorMessage) {
             this.expectedExceptionMessage = errorMessage;
-            return this;
+            return buildTestCase();
         }
 
         public TestDataItem expectProperty(ConfigurationBeanProperty property) {
@@ -239,8 +244,12 @@ public class ConfigurationBeanPropertiesReaderTest {
             return this;
         }
 
-        public TestDataItem expectNoProperties() {
-            return this;
+        public Object[] expectNoProperties() {
+            return buildTestCase();
+        }
+
+        public Object[] buildTestCase() {
+            return new Object[] {this};
         }
 
         @Override
@@ -451,5 +460,4 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
 
     }
-
 }
