@@ -5,7 +5,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 /**
- * Creates all the necessary configuration engine components and wire them together.
+ * Creates all the necessary configuration engine components and wires them together.
  * Produces {@link Configuration} object ready to be used in profiler.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

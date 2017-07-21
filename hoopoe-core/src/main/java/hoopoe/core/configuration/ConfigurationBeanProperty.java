@@ -7,7 +7,7 @@ import lombok.experimental.Builder;
 /**
  * Describes a property of {@link hoopoe.api.configuration.HoopoeConfigurableComponent}.
  * Provides information as specified by user via {@link hoopoe.api.configuration.HoopoeConfigurationProperty}
- * and methods to read and write the values (with embedded conversion between property type and String).
+ * and methods to read and write the values.
  *
  * @param <T> type of the property.
  */
