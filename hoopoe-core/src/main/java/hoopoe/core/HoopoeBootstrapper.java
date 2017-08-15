@@ -20,8 +20,7 @@ public class HoopoeBootstrapper {
      * @param instrumentation instrumentation to use to apply profiling code with.
      */
     public void bootstrapHoopoe(String agentArgs, Instrumentation instrumentation) {
-        JavaAgentArguments javaAgentArguments = new JavaAgentArguments(agentArgs);
-        Environment environment = new Environment();
+        Environment environment = new Environment(agentArgs);
 
         Configuration configuration = ConfigurationFactory.createConfiguration(environment);
         ClassMetadataReader classMetadataReader = new ClassMetadataReader();
