@@ -1,5 +1,7 @@
 package hoopoe.core;
 
+import hoopoe.core.components.ComponentLoader;
+import hoopoe.core.components.PluginManager;
 import hoopoe.core.configuration.Configuration;
 import hoopoe.core.configuration.ConfigurationFactory;
 import hoopoe.core.supplements.InstrumentationHelper;
@@ -24,8 +26,10 @@ public class HoopoeBootstrapper {
 
         Configuration configuration = ConfigurationFactory.createConfiguration(environment);
         ClassMetadataReader classMetadataReader = new ClassMetadataReader();
+        ClassLoader currentClassLoader = HoopoeBootstrapper.class.getClassLoader();
+        ComponentLoader componentLoader = new ComponentLoader(currentClassLoader);
 
-        PluginManager pluginManager = new PluginManager(configuration, classMetadataReader);
+        PluginManager pluginManager = new PluginManager(configuration, componentLoader, classMetadataReader);
 
 
         InstrumentationHelper instrumentationHelper = new InstrumentationHelper(configuration, pluginManager, classMetadataReader);

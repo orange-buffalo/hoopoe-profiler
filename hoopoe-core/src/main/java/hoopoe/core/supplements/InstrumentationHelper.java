@@ -2,7 +2,7 @@ package hoopoe.core.supplements;
 
 import hoopoe.core.HoopoeProfilerImpl;
 import hoopoe.core.ClassMetadataReader;
-import hoopoe.core.PluginManager;
+import hoopoe.core.components.PluginManager;
 import hoopoe.core.bootstrap.HoopoeProfilerBridge;
 import hoopoe.core.configuration.Configuration;
 import java.io.File;

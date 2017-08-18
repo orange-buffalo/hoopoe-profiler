@@ -6,6 +6,7 @@ import hoopoe.api.HoopoeProfiler;
 import hoopoe.api.plugins.HoopoeInvocationAttribute;
 import hoopoe.api.plugins.HoopoePlugin;
 import hoopoe.core.bootstrap.HoopoeProfilerBridge;
+import hoopoe.core.components.PluginManager;
 import hoopoe.core.configuration.Configuration;
 import hoopoe.core.supplements.InstrumentationHelper;
 import hoopoe.core.supplements.ProfiledResultHelper;

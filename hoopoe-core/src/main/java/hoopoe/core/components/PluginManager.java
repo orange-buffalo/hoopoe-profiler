@@ -1,8 +1,11 @@
-package hoopoe.core;
+package hoopoe.core.components;
 
 import hoopoe.api.plugins.HoopoeInvocationRecorder;
 import hoopoe.api.plugins.HoopoePlugin;
+import hoopoe.core.ClassMetadataReader;
+import hoopoe.core.HoopoeMethodInfoImpl;
 import hoopoe.core.configuration.Configuration;
+import hoopoe.core.configuration.EnabledComponentData;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,6 +17,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.implementation.bytecode.StackManipulation;
 import net.bytebuddy.implementation.bytecode.constant.SerializedConstant;
+import org.apache.commons.lang3.ArrayUtils;
 
 public class PluginManager {
 
@@ -27,12 +31,19 @@ public class PluginManager {
 
     private Collection<HoopoePlugin> plugins;
 
-    public PluginManager(Configuration configuration, ClassMetadataReader classMetadataReader) {
+    public PluginManager(
+            Configuration configuration,
+            ComponentLoader componentLoader,
+            ClassMetadataReader classMetadataReader) {
 
         this.classMetadataReader = classMetadataReader;
 
-        //todo
-        plugins = new ArrayList<>();
+        this.plugins = new ArrayList<>();
+        for (EnabledComponentData enabledPlugin : configuration.getEnabledPlugins()) {
+            HoopoePlugin plugin = componentLoader.loadComponent(
+                    enabledPlugin.getBinariesPath(), HoopoePlugin.class);
+            this.plugins.add(plugin);
+        }
     }
 
     private int[] addPluginActions(HoopoeMethodInfoImpl methodInfo) {
@@ -44,9 +55,7 @@ public class PluginManager {
                 pluginActionIndicies.add(pluginActions.size() - 1);
             }
         }
-//        return pluginActionIndicies.toArray(new Integer[pluginActionIndicies.size()]);
-        //todo
-        return null;
+        return ArrayUtils.toPrimitive(pluginActionIndicies.toArray(new Integer[pluginActionIndicies.size()]));
     }
 
     public Collection<HoopoeInvocationRecorder> getRecorders(Object pluginActionIndicies) {
@@ -64,10 +73,12 @@ public class PluginManager {
         String methodSignature = classMetadataReader.getMethodSignature(method);
 
         String methodKey = className + methodSignature;
+        // todo use weak cache instead, maybe with MethodDescription as a key (check what will be faster)
         if (pluginActionsCache.containsKey(methodKey)) {
             return pluginActionsCache.get(methodKey);
         }
 
+        // todo lazy calculate
         HoopoeMethodInfoImpl methodInfo = new HoopoeMethodInfoImpl(
                 className,
                 methodSignature,
