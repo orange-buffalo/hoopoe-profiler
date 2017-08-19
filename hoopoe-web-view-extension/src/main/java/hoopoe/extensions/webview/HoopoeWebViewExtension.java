@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import hoopoe.api.HoopoeProfiler;
-import hoopoe.api.HoopoeProfilerExtension;
+import hoopoe.api.extensions.HoopoeProfilerExtension;
 import hoopoe.extensions.webview.controllers.JsonRpcServletHolder;
 import hoopoe.extensions.webview.controllers.ProfilerService;
 import hoopoe.extensions.webview.controllers.ProfilerServiceImpl;
@@ -36,7 +36,9 @@ public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
     private HoopoeProfiler profiler;
 
     @Override
-    public void init() {
+    public void init(HoopoeProfiler profiler) {
+        this.profiler = profiler;
+
         try {
             Server server = new Server(9786);  //todo setup port here from config
 
@@ -125,12 +127,6 @@ public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
         objectMapper.registerModule(hoopoeJacksonModule);
 
         return objectMapper;
-    }
-
-    // todo common code should be reusable
-    @Override
-    public void setupProfiler(HoopoeProfiler profiler) {
-        this.profiler = profiler;
     }
 
 }

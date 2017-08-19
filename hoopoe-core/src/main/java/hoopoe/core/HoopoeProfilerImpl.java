@@ -1,17 +1,13 @@
 package hoopoe.core;
 
-import hoopoe.api.HoopoeAttribute;
-import hoopoe.api.HoopoeConfiguration;
-import hoopoe.api.HoopoeMethodInfo;
-import hoopoe.api.HoopoePlugin;
-import hoopoe.api.HoopoePluginAction;
-import hoopoe.api.HoopoePluginsProvider;
 import hoopoe.api.HoopoeProfiledResult;
 import hoopoe.api.HoopoeProfiler;
-import hoopoe.api.HoopoeProfilerExtension;
-import hoopoe.api.HoopoeProfilerExtensionsProvider;
+import hoopoe.api.configuration.HoopoeConfiguration;
+import hoopoe.api.plugins.HoopoeInvocationAttribute;
 import hoopoe.core.bootstrap.HoopoeProfilerBridge;
-import hoopoe.core.supplements.ConfigurationHelper;
+import hoopoe.core.components.ExtensionsManager;
+import hoopoe.core.components.PluginsManager;
+import hoopoe.core.configuration.Configuration;
 import hoopoe.core.supplements.InstrumentationHelper;
 import hoopoe.core.supplements.ProfiledResultHelper;
 import hoopoe.core.supplements.TraceNode;
@@ -21,9 +17,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import lombok.AllArgsConstructor;
+import java.util.stream.Collectors;
 import lombok.Getter;
+import lombok.experimental.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j(topic = "hoopoe.profiler")
@@ -40,34 +36,35 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     @Getter
     private HoopoeConfiguration configuration;
 
-    private List<PluginActionWrapper> pluginActions = new CopyOnWriteArrayList<>();
-
-    private Collection<HoopoePlugin> plugins;
-
     private InstrumentationHelper instrumentationHelper;
 
-    private ProfiledResultHelper profiledResultHelper = new ProfiledResultHelper();
+    private ProfiledResultHelper profiledResultHelper;
 
     @Getter
     private HoopoeProfiledResult lastProfiledResult;
 
-    public HoopoeProfilerImpl(String rawArgs, Instrumentation instrumentation) {
+    private PluginsManager pluginsManager;
+
+    @Builder
+    private HoopoeProfilerImpl(
+            Configuration configuration,
+            PluginsManager pluginsManager,
+            InstrumentationHelper instrumentationHelper,
+            ProfiledResultHelper profiledResultHelper,
+            ExtensionsManager extensionsManager) {
+
         log.info("starting profiler");
 
-        ConfigurationHelper configurationHelper = new ConfigurationHelper();
-        configuration = configurationHelper.getConfiguration(rawArgs);
+        this.configuration = configuration;
+        this.profiledResultHelper = profiledResultHelper;
+        this.pluginsManager = pluginsManager;
+        this.instrumentationHelper = instrumentationHelper;
 
-        HoopoePluginsProvider pluginsProvider = configuration.createPluginsProvider();
-        pluginsProvider.setupProfiler(this);
-        plugins = pluginsProvider.createPlugins();
+        extensionsManager.initExtensions(this);
+    }
 
-        HoopoeProfilerExtensionsProvider extensionsProvider = configuration.createProfilerExtensionProvider();
-        extensionsProvider.setupProfiler(this);
-        extensionsProvider.createExtensions().forEach(HoopoeProfilerExtension::init);
-
-        instrumentationHelper = new InstrumentationHelper(
-                configuration.getExcludedClassesPatterns(), configuration.getIncludedClassesPatterns(), this);
-        instrumentationHelper.createClassFileTransformer(instrumentation);
+    public void instrument(Instrumentation instrumentation) {
+        instrumentationHelper.createClassFileTransformer(instrumentation, this);
     }
 
     public void unload() {
@@ -95,14 +92,15 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         return HoopoeProfilerBridge.enabled;
     }
 
-    public void profileCall(long startTimeInNs,
-                            long endTimeInNs,
-                            String className,
-                            String methodSignature,
-                            int[] pluginActionIndicies,
-                            Object[] args,
-                            Object returnValue,
-                            Object thisInMethod) {
+    public void profileCall(
+            long startTimeInNs,
+            long endTimeInNs,
+            String className,
+            String methodSignature,
+            Object pluginActionIndicies,
+            Object[] args,
+            Object returnValue,
+            Object thisInMethod) {
 
         TraceNodesWrapper traceNodesWrapper = threadTraceNodesWrapper.get();
         List<TraceNode> traceNodes = traceNodesWrapper.getTraceNodes();
@@ -115,38 +113,13 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         if (pluginActionIndicies == null) {
             traceNodes.add(
                     new TraceNode(className, methodSignature, startTimeInNs, endTimeInNs, null));
+        } else {
+            Collection<HoopoeInvocationAttribute> attributes = pluginsManager.getRecorders(pluginActionIndicies).stream()
+                    .flatMap(pluginAction -> pluginAction.getAttributes(args, returnValue, thisInMethod).stream())
+                    .collect(Collectors.toList());
+
+            traceNodes.add(new TraceNode(className, methodSignature, startTimeInNs, endTimeInNs, attributes));
         }
-        else {
-            Collection<HoopoeAttribute> attributes = new ArrayList<>(pluginActionIndicies.length);
-
-            for (int pluginActionIndex : pluginActionIndicies) {
-                PluginActionWrapper pluginActionWrapper = pluginActions.get(pluginActionIndex);
-                attributes.addAll(pluginActionWrapper.pluginAction.getAttributes(
-                        args, returnValue, thisInMethod,
-                        traceNodesWrapper.getPluginCache(pluginActionWrapper.plugin)));
-            }
-
-            traceNodes.add(
-                    new TraceNode(className, methodSignature, startTimeInNs, endTimeInNs, attributes));
-        }
-    }
-
-    public List<Integer> addPluginActions(HoopoeMethodInfo methodInfo) {
-        List<Integer> pluginActionIndicies = new ArrayList<>(0);
-        for (HoopoePlugin plugin : plugins) {
-            HoopoePluginAction pluginAction = plugin.createActionIfSupported(methodInfo);
-            if (pluginAction != null) {
-                pluginActions.add(new PluginActionWrapper(pluginAction, plugin));
-                pluginActionIndicies.add(pluginActions.size() - 1);
-            }
-        }
-        return pluginActionIndicies;
-    }
-
-    @AllArgsConstructor
-    private static class PluginActionWrapper {
-        HoopoePluginAction pluginAction;
-        HoopoePlugin plugin;
     }
 
 }

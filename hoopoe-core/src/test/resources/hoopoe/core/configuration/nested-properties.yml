@@ -1,0 +1,5 @@
+first-property.one: "one"
+first-property.two: 2
+second_property:
+  alpha.one: "a1"
+  alpha.two: "a2"

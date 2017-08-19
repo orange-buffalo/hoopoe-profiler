@@ -1,10 +1,11 @@
 package hoopoe.core.supplements;
 
-import hoopoe.api.HoopoeAttribute;
+import hoopoe.api.plugins.HoopoeInvocationAttribute;
 import hoopoe.api.HoopoeProfiledInvocation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ public class TraceNode {
     @Getter
     private long endTimeInNs;
 
-    private Collection<HoopoeAttribute> attributes;
+    private Collection<HoopoeInvocationAttribute> attributes;
 
     /**
      * Duration of this method body without descendant method calls and without profiler overhead.
@@ -51,7 +52,7 @@ public class TraceNode {
                      String methodSignature,
                      long startTimeInNs,
                      long endTimeInNs,
-                     Collection<HoopoeAttribute> attributes) {
+                     Collection<HoopoeInvocationAttribute> attributes) {
         this.className = className;
         this.methodSignature = methodSignature;
         this.startTimeInNs = startTimeInNs;
@@ -135,9 +136,9 @@ public class TraceNode {
     private String getGroupingKey() {
         String attributesKey = StringUtils.EMPTY;
         if (attributes != null) {
-            List<HoopoeAttribute> sortedAttributes = new ArrayList(attributes);
-            Collections.sort(sortedAttributes, (o1, o2) -> o1.getName().compareTo(o2.getName()));
-            for (HoopoeAttribute attribute : sortedAttributes) {
+            List<HoopoeInvocationAttribute> sortedAttributes = new ArrayList(attributes);
+            sortedAttributes.sort(Comparator.comparing(HoopoeInvocationAttribute::getName));
+            for (HoopoeInvocationAttribute attribute : sortedAttributes) {
                 attributesKey += attribute.getName() + attribute.getDetails();
             }
         }
