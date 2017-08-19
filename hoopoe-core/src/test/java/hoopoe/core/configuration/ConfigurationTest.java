@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 public class ConfigurationTest {
@@ -64,13 +65,14 @@ public class ConfigurationTest {
         HoopoePlugin plugin = mock(
                 HoopoePlugin.class,
                 withSettings().extraInterfaces(HoopoeConfigurableComponent.class));
+        when(((HoopoeConfigurableComponent) plugin).getConfiguration()).thenReturn(new TestPluginConfig());
 
         configuration.setPluginConfiguration(plugin, "id");
 
         verify(configurationDataReaderMock).readConfiguration();
         verifyNoMoreInteractions(configurationDataReaderMock);
 
-        verify(configurationBeanPropertiesReaderMock).readProperties(plugin.getClass());
+        verify(configurationBeanPropertiesReaderMock).readProperties(TestPluginConfig.class);
         verifyNoMoreInteractions(configurationBeanPropertiesReaderMock);
     }
 
@@ -88,14 +90,23 @@ public class ConfigurationTest {
         HoopoeProfilerExtension extension = mock(
                 HoopoeProfilerExtension.class,
                 withSettings().extraInterfaces(HoopoeConfigurableComponent.class));
+        when(((HoopoeConfigurableComponent) extension).getConfiguration()).thenReturn(new TestExtensionConfig());
 
         configuration.setExtensionConfiguration(extension, "id");
 
         verify(configurationDataReaderMock).readConfiguration();
         verifyNoMoreInteractions(configurationDataReaderMock);
 
-        verify(configurationBeanPropertiesReaderMock).readProperties(extension.getClass());
+        verify(configurationBeanPropertiesReaderMock).readProperties(TestExtensionConfig.class);
         verifyNoMoreInteractions(configurationBeanPropertiesReaderMock);
+    }
+
+    public static class TestPluginConfig {
+
+    }
+
+    public static class TestExtensionConfig {
+
     }
 
 }

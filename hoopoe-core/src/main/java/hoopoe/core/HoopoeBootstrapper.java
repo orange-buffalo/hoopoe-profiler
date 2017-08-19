@@ -1,7 +1,8 @@
 package hoopoe.core;
 
 import hoopoe.core.components.ComponentLoader;
-import hoopoe.core.components.PluginManager;
+import hoopoe.core.components.ExtensionsManager;
+import hoopoe.core.components.PluginsManager;
 import hoopoe.core.configuration.Configuration;
 import hoopoe.core.configuration.ConfigurationFactory;
 import hoopoe.core.supplements.InstrumentationHelper;
@@ -21,7 +22,9 @@ public class HoopoeBootstrapper {
      * @param agentArgs       additional parameters supplied for initialization; in java agent notation.
      * @param instrumentation instrumentation to use to apply profiling code with.
      */
-    public void bootstrapHoopoe(String agentArgs, Instrumentation instrumentation) {
+    public void bootstrapHoopoe(
+            String agentArgs,
+            Instrumentation instrumentation) {
         Environment environment = new Environment(agentArgs);
 
         Configuration configuration = ConfigurationFactory.createConfiguration(environment);
@@ -29,17 +32,21 @@ public class HoopoeBootstrapper {
         ClassLoader currentClassLoader = HoopoeBootstrapper.class.getClassLoader();
         ComponentLoader componentLoader = new ComponentLoader(currentClassLoader);
 
-        PluginManager pluginManager = new PluginManager(configuration, componentLoader, classMetadataReader);
+        PluginsManager pluginManager = new PluginsManager(configuration, componentLoader, classMetadataReader);
+        ExtensionsManager extensionsManager = new ExtensionsManager(configuration, componentLoader);
 
-
-        InstrumentationHelper instrumentationHelper = new InstrumentationHelper(configuration, pluginManager, classMetadataReader);
+        InstrumentationHelper instrumentationHelper = new InstrumentationHelper(pluginManager,
+                classMetadataReader);
 
         ProfiledResultHelper profiledResultHelper = new ProfiledResultHelper();
-        HoopoeProfilerImpl profiler = new HoopoeProfilerImpl(configuration, pluginManager, instrumentationHelper, profiledResultHelper);
 
-        
-        profiler.instrument(instrumentation);
-
+        HoopoeProfilerImpl.builder()
+                .configuration(configuration)
+                .pluginsManager(pluginManager)
+                .extensionsManager(extensionsManager)
+                .instrumentationHelper(instrumentationHelper)
+                .profiledResultHelper(profiledResultHelper)
+                .build()
+                .instrument(instrumentation);
     }
-
 }

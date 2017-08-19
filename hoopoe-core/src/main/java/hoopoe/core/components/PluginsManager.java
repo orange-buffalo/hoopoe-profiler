@@ -19,7 +19,7 @@ import net.bytebuddy.implementation.bytecode.StackManipulation;
 import net.bytebuddy.implementation.bytecode.constant.SerializedConstant;
 import org.apache.commons.lang3.ArrayUtils;
 
-public class PluginManager {
+public class PluginsManager {
 
     private List<PluginActionWrapper> pluginActions = new CopyOnWriteArrayList<>();
 
@@ -31,7 +31,7 @@ public class PluginManager {
 
     private Collection<HoopoePlugin> plugins;
 
-    public PluginManager(
+    public PluginsManager(
             Configuration configuration,
             ComponentLoader componentLoader,
             ClassMetadataReader classMetadataReader) {
@@ -42,6 +42,7 @@ public class PluginManager {
         for (EnabledComponentData enabledPlugin : configuration.getEnabledPlugins()) {
             HoopoePlugin plugin = componentLoader.loadComponent(
                     enabledPlugin.getBinariesPath(), HoopoePlugin.class);
+            configuration.setPluginConfiguration(plugin, enabledPlugin.getId());
             this.plugins.add(plugin);
         }
     }

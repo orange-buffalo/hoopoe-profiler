@@ -1,12 +1,12 @@
 package hoopoe.core;
 
-import hoopoe.api.HoopoeConfiguration;
 import hoopoe.api.HoopoeProfiledResult;
 import hoopoe.api.HoopoeProfiler;
+import hoopoe.api.configuration.HoopoeConfiguration;
 import hoopoe.api.plugins.HoopoeInvocationAttribute;
-import hoopoe.api.plugins.HoopoePlugin;
 import hoopoe.core.bootstrap.HoopoeProfilerBridge;
-import hoopoe.core.components.PluginManager;
+import hoopoe.core.components.ExtensionsManager;
+import hoopoe.core.components.PluginsManager;
 import hoopoe.core.configuration.Configuration;
 import hoopoe.core.supplements.InstrumentationHelper;
 import hoopoe.core.supplements.ProfiledResultHelper;
@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import lombok.experimental.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j(topic = "hoopoe.profiler")
@@ -35,10 +36,6 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     @Getter
     private HoopoeConfiguration configuration;
 
-
-
-    private Collection<HoopoePlugin> plugins;
-
     private InstrumentationHelper instrumentationHelper;
 
     private ProfiledResultHelper profiledResultHelper;
@@ -46,23 +43,28 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     @Getter
     private HoopoeProfiledResult lastProfiledResult;
 
-    private PluginManager pluginManager;
+    private PluginsManager pluginsManager;
 
-    public HoopoeProfilerImpl(Configuration configuration, PluginManager pluginManager,
-                              InstrumentationHelper instrumentationHelper, ProfiledResultHelper profiledResultHelper) {
+    @Builder
+    private HoopoeProfilerImpl(
+            Configuration configuration,
+            PluginsManager pluginsManager,
+            InstrumentationHelper instrumentationHelper,
+            ProfiledResultHelper profiledResultHelper,
+            ExtensionsManager extensionsManager) {
+
         log.info("starting profiler");
 
+        this.configuration = configuration;
         this.profiledResultHelper = profiledResultHelper;
-        this.pluginManager = pluginManager;
-
-
-
+        this.pluginsManager = pluginsManager;
         this.instrumentationHelper = instrumentationHelper;
 
+        extensionsManager.initExtensions(this);
     }
 
     public void instrument(Instrumentation instrumentation) {
-       instrumentationHelper.createClassFileTransformer(instrumentation);
+        instrumentationHelper.createClassFileTransformer(instrumentation, this);
     }
 
     public void unload() {
@@ -90,14 +92,15 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         return HoopoeProfilerBridge.enabled;
     }
 
-    public void profileCall(long startTimeInNs,
-                            long endTimeInNs,
-                            String className,
-                            String methodSignature,
-                            Object pluginActionIndicies,
-                            Object[] args,
-                            Object returnValue,
-                            Object thisInMethod) {
+    public void profileCall(
+            long startTimeInNs,
+            long endTimeInNs,
+            String className,
+            String methodSignature,
+            Object pluginActionIndicies,
+            Object[] args,
+            Object returnValue,
+            Object thisInMethod) {
 
         TraceNodesWrapper traceNodesWrapper = threadTraceNodesWrapper.get();
         List<TraceNode> traceNodes = traceNodesWrapper.getTraceNodes();
@@ -110,18 +113,13 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         if (pluginActionIndicies == null) {
             traceNodes.add(
                     new TraceNode(className, methodSignature, startTimeInNs, endTimeInNs, null));
-        }
-        else {
-            Collection<HoopoeInvocationAttribute> attributes = pluginManager.getRecorders(pluginActionIndicies).stream()
+        } else {
+            Collection<HoopoeInvocationAttribute> attributes = pluginsManager.getRecorders(pluginActionIndicies).stream()
                     .flatMap(pluginAction -> pluginAction.getAttributes(args, returnValue, thisInMethod).stream())
                     .collect(Collectors.toList());
 
             traceNodes.add(new TraceNode(className, methodSignature, startTimeInNs, endTimeInNs, attributes));
         }
     }
-
-
-
-
 
 }

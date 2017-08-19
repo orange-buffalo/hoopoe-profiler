@@ -1,10 +1,10 @@
 package hoopoe.core.supplements;
 
-import hoopoe.core.HoopoeProfilerImpl;
+import hoopoe.api.HoopoeProfiler;
+import hoopoe.api.configuration.HoopoeConfiguration;
 import hoopoe.core.ClassMetadataReader;
-import hoopoe.core.components.PluginManager;
 import hoopoe.core.bootstrap.HoopoeProfilerBridge;
-import hoopoe.core.configuration.Configuration;
+import hoopoe.core.components.PluginsManager;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -42,26 +42,27 @@ public class InstrumentationHelper {
 
     private Collection<Pattern> excludedClassesPatterns;
     private Collection<Pattern> includedClassesPatterns;
-    private HoopoeProfilerImpl profiler;
+    private HoopoeProfiler profiler;
     
     private Instrumentation instrumentation;
     private Collection<ClassFileTransformer> transformers = new ArrayList<>(2);
 
-    private Configuration configuration;
-    private PluginManager pluginManager;
+    private PluginsManager pluginManager;
     private ClassMetadataReader classMetadataReader;
 
-    public InstrumentationHelper(Configuration configuration, PluginManager pluginManager, ClassMetadataReader classMetadataReader) {
-        this.excludedClassesPatterns = excludedClassesPatterns;
-        this.includedClassesPatterns = includedClassesPatterns;
-        this.profiler = profiler;
+    public InstrumentationHelper(
+            PluginsManager pluginManager,
+            ClassMetadataReader classMetadataReader) {
 
         this.pluginManager = pluginManager;
-        this.configuration = configuration;
         this.classMetadataReader = classMetadataReader;
     }
 
-    public void createClassFileTransformer(Instrumentation instrumentation) {
+    public void createClassFileTransformer(Instrumentation instrumentation, HoopoeProfiler profiler) {
+        HoopoeConfiguration configuration = profiler.getConfiguration();
+        this.excludedClassesPatterns = configuration.getExcludedClassesPatterns();
+        this.includedClassesPatterns = configuration.getIncludedClassesPatterns();
+        this.profiler = profiler;
         this.instrumentation = instrumentation;
         deployBootstrapJar(instrumentation);
         initProfilerBridge();
@@ -84,7 +85,7 @@ public class InstrumentationHelper {
                 .bind(MinimumTrackedTime.class,
                         (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
                                 LongConstant.forValue(
-                                        profiler.getConfiguration().getMinimumTrackedInvocationTimeInNs()));
+                                        configuration.getMinimumTrackedInvocationTimeInNs()));
 
         transformers.add(baseAgentConfig
                 .type(this::matchesProfiledClass)

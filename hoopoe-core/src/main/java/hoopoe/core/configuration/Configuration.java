@@ -1,9 +1,12 @@
 package hoopoe.core.configuration;
 
 import hoopoe.api.configuration.HoopoeConfigurableComponent;
+import hoopoe.api.configuration.HoopoeConfiguration;
 import hoopoe.api.extensions.HoopoeProfilerExtension;
 import hoopoe.api.plugins.HoopoePlugin;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -15,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * custom configuration profiles.
  */
 @Slf4j(topic = "hoopoe.profiler")
-public class Configuration {
+public class Configuration implements HoopoeConfiguration {
 
     private final ConfigurationDataReader configurationDataReader;
     private final ConfigurationBeanPropertiesReader configurationBeanPropertiesReader;
@@ -62,9 +65,10 @@ public class Configuration {
 
         if (hoopoePlugin instanceof HoopoeConfigurableComponent) {
             HoopoeConfigurableComponent configurableComponent = (HoopoeConfigurableComponent) hoopoePlugin;
+            Object componentConfiguration = configurableComponent.getConfiguration();
             Collection<ConfigurationBeanProperty> configurationProperties = configurationBeanPropertiesReader
-                    .readProperties(configurableComponent.getClass());
-            getConfigurationData().updatePluginConfiguration(pluginId, configurableComponent, configurationProperties);
+                    .readProperties(componentConfiguration.getClass());
+            getConfigurationData().updatePluginConfiguration(pluginId, componentConfiguration, configurationProperties);
         }
     }
 
@@ -81,10 +85,11 @@ public class Configuration {
 
         if (hoopoeExtension instanceof HoopoeConfigurableComponent) {
             HoopoeConfigurableComponent configurableComponent = (HoopoeConfigurableComponent) hoopoeExtension;
+            Object componentConfiguration = configurableComponent.getConfiguration();
             Collection<ConfigurationBeanProperty> configurationProperties = configurationBeanPropertiesReader
-                    .readProperties(configurableComponent.getClass());
+                    .readProperties(componentConfiguration.getClass());
             getConfigurationData().updateExtensionConfiguration(
-                    extensionId, configurableComponent, configurationProperties);
+                    extensionId, componentConfiguration, configurationProperties);
         }
     }
 
@@ -93,5 +98,23 @@ public class Configuration {
             configurationData = new ConfigurationData(configurationDataReader.readConfiguration());
         }
         return configurationData;
+    }
+
+    @Override
+    public long getMinimumTrackedInvocationTimeInNs() {
+        // TODO read from config
+        return 1_000_000;
+    }
+
+    @Override
+    public Collection<Pattern> getIncludedClassesPatterns() {
+        // TODO read from config
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<Pattern> getExcludedClassesPatterns() {
+        // TODO read from config
+        return Collections.emptyList();
     }
 }

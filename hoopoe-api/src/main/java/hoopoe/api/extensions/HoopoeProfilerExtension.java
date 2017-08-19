@@ -1,5 +1,7 @@
 package hoopoe.api.extensions;
 
+import hoopoe.api.HoopoeProfiler;
+
 /**
  * Extensions are used to control the profiler, managing profiling results, managing configuration etc.
  * <p>
@@ -15,6 +17,11 @@ package hoopoe.api.extensions;
  */
 public interface HoopoeProfilerExtension {
 
-    void init();
+    /**
+     * Called by profiler when it is time to setup this extension.
+     *
+     * @param profiler profiler this extension is started for.
+     */
+    void init(HoopoeProfiler profiler);
 
 }

@@ -35,10 +35,11 @@ public @interface HoopoeConfigurationProperty {
     String description() default "";
 
     /**
-     * Provides the technical key of the property. To be used to read-write the value from/to the configuration
-     * sources. If {@link HoopoeConfigurationProperty#name()} is empty, will be used to display the property to users.
+     * Provides the technical key of the property. To be used to read-write the value from/to the configuration sources.
+     * If {@link HoopoeConfigurationProperty#name()} is empty, will be used to display the property to users.
      *
-     * @return property technical name, or empty string to use internal naming strategy.
+     * @return property technical name, or empty string to use internal naming strategy. May be a composite key, i.e
+     * "server.port"
      */
     String key() default "";
 

@@ -1,10 +1,9 @@
 package hoopoe.test.supplements;
 
-import hoopoe.api.HoopoeConfiguration;
+import hoopoe.api.configuration.HoopoeConfiguration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.Setter;
@@ -47,10 +46,10 @@ public class TestConfiguration implements HoopoeConfiguration {
         return minimumTrackedInvocationTimeInNs;
     }
 
-    @Override
-    public Collection<String> getEnabledPlugins() {
-        return Collections.emptyList();
-    }
+//    @Override
+//    public Collection<String> getEnabledPlugins() {
+//        return Collections.emptyList();
+//    }
 
     @Override
     public Collection<Pattern> getIncludedClassesPatterns() {

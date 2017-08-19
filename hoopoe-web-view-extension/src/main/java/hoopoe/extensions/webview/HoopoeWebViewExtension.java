@@ -36,7 +36,9 @@ public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
     private HoopoeProfiler profiler;
 
     @Override
-    public void init() {
+    public void init(HoopoeProfiler profiler) {
+        this.profiler = profiler;
+
         try {
             Server server = new Server(9786);  //todo setup port here from config
 
@@ -125,13 +127,6 @@ public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
         objectMapper.registerModule(hoopoeJacksonModule);
 
         return objectMapper;
-    }
-
-    // todo common code should be reusable
-    //@Override
-    //todo rewrite
-    public void setupProfiler(HoopoeProfiler profiler) {
-        this.profiler = profiler;
     }
 
 }

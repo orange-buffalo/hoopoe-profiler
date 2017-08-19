@@ -13,23 +13,15 @@ package hoopoe.api.configuration;
 public interface HoopoeConfigurableComponent<T> {
 
     /**
-     * Returns the configuration of this component. If it was not yet set via
-     * {@link HoopoeConfigurableComponent#setCustomizedConfiguration(Object)}, should return an instance
-     * with default configuration values.
+     * Returns the configuration of this component. Every configuration property in this object will be updated with
+     * user-defined values, unless the user-provided value is {@code null} (which actually means user decided to keep
+     * the default).
      * <p>
-     * Before component execution, the return value of this method will be updated with user-defined
-     * values and then passed to {@link HoopoeConfigurableComponent#setCustomizedConfiguration(Object)}.
+     * Typical use case would be to create this object with default configuration values in component's constructor and
+     * then let Hoopoe override any values provided by the user.
      *
-     * @return configuration class instance with default values.
+     * @return configuration object for this component; never {@code null}.
      */
     T getConfiguration();
-
-    /**
-     * Sets the configuration created by {@link HoopoeConfigurableComponent#getConfiguration()} and updated
-     * with user-defined values.
-     *
-     * @param configuration updated configuration, default values are overridden with user-defined ones (if any).
-     */
-    void setCustomizedConfiguration(T configuration);
 
 }
