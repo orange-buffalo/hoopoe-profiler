@@ -38,10 +38,10 @@ public class ClassMetadataReaderTest {
     public static Object[][] testGetClassName() {
         return new Object[][] {
                 {new TypeDescription.ForLoadedType(ClassMetadataReader.class),
-                        "hoopoe.core.MetadataReader"},
+                        "hoopoe.core.ClassMetadataReader"},
 
                 {new TypeDescription.ForLoadedType(NestedClass.class),
-                        "hoopoe.core.MetadataReaderTest.NestedClass"},
+                        "hoopoe.core.ClassMetadataReaderTest.NestedClass"},
 
                 {new TypeDescription.ForLoadedType(ArrayList.class),
                         "java.util.ArrayList"},
@@ -50,10 +50,10 @@ public class ClassMetadataReaderTest {
                         "java.util.AbstractList"},
 
                 {new TypeDescription.ForLoadedType(SUPPLIER_LAMBDA.getClass()), "" +
-                        "hoopoe.core.MetadataReaderTest$$Lambda$1"},
+                        "hoopoe.core.ClassMetadataReaderTest$$Lambda$1"},
 
                 {new TypeDescription.ForLoadedType(SUPPLIER_ANONYMOUS_IMPL.getClass()),
-                        "hoopoe.core.MetadataReaderTest$1"}
+                        "hoopoe.core.ClassMetadataReaderTest$1"}
         };
     }
 
@@ -135,7 +135,7 @@ public class ClassMetadataReaderTest {
                 new Object[] {
                         new MethodDescription.ForLoadedMethod(
                                 getMethodForGetMethodSignatureTest("nestedClassParameter")),
-                        "nestedClassParameter(hoopoe.core.MetadataReaderTest.NestedClass)"
+                        "nestedClassParameter(hoopoe.core.ClassMetadataReaderTest.NestedClass)"
                 },
 
                 new Object[] {
