@@ -18,6 +18,7 @@ import org.junit.runner.RunWith;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 
 @RunWith(DataProviderRunner.class)
@@ -50,10 +51,10 @@ public class ClassMetadataReaderTest {
                         "java.util.AbstractList"},
 
                 {new TypeDescription.ForLoadedType(SUPPLIER_LAMBDA.getClass()), "" +
-                        "hoopoe.core.ClassMetadataReaderTest$$Lambda$1"},
+                        "hoopoe.core.ClassMetadataReaderTest$$Lambda$"},
 
                 {new TypeDescription.ForLoadedType(SUPPLIER_ANONYMOUS_IMPL.getClass()),
-                        "hoopoe.core.ClassMetadataReaderTest$1"}
+                        "hoopoe.core.ClassMetadataReaderTest$"}
         };
     }
 
@@ -62,7 +63,7 @@ public class ClassMetadataReaderTest {
     public void testGetClassName(TypeDefinition inputType, String expectedName) {
         ClassMetadataReader classMetadataReader = new ClassMetadataReader();
         String actualName = classMetadataReader.getClassName(inputType);
-        assertThat(actualName, equalTo(expectedName));
+        assertThat(actualName, containsString(expectedName));
     }
 
     @DataProvider

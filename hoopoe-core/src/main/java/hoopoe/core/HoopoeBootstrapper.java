@@ -22,7 +22,7 @@ public class HoopoeBootstrapper {
      * @param agentArgs       additional parameters supplied for initialization; in java agent notation.
      * @param instrumentation instrumentation to use to apply profiling code with.
      */
-    public void bootstrapHoopoe(
+    public HoopoeProfilerImpl bootstrapHoopoe(
             String agentArgs,
             Instrumentation instrumentation) {
         Environment environment = new Environment(agentArgs);
@@ -40,13 +40,16 @@ public class HoopoeBootstrapper {
 
         ProfiledResultHelper profiledResultHelper = new ProfiledResultHelper();
 
-        HoopoeProfilerImpl.builder()
+        HoopoeProfilerImpl profiler = HoopoeProfilerImpl.builder()
                 .configuration(configuration)
                 .pluginsManager(pluginManager)
                 .extensionsManager(extensionsManager)
                 .instrumentationHelper(instrumentationHelper)
                 .profiledResultHelper(profiledResultHelper)
-                .build()
-                .instrument(instrumentation);
+                .build();
+
+        profiler.instrument(instrumentation);
+
+        return profiler;
     }
 }

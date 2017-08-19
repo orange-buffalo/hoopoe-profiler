@@ -1,6 +1,7 @@
 package hoopoe.test.supplements;
 
 import com.ea.agentloader.AgentLoader;
+import hoopoe.core.HoopoeBootstrapper;
 import hoopoe.core.HoopoeProfilerImpl;
 import java.lang.instrument.Instrumentation;
 import lombok.Getter;
@@ -18,7 +19,8 @@ public class TestAgent {
     public static void agentmain(String args, Instrumentation instrumentation)
             throws NoSuchFieldException, IllegalAccessException {
 
-//        profiler = new HoopoeProfilerImpl(args, instrumentation);
+        HoopoeBootstrapper bootstrapper = new HoopoeBootstrapper();
+        profiler = bootstrapper.bootstrapHoopoe(args, instrumentation);
     }
 
     public static void unload() {

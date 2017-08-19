@@ -20,10 +20,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 @RunWith(DataProviderRunner.class)
+//TODO
+@Ignore
 public class SqlQueriesPluginTest {
 
     @Rule
