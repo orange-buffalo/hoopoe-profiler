@@ -1,0 +1,21 @@
+We are currently in alpha-version. Our goal for alpha is to deliver all the main features we believe hoopoe should have. Beta is to finalize the API and cleanup the code. As soon as this is done we are ready for stable release.
+
+### Alpha
+#### Core
+- [x] Trace method calls
+- [x] Track SQL queries
+- [ ] Calculate hotspots
+- [ ] Externalize configuration
+- [ ] Manage profiled data
+
+#### Web-UI
+- [x] Display trace results
+- [x] Display SQL queries
+- [ ] Display hotspots
+- [ ] Various searches
+- [ ] Edit configuration
+
+### Beta
+- [ ] API stabilization
+- [ ] Load plugins and extensions from external sources
+- [ ] Code cleanup

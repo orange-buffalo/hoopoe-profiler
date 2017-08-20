@@ -1,0 +1,35 @@
+The reasons to use profiler are obvious and we are not going to repeat them here. We want to concentrate on criteria we used to look for existing product and reasons why we failed to find "a good one".
+
+### Price
+
+Java profiler is a tool developer will use couple of times per year (as per our experience). It makes no sense to pay a lot of money for such a rare usage. Thus the price should either be reasonable or product should be free.
+
+All commercial profilers fail here. Their price is 2-3 times higher than price of IDEs, although the added value is much lower.
+
+### Basic functionality
+
+Of course, profiler should profile and trace method calls. All profilers can do this.
+
+### Track SQL queries
+
+In our experience most of the performance problems in enterprise applications are originated in poor SQL queries performance. Either there are too many queries or some of them are not optimal, but usually tuning this aspect will help to significantly improve the application's responsiveness and processing times.
+
+Commercial products offer possibility to see queries executed, but not the free ones.
+
+### Profiling results presentation
+
+Obviously, the better results are delivered to developer, the easier and more efficient it is to work with them. Good profiler should be capable of user-friendly interfaces and productivity features.
+
+It is arguable, but even commercial products do not deliver good experience. Often they are overloaded with features which are never used but help them to justify price for new version. At the same time basic usability is not worth the money paid.
+
+Free profilers we saw had extremely poor user interfaces.
+
+### Open source
+
+This was not a hard requirement we stated, but rather a pleasant bonus. We love open source.
+
+Of course, commercial products do not share their sources. Free profilers often do that.
+
+## So..
+
+Basically, everything said previously motivated us to create a free, open source, user-friendly profiler. This is how hoopoe-profiler was born.

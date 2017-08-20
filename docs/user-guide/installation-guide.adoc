@@ -1,0 +1,73 @@
+:toc:
+:toc-title:
+
+[[basics]]
+== Basics
+The core of hoopoe-profiler is the java agent to instrument the code of profiled application.
+The jar file also contains bundled plugins and extensions.
+
+1. Download https://bintray.com/orange-buffalo/hoopoe-profiler/hoopoe-profiler/_latestVersion[the hoopoe-agent.jar].
+
+2. Register hoopoe-agent.jar in application's java options: `-javaagent:<path-to-hoopoe-agent.jar>`
+
+For most application servers setup is done. We know some peculiarities of JBoss servers, see below if you use one.    
+
+[[jboss]]
+== JBoss Servers
+JBoss servers (AS, EAP, WildFly) have some special traits to be concerned when using java agents:
+
+1. `ModuleClassLoader` breaks javaclassloader contract (https://issues.jboss.org/browse/MODULES-250[MODULES-250]).
+2. `LogManager` implementation is not friendly to java agents (https://issues.jboss.org/browse/WFLY-895[WFLY-895]).
+
+Thus some additional steps required to setup hoopoe.
+
+=== Domain mode
+
+Edit `host.xml`:
+
+1. Set system properties to allow packages to be loaded from bootstrap classloader and to fix log manager:
+[source,xml]
+  <server name="server-one" group="main-server-group">
+    <system-properties>
+        <property name="jboss.modules.system.pkgs" value="hoopoe.core.bootstrap,org.jboss.logmanager"/>
+        <property name="java.util.logging.manager" value="org.jboss.logmanager.LogManager"/>
+        ...
+    </system-properties>
+  ...
+
+2. Locate `jboss-logmanager-*.jar` in `$JBOSS_HOME/modules/system/layers/base/org/jboss/logmanager/main`.
+
+3. Add jboss-logmanager.jar to boot classpath and enable hoopoe-agent.jar:
+[source,xml]
+  <server name="server-one" group="main-server-group">
+    ..
+    <jvm name="default">
+      <jvm-options>
+         <option value="-Xbootclasspath/p:<path-to-log-manager.jar>"/>
+         <option value="-javaagent:<path-to-hoopoe-agent.jar>"/>
+         ...
+       </jvm-options>
+    </jvm>
+  ...
+  ```
+
+=== Standalone mode
+
+Edit `standalone.conf`:
+
+1. Locate the place where `JBOSS_MODULES_SYSTEM_PKGS` is configured and and the following after that
+ (to allow packages to be loaded from bootstrap classloader):
+[source,sh]
+  JBOSS_MODULES_SYSTEM_PKGS="$JBOSS_MODULES_SYSTEM_PKGS,hoopoe.core.bootstrap,org.jboss.logmanager"
+
+2. Locate `jboss-logmanager-*.jar` in `$JBOSS_HOME/modules/system/layers/base/org/jboss/logmanager/main`.
+
+3. Add jboss-logmanager.jar to boot classpath and enable hoopoe-agent.jar. Add to the end of the file:
+[source,sh]
+  JAVA_OPTS="$JAVA_OPTS -Xbootclasspath/p:<path-to-log-manager.jar>"
+  JAVA_OPTS="$JAVA_OPTS -javaagent:<path-to-hoopoe-agent.jar>"
+
+4. And finally fix log manager by adding the following to the end of the file:
+[source,sh]
+  JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+

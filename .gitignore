@@ -2,3 +2,6 @@
 **/out/
 **/.gradle/
 **/build/
+**/.sass-cache
+docs/_site
+docs/.jekyll-metadata
