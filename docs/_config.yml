@@ -17,7 +17,7 @@ title: hoopoe-profiler
 description: > # this means to ignore newlines until "baseurl:"
   Open Source and forever free Java Profiler
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://orange-buffalo.github.io/hoopoe-profiler" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  orange-buffalo
 
 theme: jekyll-theme-cayman
