@@ -16,6 +16,8 @@ before_install:
   - \curl -sSL https://get.rvm.io | sed -E s/_rvm_print_headline/_rvm_version/ | bash -s stable --ruby=2.4.1
   - gem install jekyll bundler
 
+install: true
+
 script:
   # let's check gradle version
   - ./gradlew --version
@@ -24,7 +26,7 @@ script:
   - ./gradlew assemble
   - ./gradlew check
   # build the gh-pages
-  - cd ./docs/ && bundle
+  - cd ./docs/ && bundle exec rake deploy
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
