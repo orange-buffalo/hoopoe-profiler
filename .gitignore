@@ -5,3 +5,4 @@
 **/.sass-cache
 docs/_site
 docs/.jekyll-metadata
+.deploy_key

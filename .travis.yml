@@ -4,6 +4,10 @@ jdk:
   - oraclejdk8
 
 before_install:
+  # deploy keys for github pages
+  - openssl aes-256-cbc -K $encrypted_5a0f048e2914_key -iv $encrypted_5a0f048e2914_iv
+    -in .deploy_key.enc -out .deploy_key -d
+  - chmod 600 .deploy_key
   # codacy coverage
   - sudo apt-get install jq
   - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
@@ -13,9 +17,14 @@ before_install:
   - gem install jekyll bundler
 
 script:
-- ./gradlew clean
-- ./gradlew assemble
-- ./gradlew check
+  # let's check gradle version
+  - ./gradlew --version
+  # build the project
+  - ./gradlew clean
+  - ./gradlew assemble
+  - ./gradlew check
+  # build the gh-pages
+  - cd ./docs/ && bundle
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
@@ -24,6 +33,7 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
+    - $HOME/.rvm/
 
 after_success:
   # codecov coverage
