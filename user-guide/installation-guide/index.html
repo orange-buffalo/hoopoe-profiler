@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+
+<!-- Begin Jekyll SEO tag v2.2.3 -->
+<title>hoopoe-profiler | Open Source and forever free Java Profiler</title>
+<meta property="og:title" content="hoopoe-profiler" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Open Source and forever free Java Profiler" />
+<meta property="og:description" content="Open Source and forever free Java Profiler" />
+<link rel="canonical" href="https://orange-buffalo.github.io/hoopoe-profiler/user-guide/installation-guide/" />
+<meta property="og:url" content="https://orange-buffalo.github.io/hoopoe-profiler/user-guide/installation-guide/" />
+<meta property="og:site_name" content="hoopoe-profiler" />
+<script type="application/ld+json">
+{"@context":"http://schema.org","@type":"WebPage","headline":"hoopoe-profiler","description":"Open Source and forever free Java Profiler","url":"https://orange-buffalo.github.io/hoopoe-profiler/user-guide/installation-guide/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <meta name="description" content="Open Source and forever free Java Profiler
+"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+  </head>
+  <body>
+    <section class="main-content">
+      <div id="toc" class="toc">
+<div id="toctitle"></div>
+<ul class="sectlevel1">
+<li><a href="#basics">Basics</a></li>
+<li><a href="#jboss">JBoss Servers</a>
+<ul class="sectlevel2">
+<li><a href="#domain-mode">Domain mode</a></li>
+<li><a href="#standalone-mode">Standalone mode</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="basics">Basics</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The core of hoopoe-profiler is the java agent to instrument the code of profiled application.
+The jar file also contains bundled plugins and extensions.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Download <a href="https://bintray.com/orange-buffalo/hoopoe-profiler/hoopoe-profiler/_latestVersion">the hoopoe-agent.jar</a>.</p>
+</li>
+<li>
+<p>Register hoopoe-agent.jar in application&#8217;s java options: <code>-javaagent:&lt;path-to-hoopoe-agent.jar&gt;</code></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>For most application servers setup is done. We know some peculiarities of JBoss servers, see below if you use one.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="jboss">JBoss Servers</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>JBoss servers (AS, EAP, WildFly) have some special traits to be concerned when using java agents:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>ModuleClassLoader</code> breaks javaclassloader contract (<a href="https://issues.jboss.org/browse/MODULES-250">MODULES-250</a>).</p>
+</li>
+<li>
+<p><code>LogManager</code> implementation is not friendly to java agents (<a href="https://issues.jboss.org/browse/WFLY-895">WFLY-895</a>).</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Thus some additional steps required to setup hoopoe.</p>
+</div>
+<div class="sect2">
+<h3 id="domain-mode">Domain mode</h3>
+<div class="paragraph">
+<p>Edit <code>host.xml</code>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Set system properties to allow packages to be loaded from bootstrap classloader and to fix log manager:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">  &lt;server name="server-one" group="main-server-group"&gt;
+    &lt;system-properties&gt;
+        &lt;property name="jboss.modules.system.pkgs" value="hoopoe.core.bootstrap,org.jboss.logmanager"/&gt;
+        &lt;property name="java.util.logging.manager" value="org.jboss.logmanager.LogManager"/&gt;
+        ...
+    &lt;/system-properties&gt;
+  ...</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Locate <code>jboss-logmanager-*.jar</code> in <code>$JBOSS_HOME/modules/system/layers/base/org/jboss/logmanager/main</code>.</p>
+</li>
+<li>
+<p>Add jboss-logmanager.jar to boot classpath and enable hoopoe-agent.jar:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">  &lt;server name="server-one" group="main-server-group"&gt;
+    ..
+    &lt;jvm name="default"&gt;
+      &lt;jvm-options&gt;
+         &lt;option value="-Xbootclasspath/p:&lt;path-to-log-manager.jar&gt;"/&gt;
+         &lt;option value="-javaagent:&lt;path-to-hoopoe-agent.jar&gt;"/&gt;
+         ...
+       &lt;/jvm-options&gt;
+    &lt;/jvm&gt;
+  ...
+  ```</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="standalone-mode">Standalone mode</h3>
+<div class="paragraph">
+<p>Edit <code>standalone.conf</code>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Locate the place where <code>JBOSS_MODULES_SYSTEM_PKGS</code> is configured and and the following after that
+(to allow packages to be loaded from bootstrap classloader):</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  JBOSS_MODULES_SYSTEM_PKGS="$JBOSS_MODULES_SYSTEM_PKGS,hoopoe.core.bootstrap,org.jboss.logmanager"</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Locate <code>jboss-logmanager-*.jar</code> in <code>$JBOSS_HOME/modules/system/layers/base/org/jboss/logmanager/main</code>.</p>
+</li>
+<li>
+<p>Add jboss-logmanager.jar to boot classpath and enable hoopoe-agent.jar. Add to the end of the file:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  JAVA_OPTS="$JAVA_OPTS -Xbootclasspath/p:&lt;path-to-log-manager.jar&gt;"
+  JAVA_OPTS="$JAVA_OPTS -javaagent:&lt;path-to-hoopoe-agent.jar&gt;"</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>And finally fix log manager by adding the following to the end of the file:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">  JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.manager=org.jboss.logmanager.LogManager"</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+
+      <footer class="site-footer">
+        
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+      </footer>
+    </section>
+
+    
+  </body>
+</html>
