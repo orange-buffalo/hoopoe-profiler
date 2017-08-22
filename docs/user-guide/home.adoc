@@ -7,6 +7,4 @@ profiled results, providing developers with pleasurable profiling experience.
 We want to make hoopoe-profiler as convenient as possible. Thus we value all the feedback and improvements proposals,
 as well as constructive critics and bug reports. Community is the force to shape the hoopoe.
 
-If you want to contribute, please check our link:../../CONTRIBUTING[guide].
-
-image::../../assets/img/hoopoe-in-action.gif[hoopoe in action]
+If you want to contribute, please check our link:../../dev-guide/contributing/[guide].
