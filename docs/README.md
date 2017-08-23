@@ -4,10 +4,10 @@
 
 ## Why?
 Quick answer is that we did not find any java profiler with reasonable price, active development / support and human-friendly 
-profiling results delivery. Check our [User Guide](https://orange-buffalo.github.io/hoopoe-profiler/user-guide/home/) for more explanations.
+profiling results delivery. Check our [User Guide](https://orange-buffalo.github.io/hoopoe-profiler/user-guide/why-another-profiler/) for more explanations.
 
 ## What exactly is hoopoe?
-Hoopoe is a java agent deployed to JVM of profiled application. It instruments the code to trace its execution. 
+Hoopoe is a java agent. It instruments the code to trace the execution. 
 It supports plugins and extensions. Out-of-the-box we have a plugin to track SQL queries and extension to provide Web-UI.
  Hoopoe is not a standalone application. Every profiled java process will bring new hoopoe instance up. 
  

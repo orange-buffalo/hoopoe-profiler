@@ -1,0 +1,31 @@
+== Documentation Guide
+
+We use https://jekyllrb.com/docs/home/[Jekyll] to render our markup documents into static html.
+ https://asciidoctor.org/docs/user-manual/[Asciidoctor] is our markup language of choice. All the documentation is
+ stored under `docs/` path in the repository. Travis automatically builds the html and pushes it to GitHub Pages.
+
+=== Setup local environment
+
+It might be useful to see what the added/changed documentation will look like once it is rendered into html.
+In order to do so, one needs to prepare his local environment.
+
+1. Install Ruby environment.
+We recommend to use https://rvm.io/[RVM]. At the moment of writing, the following instructions to be executed:
+[source,sh]
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+\curl -sSL https://get.rvm.io | bash -s stable --ruby=2.4.1
+
+2. Install `bundle` (for managing Jekyll):
+[source,sh]
+gem install bundle
+
+3. Install all the necessary gems:
+[source,sh]
+cd docs
+bundle
+
+4. Start a local server that watches for changes in sources, rebuilds the html and serves it to the browser:
+[source,sh]
+bundle exec jekyll serve
+
+5. See the results at http://127.0.0.1:4000/hoopoe-profiler/
