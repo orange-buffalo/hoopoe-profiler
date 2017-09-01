@@ -30,13 +30,13 @@ public class Environment {
     private URL defaultConfigFile;
 
     public Environment(String agentArgs) {
-        Map<String, String> arguments = parseAgenArguments(agentArgs);
+        Map<String, String> arguments = parseAgentArguments(agentArgs);
         detectCustomConfigFile(arguments);
         detectConfigurationProfileName(arguments);
         detectDefaultConfigFile();
     }
 
-    private Map<String, String> parseAgenArguments(String agentArgs) {
+    private Map<String, String> parseAgentArguments(String agentArgs) {
         log.info("parsing arguments supplied: {}", agentArgs);
 
         Map<String, String> arguments = new HashMap<>();
