@@ -17,8 +17,13 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 import org.junit.runners.model.Statement;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.GenericContainer;
 
 public class HoopoeIntegrationTest implements TestRule {
+
+    public static final String HOOPOE_AGENT_ENV = "HOOPOE_AGENT";
+    public static final String HOOPOE_AGENT_JAR_CONTAINER_PATH = "/opt/hoopoe-agent.jar";
 
     private static final String HOOPOE_AGENT_JAR_NAME = "hoopoe-test-agent.jar";
     private static final String INTEGRATION_TESTING_EXTENSION_PATH = "/hoopoe-integration-testing.zip";
@@ -34,8 +39,8 @@ public class HoopoeIntegrationTest implements TestRule {
     private List<HoopoeComponent> plugins = new ArrayList<>();
     private List<HoopoeComponent> extensions = new ArrayList<>();
     private int integrationTestExtensionPort = 9271;
-    private int integrationTestExtensionExposedPort = 9271;
     private int hoopoeComponentsCount = 0;
+    private GenericContainer hoopoeContainer;
 
     public HoopoeIntegrationTest withPlugin(URL pluginArchiveUrl) {
         return withPlugin(pluginArchiveUrl, (plugin) -> {
@@ -66,16 +71,23 @@ public class HoopoeIntegrationTest implements TestRule {
         return this;
     }
 
-    public HoopoeIntegrationTest withIntegrationTestExtensionExposedPort(int integrationTestExtensionExposedPort) {
-        this.integrationTestExtensionExposedPort = integrationTestExtensionExposedPort;
+    public HoopoeIntegrationTest withHoopoeContainer(GenericContainer container) {
+        this.hoopoeContainer = container;
+        this.ruleChain = this.ruleChain.around(container);
         return this;
     }
 
     private void prepareContainers() throws Exception {
+        Objects.requireNonNull(hoopoeContainer,
+                "withHoopoeContainer method must be called when building HoopoeIntegrationTest");
+
         enableIntegrationTestExtension();
         File agentJar = buildAgentJar();
 
-
+        hoopoeContainer.addExposedPort(integrationTestExtensionPort);
+        hoopoeContainer.addFileSystemBind(
+                agentJar.getAbsolutePath(), HOOPOE_AGENT_JAR_CONTAINER_PATH, BindMode.READ_ONLY);
+        hoopoeContainer.addEnv(HOOPOE_AGENT_ENV, HOOPOE_AGENT_JAR_CONTAINER_PATH);
     }
 
     private File buildAgentJar() throws Exception {

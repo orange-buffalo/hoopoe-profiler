@@ -20,6 +20,7 @@ dependencies {
     compile(project(":hoopoe-core", "hoopoe"))
     compile(project(":hoopoe-api"))
     "compileOnly"("org.projectlombok:lombok-maven:1.16.18.1")
+    "runtime"("ch.qos.logback:logback-classic:1.2.3")
 
     "hoopoeExtensionCompileOnly"(project(":hoopoe-api"))
     "hoopoeExtensionCompile"("org.eclipse.jetty:jetty-server:9.4.0.v20161208")

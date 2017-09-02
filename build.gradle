@@ -72,6 +72,8 @@ allprojects {
         provided
         compile.extendsFrom provided
         hoopoe
+        itestCompile.extendsFrom testCompile
+        itestRuntime.extendsFrom testRuntime
     }
 }
 
@@ -82,6 +84,16 @@ subprojects {
     }
 
     afterEvaluate {  project ->
+        project.sourceSets.create("itest") {
+            compileClasspath += project.sourceSets["main"].output
+            runtimeClasspath += project.sourceSets["main"].output
+        }
+
+        project.tasks.create("integration-tests", Test) {
+            testClassesDirs += sourceSets.itest.output.classesDirs
+            classpath = sourceSets.itest.runtimeClasspath
+        }
+
         project.tasks.withType(Test) {
             it.testLogging {
                 it.exceptionFormat = 'full'
