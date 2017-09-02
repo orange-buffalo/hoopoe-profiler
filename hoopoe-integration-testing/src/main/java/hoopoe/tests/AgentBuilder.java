@@ -24,6 +24,7 @@ class AgentBuilder {
     private static final String AGENT_JAR_PROTOTYPE_PATH = "/hoopoe-test-agent.jar";
     private static final String AGENT_JAR_PROTOTYPE_NOT_FOUND = "What's wrong with the assembly? Can't find "
             + AGENT_JAR_PROTOTYPE_PATH;
+    private static final String HOOPOE_CONFIG_PATH = "/hoopoe-config.yml";
 
     /**
      * Copies agent jar prototype to {@code destinationFile} and updates it with dynamic configuration and requested
@@ -43,7 +44,7 @@ class AgentBuilder {
         try (FileSystem agentJarFs = FileSystems.newFileSystem(agentJarUri, new HashMap<>())) {
             Files.copy(
                     new ByteArrayInputStream(hoopoeConfig.getBytes(StandardCharsets.UTF_8)),
-                    agentJarFs.getPath("/hoopoe-config.yml")
+                    agentJarFs.getPath(HOOPOE_CONFIG_PATH)
             );
             log.info("config file is written");
 

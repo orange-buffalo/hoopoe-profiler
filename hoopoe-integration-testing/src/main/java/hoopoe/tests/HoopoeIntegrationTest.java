@@ -20,6 +20,11 @@ import org.junit.runners.model.Statement;
 
 public class HoopoeIntegrationTest implements TestRule {
 
+    private static final String HOOPOE_AGENT_JAR_NAME = "hoopoe-test-agent.jar";
+    private static final String INTEGRATION_TESTING_EXTENSION_PATH = "/hoopoe-integration-testing.zip";
+    private static final String INTEGRATION_TESTING_EXTENSION_NOT_FOUND = "Something terrible happened to assembly, "
+            + "cannot find " + INTEGRATION_TESTING_EXTENSION_PATH;
+
     private TemporaryFolder temporaryFolderRule = new TemporaryFolder();
 
     @Delegate(types = TestRule.class)
@@ -74,16 +79,15 @@ public class HoopoeIntegrationTest implements TestRule {
     }
 
     private File buildAgentJar() throws Exception {
-        File agentFile = new File(temporaryFolderRule.getRoot(), "hoopoe-test-agent.jar");
+        File agentFile = new File(temporaryFolderRule.getRoot(), HOOPOE_AGENT_JAR_NAME);
         AgentBuilder agentBuilder = new AgentBuilder();
         agentBuilder.createAgentJar(agentFile, plugins, extensions);
         return agentFile;
     }
 
     private void enableIntegrationTestExtension() {
-        URL extensionUrl = HoopoeIntegrationTest.class.getResource("/hoopoe-integration-testing.zip");
-        Objects.requireNonNull(extensionUrl,
-                "Something terrible happened to assembly, cannot find hoopoe-integration-testing.zip");
+        URL extensionUrl = HoopoeIntegrationTest.class.getResource(INTEGRATION_TESTING_EXTENSION_PATH);
+        Objects.requireNonNull(extensionUrl, INTEGRATION_TESTING_EXTENSION_NOT_FOUND);
         withExtension(extensionUrl, (extension) -> extension.withProperty("port", integrationTestExtensionPort));
     }
 
