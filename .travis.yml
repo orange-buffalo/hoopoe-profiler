@@ -28,8 +28,8 @@ script:
   # build the project
   - ./gradlew clean
   - ./gradlew assemble
-  - ./gradlew check -i
-  - ./gradlew integration-tests -i
+  - ./gradlew check
+  - ./gradlew integration-tests
   # build the gh-pages
   - cd ./docs/ && bundle && bundle exec rake deploy
 
