@@ -1,4 +1,3 @@
-
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Jar
@@ -17,8 +16,10 @@ configure<JavaPluginConvention> {
 dependencies {
     compile("junit:junit:4.12")
     compile("org.testcontainers:testcontainers:1.4.2")
+    compile("org.yaml:snakeyaml:1.18")
     compile(project(":hoopoe-core", "hoopoe"))
     compile(project(":hoopoe-api"))
+    "compileOnly"("org.projectlombok:lombok-maven:1.16.18.1")
 
     "hoopoeExtensionCompileOnly"(project(":hoopoe-api"))
     "hoopoeExtensionCompile"("org.eclipse.jetty:jetty-server:9.4.0.v20161208")
@@ -31,18 +32,22 @@ val sourceSets: SourceSetContainer = properties["sourceSets"] as SourceSetContai
 
 tasks {
     "buildHoopoeExtension"(HoopoeAssemblyTask::class) {
-        classesSourceSetName = "hoopoeExtension"
+        classesDirs = Callable {
+            HoopoeAssemblyTask.resolveClassesAndResourcesBySourceSet(project, "hoopoeExtension")
+        }
         libFiles = Callable {
             HoopoeAssemblyTask.resolveLibsByConfiguration(project, "hoopoeExtensionCompile")
         }
-        extensionClassName = "hoopoe.tests.extension.IntegrationTestExtension"
+        extensionClassName = Callable { "hoopoe.tests.extension.IntegrationTestExtension" }
+        attachToArtifacts = Callable { false }
+        archiveName = Callable { "hoopoe-integration-testing.zip" }
 
         dependsOn("hoopoeExtensionClasses")
 
         doLast {
             project.copy {
                 from(outputArchive)
-                into(sourceSets["hoopoeAgent"].output.resourcesDir)
+                into(sourceSets["main"].output.resourcesDir)
             }
         }
     }
@@ -60,16 +65,14 @@ tasks {
         manifest {
             attributes(mapOf("Premain-Class" to "hoopoe.tests.HoopoeTestAgent"))
         }
-
-        dependsOn("buildHoopoeExtension")
     }
 
 
     "classes" {
-        dependsOn("buildTestAgent")
+        dependsOn("buildTestAgent", "buildHoopoeExtension")
     }
 
     "testClasses" {
-        dependsOn("buildTestAgent")
+        dependsOn("buildTestAgent", "buildHoopoeExtension")
     }
 }

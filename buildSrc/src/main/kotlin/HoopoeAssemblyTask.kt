@@ -1,3 +1,4 @@
+
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ResolvedArtifact
@@ -9,38 +10,32 @@ import java.util.zip.ZipOutputStream
 
 open class HoopoeAssemblyTask : DefaultTask() {
 
-    @OutputFile
-    @Optional
-    var outputArchive: File? = null
+    @get:OutputFile
+    var outputArchive: Callable<File> = Callable { File(temporaryDir, archiveName.call()) }
 
-    @Input
-    @Optional
-    var pluginClassName: String? = null
+    @get:Input
+    var pluginClassName: Callable<String?> = Callable { null }
 
-    @Input
-    @Optional
-    var extensionClassName: String? = null
+    @get:Input
+    var extensionClassName: Callable<String?> = Callable { null }
 
-    @Input
-    @Optional
-    var archiveName: String? = null
+    @get:Input
+    var archiveName: Callable<String> = Callable { "${project.name}.zip" }
 
-    @Input
-    @Optional
-    var archiveClassifier: String? = null
+    @get:Input
+    var archiveClassifier: Callable<String> = Callable { "hoopoe" }
 
-    @Input
-    @Optional
-    var attachToArtifacts: Boolean? = null
+    @get:Input
+    var attachToArtifacts: Callable<Boolean> = Callable { true }
 
-    @Input
-    @Optional
-    var classesSourceSetName: String? = null
+    @get:InputFiles
+    var classesDirs: Callable<Iterable<File>> = Callable {
+        HoopoeAssemblyTask.resolveClassesAndResourcesBySourceSet(project, "main")
+    }
 
-    @Input
-    var libFiles: Callable<Collection<File>> = Callable {
+    @get:InputFiles
+    var libFiles: Callable<Iterable<File>> = Callable {
         HoopoeAssemblyTask.resolveLibsByConfiguration(project, "runtime")
-                .minus(HoopoeAssemblyTask.resolveLibsByConfiguration(project, "provided"))
     }
 
     init {
@@ -50,24 +45,16 @@ open class HoopoeAssemblyTask : DefaultTask() {
     fun buildArchive() {
         val manifestFile = createManifest()
 
-        val sourceSet = getSourceSet(classesSourceSetName ?: "main")
-
-        val archiveFile = File(temporaryDir, getEffectiveArchiveName())
-        logger.lifecycle("starting creation of $archiveFile")
+        val archiveFile = outputArchive.call();
+        logger.debug("starting creation of $archiveFile")
 
         ZipOutputStream(archiveFile.outputStream().buffered()).use { archiveStream ->
 
-            for (classesDir in sourceSet.output.classesDirs) {
+            for (classesDir in classesDirs.call()) {
                 for (classFile in classesDir.walk().asSequence()) {
                     val relativePath = classFile.relativeTo(classesDir)
                     writeFileToArchive(classFile, "classes/$relativePath", archiveStream)
                 }
-            }
-
-            val resourcesDir = sourceSet.output.resourcesDir
-            for (resourceFile in resourcesDir.walk().asSequence()) {
-                val relativePath = resourceFile.relativeTo(resourcesDir)
-                writeFileToArchive(resourceFile, "classes/$relativePath", archiveStream)
             }
 
             manifestFile?.let {
@@ -78,15 +65,13 @@ open class HoopoeAssemblyTask : DefaultTask() {
                 writeFileToArchive(libFile, "lib/${libFile.name}", archiveStream)
             }
         }
-        logger.lifecycle("archive has been created")
+        logger.debug("archive has been created")
 
-        outputArchive = archiveFile
+        if (attachToArtifacts.call()) {
+            val classifier = archiveClassifier.call()
+            project.artifacts.add(classifier, archiveFile)
 
-        if (attachToArtifacts ?: false) {
-            val classifier = archiveClassifier ?: "hoopoe"
-            project.artifacts.add(classifier, outputArchive)
-
-            logger.lifecycle("attached to artifacts with classifier $classifier")
+            logger.debug("attached to artifacts with classifier $classifier")
         }
     }
 
@@ -101,24 +86,24 @@ open class HoopoeAssemblyTask : DefaultTask() {
         }
     }
 
-    private fun getEffectiveArchiveName() = archiveName ?: "${project.name}.zip"
-
     private fun createManifest(): File? {
-        if (pluginClassName != null || extensionClassName != null) {
+        val plugin = pluginClassName.call();
+        val extension = extensionClassName.call();
+        if (plugin != null || extension != null) {
             val manifestFile = File(temporaryDir, "hoopoe.properties")
 
             manifestFile.parentFile.mkdirs()
 
-            pluginClassName?.let {
+            plugin?.let {
                 manifestFile.writeText("plugin.className=$it")
 
-                logger.lifecycle("created manifest entry for plugin $it")
+                logger.debug("created manifest entry for plugin $it")
             }
 
-            extensionClassName?.let {
+            extension?.let {
                 manifestFile.writeText("extension.className=$it")
 
-                logger.lifecycle("created manifest entry for extension $it")
+                logger.debug("created manifest entry for extension $it")
             }
 
             return manifestFile
@@ -126,17 +111,30 @@ open class HoopoeAssemblyTask : DefaultTask() {
         return null
     }
 
-    private fun getSourceSet(name: String): SourceSet {
-        val sourceSets = project.properties["sourceSets"] as SourceSetContainer
-        val sourceSet = sourceSets.asMap[name]
-        return sourceSet ?: throw IllegalArgumentException("Cannot find source set $name")
-    }
-
     companion object CommonResolvers {
-        fun resolveLibsByConfiguration(project: Project, configurationName: String): Collection<File> {
+
+        /**
+         * Returns iterable over libraries defined in dependencies of specified configuration
+         */
+        fun resolveLibsByConfiguration(project: Project, configurationName: String): Iterable<File> {
             return project.configurations.getByName(configurationName)
                     .resolvedConfiguration.resolvedArtifacts
                     .map(ResolvedArtifact::getFile)
+        }
+
+        /**
+         * Returns iterable over directories where compiled classes and resources are stored
+         */
+        fun resolveClassesAndResourcesBySourceSet(project: Project, sourceSetName: String): Iterable<File> {
+            val sourceSets = project.properties["sourceSets"] as SourceSetContainer
+            val sourceSet = sourceSets.asMap[sourceSetName]
+                    ?: throw IllegalArgumentException("Cannot find source set $sourceSetName")
+
+            val dirs = arrayListOf<File>();
+            dirs.addAll(sourceSet.output.classesDirs.files)
+            dirs.add(sourceSet.output.resourcesDir)
+
+            return dirs
         }
     }
 }
