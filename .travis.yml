@@ -29,6 +29,7 @@ script:
   - ./gradlew clean
   - ./gradlew assemble
   - ./gradlew check -i
+  - ./gradlew integration-tests -i
   # build the gh-pages
   - cd ./docs/ && bundle && bundle exec rake deploy
 
