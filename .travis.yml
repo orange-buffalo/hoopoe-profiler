@@ -3,6 +3,11 @@ language: java
 jdk:
   - oraclejdk8
 
+sudo: required
+
+services:
+  - docker
+
 before_install:
   # deploy keys for github pages
   - openssl aes-256-cbc -K $encrypted_5a0f048e2914_key -iv $encrypted_5a0f048e2914_iv
