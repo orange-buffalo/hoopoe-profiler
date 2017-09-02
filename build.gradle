@@ -90,7 +90,7 @@ subprojects {
         }
 
         project.tasks.create("integration-tests", Test) {
-            testClassesDirs += sourceSets.itest.output.classesDirs
+            testClassesDirs = sourceSets.itest.output.classesDirs
             classpath = sourceSets.itest.runtimeClasspath
         }
 
