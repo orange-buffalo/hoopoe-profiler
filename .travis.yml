@@ -19,12 +19,16 @@ before_install:
   # rvm for jekyll
   - rvm install 2.4.1
   - gem install jekyll bundler
+  # pull docker images for integration tests
+  - docker pull ubuntu:xenial
+  - docker pull orange-buffalo-docker-hoopoe.bintray.io/tomcat8-hoopoe:latest
 
 install: true
 
 script:
-  # let's check gradle version
+  # let's check the versions
   - ./gradlew --version
+  - docker --version
   # build the project
   - ./gradlew clean
   - ./gradlew assemble

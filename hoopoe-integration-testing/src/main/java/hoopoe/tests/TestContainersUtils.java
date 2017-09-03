@@ -6,7 +6,7 @@ import org.testcontainers.containers.Container;
 import org.testcontainers.containers.wait.HttpWaitStrategy;
 
 /**
- * Various utility method we miss in Test Containers
+ * Various utility methods we miss in Test Containers.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class TestContainersUtils {

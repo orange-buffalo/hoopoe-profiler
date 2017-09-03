@@ -2,7 +2,6 @@ package hoopoe.tests;
 
 import hoopoe.api.HoopoeProfiledResult;
 import java.io.IOException;
-import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
@@ -21,9 +20,7 @@ public class ExtensionIT {
     private static final GenericContainer container =
             new GenericContainer("orange-buffalo-docker-hoopoe.bintray.io/tomcat8-hoopoe:latest")
                     .withExposedPorts(8080)
-                    .waitingFor(TestContainersUtils.waitForHttp("/", 8080)
-                            .withStartupTimeout(Duration.ofSeconds(20))
-                    );
+                    .waitingFor(TestContainersUtils.waitForHttp("/", 8080));
 
     @ClassRule
     public static HoopoeIntegrationTest integrationTest = new HoopoeIntegrationTest().withHoopoeContainer(container);
