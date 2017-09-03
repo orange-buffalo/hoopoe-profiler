@@ -11,7 +11,7 @@ dependencies {
     compile libraries.guava
     compile libraries.snakeyaml
 
-    provided project(':hoopoe-api')
+    compile project(':hoopoe-api')
     provided libraries.lombok
 
     runtime libraries.logback

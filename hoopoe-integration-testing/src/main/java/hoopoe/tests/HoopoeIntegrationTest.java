@@ -1,5 +1,6 @@
 package hoopoe.tests;
 
+import hoopoe.api.HoopoeProfiledResult;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
@@ -77,6 +78,15 @@ public class HoopoeIntegrationTest implements TestRule {
         return this;
     }
 
+    public HoopoeProfiledResult executeProfiled(Runnable code) {
+        ExtensionConnector extensionConnector = new ExtensionConnector(
+                hoopoeContainer.getContainerIpAddress(),
+                hoopoeContainer.getMappedPort(integrationTestExtensionPort));
+        extensionConnector.startProfiling();
+        code.run();
+        return extensionConnector.stopProfiling();
+    }
+
     private void prepareContainers() throws Exception {
         Objects.requireNonNull(hoopoeContainer,
                 "withHoopoeContainer method must be called when building HoopoeIntegrationTest");
@@ -84,7 +94,11 @@ public class HoopoeIntegrationTest implements TestRule {
         enableIntegrationTestExtension();
         File agentJar = buildAgentJar();
 
-        hoopoeContainer.addExposedPort(integrationTestExtensionPort);
+        // workaround for https://github.com/testcontainers/testcontainers-java/issues/451
+        List<Integer> exposedPorts = new ArrayList<>(hoopoeContainer.getExposedPorts());
+        exposedPorts.add(integrationTestExtensionPort);
+        hoopoeContainer.withExposedPorts(exposedPorts.toArray(new Integer[exposedPorts.size()]));
+
         hoopoeContainer.addFileSystemBind(
                 agentJar.getAbsolutePath(), HOOPOE_AGENT_JAR_CONTAINER_PATH, BindMode.READ_ONLY);
         hoopoeContainer.addEnv(HOOPOE_AGENT_ENV, HOOPOE_AGENT_JAR_CONTAINER_PATH);

@@ -19,8 +19,7 @@ public class TestAgent {
     public static void agentmain(String args, Instrumentation instrumentation)
             throws NoSuchFieldException, IllegalAccessException {
 
-        HoopoeBootstrapper bootstrapper = new HoopoeBootstrapper();
-        profiler = bootstrapper.bootstrapHoopoe(args, instrumentation);
+        profiler = HoopoeBootstrapper.bootstrapHoopoe(args, instrumentation);
     }
 
     public static void unload() {

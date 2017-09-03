@@ -22,7 +22,7 @@ class AgentConfig {
 
         Map<String, Object> extensionsRoot = new HashMap<>();
         writeComponents(extensionsRoot, extensions);
-        configRoot.put("extension", extensionsRoot);
+        configRoot.put("extensions", extensionsRoot);
 
         Yaml yaml = new Yaml();
         return yaml.dump(configRoot);

@@ -22,7 +22,7 @@ public class HoopoeBootstrapper {
      * @param agentArgs       additional parameters supplied for initialization; in java agent notation.
      * @param instrumentation instrumentation to use to apply profiling code with.
      */
-    public HoopoeProfilerImpl bootstrapHoopoe(
+    public static HoopoeProfilerImpl bootstrapHoopoe(
             String agentArgs,
             Instrumentation instrumentation) {
         Environment environment = new Environment(agentArgs);

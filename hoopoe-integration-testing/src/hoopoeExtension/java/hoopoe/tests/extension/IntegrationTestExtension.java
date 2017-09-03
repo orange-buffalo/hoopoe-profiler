@@ -4,26 +4,45 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import hoopoe.api.HoopoeProfiledResult;
 import hoopoe.api.HoopoeProfiler;
+import hoopoe.api.configuration.HoopoeConfigurableComponent;
+import hoopoe.api.configuration.HoopoeConfigurationProperty;
 import hoopoe.api.extensions.HoopoeProfilerExtension;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 
-public class IntegrationTestExtension implements HoopoeProfilerExtension {
+@Slf4j(topic = "hoopoe.profiler")
+public class IntegrationTestExtension
+        implements HoopoeProfilerExtension, HoopoeConfigurableComponent<IntegrationTestExtension> {
+
+    private static final int DEFAULT_PORT = 9271;
+
+    @Setter
+    private Integer port;
+
+    @HoopoeConfigurationProperty(key = "port")
+    public Integer getPort() {
+        return port;
+    }
 
     @Override
     public void init(HoopoeProfiler profiler) {
+        log.info("initializing jetty, configured port is {}", port);
+        port = (port == null) ? DEFAULT_PORT : port;
+
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectWriter profilesResultWriter = objectMapper.writerFor(HoopoeProfiledResult.class);
 
             ContextHandler contextHandler = new ContextHandler();
-            contextHandler.setContextPath("/*");
+            contextHandler.setContextPath("/hoopoe-tests");
             contextHandler.setHandler(new AbstractHandler() {
                 @Override
                 public void handle(
@@ -32,21 +51,19 @@ public class IntegrationTestExtension implements HoopoeProfilerExtension {
                         HttpServletRequest request,
                         HttpServletResponse response) throws IOException, ServletException {
 
-                    if (target.contains("startProfiling")) {
+                    if (target.contains("start-profiling")) {
                         profiler.startProfiling();
 
-                    } else if (target.contains("stopProfiling")) {
+                    } else if (target.contains("stop-profiling")) {
                         HoopoeProfiledResult profiledResult = profiler.stopProfiling();
                         profilesResultWriter.writeValue(response.getWriter(), profiledResult);
 
-                    } else if (target.contains("heartbeat")) {
-                        response.getWriter().write("alive");
                     }
                 }
             });
             contextHandler.setClassLoader(IntegrationTestExtension.class.getClassLoader());
 
-            Server server = new Server(getServerPort());
+            Server server = new Server(port);
             server.setHandler(contextHandler);
             server.start();
 
@@ -55,12 +72,8 @@ public class IntegrationTestExtension implements HoopoeProfilerExtension {
         }
     }
 
-    private int getServerPort() {
-        String portStr = System.getenv("HOOPOE_IT_EXT_PORT");
-        if (portStr != null) {
-            return Integer.valueOf(portStr);
-        }
-        return 1234342;
+    @Override
+    public IntegrationTestExtension getConfiguration() {
+        return this;
     }
-
 }

@@ -17,16 +17,21 @@ dependencies {
     compile("junit:junit:4.12")
     compile("org.testcontainers:testcontainers:1.4.2")
     compile("org.yaml:snakeyaml:1.18")
+    compile("org.apache.httpcomponents:httpclient:4.5.3")
+    compile("com.fasterxml.jackson.core:jackson-databind:2.9.0")
     compile(project(":hoopoe-core", "hoopoe"))
     compile(project(":hoopoe-api"))
     "compileOnly"("org.projectlombok:lombok-maven:1.16.18.1")
     "runtime"("ch.qos.logback:logback-classic:1.2.3")
 
     "hoopoeExtensionCompileOnly"(project(":hoopoe-api"))
+    "hoopoeExtensionCompileOnly"("org.slf4j:slf4j-api:1.7.22")
     "hoopoeExtensionCompile"("org.eclipse.jetty:jetty-server:9.4.0.v20161208")
     "hoopoeExtensionCompile"("com.fasterxml.jackson.core:jackson-databind:2.9.0")
 
     "hoopoeAgentCompile"(project(":hoopoe-classloader"))
+
+    "itestCompile"("org.hamcrest:hamcrest-all:1.3")
 }
 
 val sourceSets: SourceSetContainer = properties["sourceSets"] as SourceSetContainer
