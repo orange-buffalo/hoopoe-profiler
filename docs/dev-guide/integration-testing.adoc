@@ -11,32 +11,35 @@ We have developed a small framework around https://www.testcontainers.org/[Test 
 
 [source,java]
 ----
-    private static GenericContainer javaAppContainer = new GenericContainer("..."); <1>
+    private static GenericContainer javaAppContainer = new GenericContainer("...");   <1>
 
-    private static GenericContainer dbContainer = new GenericContainer("..."); <1>
+    private static GenericContainer dbContainer = new GenericContainer("...");        <1>
 
     @ClassRule <2>
     public static HoopoeIntegrationTest integrationTest = new HoopoeIntegrationTest()
-            .withHoopoeContainer(javaAppContainer) <3>
-            .withContainer(dbContainer);
+            .withHoopoeContainer(javaAppContainer)      <3>
+            .withContainer(dbContainer)                 <4>
+            .withPlugin(URL_TO_ASSEMBLED_PLUGIN);       <5>
 
     @Test
     public void verifyMe() {
-        HoopoeProfiledResult profiledResult = integrationTest.executeProfiled(() -> {   <4>
+        HoopoeProfiledResult profiledResult = integrationTest.executeProfiled(() -> {   <6>
             ...
         });
 
         assertThat("Framework should return not-null result any time",
-                profiledResult, notNullValue()); <5>
+                profiledResult, notNullValue());     <7>
     }
 ----
-<1> Define any number of Test Containers.
-<2> Create a class rule of type `HoopoeIntegrationTest`.
+<1> Define any number of Test Containers (make sure they are not annotated with `ClassRule/Rule`).
+<2> Create a class rule / method rule of type `HoopoeIntegrationTest`.
 <3> Provide container where profiler should be enabled to `withHoopoeContainer` method.
 See below for more information.
-<4> Execute any code you want to profile within your app in container, wrapped into `executeProfiled` call
+<4> Register all other containers.
+<5> Add your plugin / extension to be deployed with profile.
+<6> Execute any code you want to profile within your app in container, wrapped into `executeProfiled` call
 (for instance, call an HTTP endpoint in your app which triggers code to be profiled).
-<5> `HoopoeProfiledResult` will be returned with whatever was recorded during execution of code in `executeProfiled`.
+<7> `HoopoeProfiledResult` will be returned with whatever was recorded during execution of code in `executeProfiled`.
 
 === Container with profiler
 
