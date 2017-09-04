@@ -49,37 +49,44 @@
 <h3 id="basics">Basics</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">    private static GenericContainer javaAppContainer = new GenericContainer("..."); <b class="conum">(1)</b>
+<pre class="highlight"><code class="language-java" data-lang="java">    private static GenericContainer javaAppContainer = new GenericContainer("...");   <b class="conum">(1)</b>
 
-    private static GenericContainer dbContainer = new GenericContainer("..."); <b class="conum">(1)</b>
+    private static GenericContainer dbContainer = new GenericContainer("...");        <b class="conum">(1)</b>
 
     @ClassRule <b class="conum">(2)</b>
     public static HoopoeIntegrationTest integrationTest = new HoopoeIntegrationTest()
-            .withHoopoeContainer(javaAppContainer) <b class="conum">(3)</b>
-            .withContainer(dbContainer);
+            .withHoopoeContainer(javaAppContainer)      <b class="conum">(3)</b>
+            .withContainer(dbContainer)                 <b class="conum">(4)</b>
+            .withPlugin(URL_TO_ASSEMBLED_PLUGIN);       <b class="conum">(5)</b>
 
     @Test
     public void verifyMe() {
-        HoopoeProfiledResult profiledResult = integrationTest.executeProfiled(() -&gt; {   <b class="conum">(4)</b>
+        HoopoeProfiledResult profiledResult = integrationTest.executeProfiled(() -&gt; {   <b class="conum">(6)</b>
             ...
         });
 
         assertThat("Framework should return not-null result any time",
-                profiledResult, notNullValue()); <b class="conum">(5)</b>
+                profiledResult, notNullValue());     <b class="conum">(7)</b>
     }</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <ol>
 <li>
-<p>Define any number of Test Containers.</p>
+<p>Define any number of Test Containers (make sure they are not annotated with <code>ClassRule/Rule</code>).</p>
 </li>
 <li>
-<p>Create a class rule of type <code>HoopoeIntegrationTest</code>.</p>
+<p>Create a class rule / method rule of type <code>HoopoeIntegrationTest</code>.</p>
 </li>
 <li>
 <p>Provide container where profiler should be enabled to <code>withHoopoeContainer</code> method.
 See below for more information.</p>
+</li>
+<li>
+<p>Register all other containers.</p>
+</li>
+<li>
+<p>Add your plugin / extension to be deployed with profile.</p>
 </li>
 <li>
 <p>Execute any code you want to profile within your app in container, wrapped into <code>executeProfiled</code> call
