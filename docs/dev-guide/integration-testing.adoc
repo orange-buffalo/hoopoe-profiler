@@ -50,5 +50,11 @@ Container provided for `withHoopoeContainer` method will be enriched with Hoopoe
 * It is a responsibility of a developer to enable agent for his app in container (i.e. add
 `-javaagent:$HOOPOE_AGENT` to the arguments of `java` process).
 
+==== Occupied Ports
+
+Hoopoe agent contains an extension to communicate with profiler. This extension listens on port `9271`. If your
+container also uses this port, you should call `HoopoeIntegrationTest#withIntegrationTestExtensionPort(int)` to change
+extension's port to something else.
+
 
 
