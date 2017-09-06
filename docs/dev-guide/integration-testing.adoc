@@ -1,0 +1,60 @@
+== Integration Testing
+
+We have developed a small framework around https://www.testcontainers.org/[Test Containers] which:
+
+* allows to use any number of https://www.testcontainers.org/usage/generic_containers.html[Generic Containers]
+(we do not support docker files and docker compose for now);
+* provides API to deploy your plugin / extension into application running in Docker container;
+* provides API to interact with a container while profiler is active and to retrieve profiled result.
+
+=== Basics
+
+[source,java]
+----
+    private static GenericContainer javaAppContainer = new GenericContainer("...");   <1>
+
+    private static GenericContainer dbContainer = new GenericContainer("...");        <1>
+
+    @ClassRule <2>
+    public static HoopoeIntegrationTest integrationTest = new HoopoeIntegrationTest()
+            .withHoopoeContainer(javaAppContainer)      <3>
+            .withContainer(dbContainer)                 <4>
+            .withPlugin(URL_TO_ASSEMBLED_PLUGIN);       <5>
+
+    @Test
+    public void verifyMe() {
+        HoopoeProfiledResult profiledResult = integrationTest.executeProfiled(() -> {   <6>
+            ...
+        });
+
+        assertThat("Framework should return not-null result any time",
+                profiledResult, notNullValue());     <7>
+    }
+----
+<1> Define any number of Test Containers (make sure they are not annotated with `ClassRule/Rule`).
+<2> Create a class rule / method rule of type `HoopoeIntegrationTest`.
+<3> Provide container where profiler should be enabled to `withHoopoeContainer` method.
+See below for more information.
+<4> Register all other containers.
+<5> Add your plugin / extension to be deployed with profile.
+<6> Execute any code you want to profile within your app in container, wrapped into `executeProfiled` call
+(for instance, call an HTTP endpoint in your app which triggers code to be profiled).
+<7> `HoopoeProfiledResult` will be returned with whatever was recorded during execution of code in `executeProfiled`.
+
+=== Container with profiler
+
+Container provided for `withHoopoeContainer` method will be enriched with Hoopoe Profiler agent:
+
+* `HoopoeIntegrationTest` rule will create agent jar and make it available inside container.
+* New environment variable with the path to agent jar will be added to the container: `HOOPOE_AGENT`.
+* It is a responsibility of a developer to enable agent for his app in container (i.e. add
+`-javaagent:$HOOPOE_AGENT` to the arguments of `java` process).
+
+==== Occupied Ports
+
+Hoopoe agent contains an extension to communicate with profiler. This extension listens on port `9271`. If your
+container also uses this port, you should call `HoopoeIntegrationTest#withIntegrationTestExtensionPort(int)` to change
+extension's port to something else.
+
+
+

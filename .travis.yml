@@ -3,6 +3,11 @@ language: java
 jdk:
   - oraclejdk8
 
+sudo: required
+
+services:
+  - docker
+
 before_install:
   # deploy keys for github pages
   - openssl aes-256-cbc -K $encrypted_5a0f048e2914_key -iv $encrypted_5a0f048e2914_iv
@@ -12,19 +17,20 @@ before_install:
   - sudo apt-get install jq
   - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
   # rvm for jekyll
-  - gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-  - \curl -sSL https://get.rvm.io | sed -E s/_rvm_print_headline/_rvm_version/ | bash -s stable --ruby=2.4.1
+  - rvm install 2.4.1
   - gem install jekyll bundler
 
 install: true
 
 script:
-  # let's check gradle version
+  # let's check the versions
   - ./gradlew --version
+  - docker --version
   # build the project
   - ./gradlew clean
   - ./gradlew assemble
   - ./gradlew check
+  - ./gradlew integration-tests
   # build the gh-pages
   - cd ./docs/ && bundle && bundle exec rake deploy
 
