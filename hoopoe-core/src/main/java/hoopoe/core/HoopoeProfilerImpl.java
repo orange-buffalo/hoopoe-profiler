@@ -4,7 +4,6 @@ import hoopoe.api.HoopoeProfiledResult;
 import hoopoe.api.HoopoeProfiler;
 import hoopoe.api.configuration.HoopoeConfiguration;
 import hoopoe.api.plugins.HoopoeInvocationAttribute;
-import hoopoe.core.bootstrap.HoopoeProfilerBridge;
 import hoopoe.core.components.ExtensionsManager;
 import hoopoe.core.components.PluginsManager;
 import hoopoe.core.configuration.Configuration;
@@ -73,13 +72,13 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     @Override
     public void startProfiling() {
-        HoopoeProfilerBridge.startProfiling();
+        HoopoeProfilerFacade.startProfiling();
         lastProfiledResult = null;
     }
 
     @Override
     public HoopoeProfiledResult stopProfiling() {
-        HoopoeProfilerBridge.enabled = false;
+        HoopoeProfilerFacade.enabled = false;
 
         lastProfiledResult = profiledResultHelper.calculateProfiledResult(profiledTraceNodeWrappers);
         profiledTraceNodeWrappers.clear();
@@ -89,7 +88,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     @Override
     public boolean isProfiling() {
-        return HoopoeProfilerBridge.enabled;
+        return HoopoeProfilerFacade.enabled;
     }
 
     public void profileCall(

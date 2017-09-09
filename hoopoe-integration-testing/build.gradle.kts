@@ -76,7 +76,6 @@ tasks {
         }
     }
 
-
     "classes" {
         dependsOn("buildTestAgent", "buildHoopoeExtension")
     }

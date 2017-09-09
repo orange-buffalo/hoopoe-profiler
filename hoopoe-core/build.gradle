@@ -19,32 +19,14 @@ dependencies {
     testCompileOnly libraries.lombok
 }
 
-task prepareBootstrapJar(type: Zip) {
+sourceSets.create("hoopoeBridge")
+sourceSets.main.compileClasspath += sourceSets.hoopoeBridge.output
+
+task prepareBootstrapJar(type: Jar) {
     archiveName "hoopoe-bootstrap.jar"
-    includeEmptyDirs false
-    from (project.sourceSets.main.output.classesDir) {
-        include '**/hoopoe/core/bootstrap/*.class'
-    }
-    destinationDir project.sourceSets.main.output.resourcesDir
+    from (sourceSets.hoopoeBridge.output)
+    destinationDir sourceSets.main.output.resourcesDir
 }
 
-task cleanupBootstrapJar(type: Delete) {
-  delete "${project.sourceSets.main.output.classesDir}/hoopoe/core/bootstrap"
-}
-
-tasks.cleanupBootstrapJar.dependsOn(prepareBootstrapJar)
-tasks.jar.dependsOn(cleanupBootstrapJar)
-tasks.compileTestJava.dependsOn(cleanupBootstrapJar)
-
-rebel {
-    classpath {
-        omitDefaultClassesDir = true
-
-        resource {}
-
-        resource {
-            directory = project.sourceSets.main.output.classesDir
-            excludes = ['**/hoopoe/core/bootstrap/**']
-        }
-    }
-}
+tasks.jar.dependsOn(prepareBootstrapJar)
+tasks.compileTestJava.dependsOn(prepareBootstrapJar)

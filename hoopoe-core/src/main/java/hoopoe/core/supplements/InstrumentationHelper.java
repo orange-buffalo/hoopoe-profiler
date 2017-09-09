@@ -3,7 +3,7 @@ package hoopoe.core.supplements;
 import hoopoe.api.HoopoeProfiler;
 import hoopoe.api.configuration.HoopoeConfiguration;
 import hoopoe.core.ClassMetadataReader;
-import hoopoe.core.bootstrap.HoopoeProfilerBridge;
+import hoopoe.core.HoopoeProfilerFacade;
 import hoopoe.core.components.PluginsManager;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -143,8 +143,8 @@ public class InstrumentationHelper {
      */
     private void initProfilerBridge() {
         try {
-            HoopoeProfilerBridge.instance = new ByteBuddy()
-                    .subclass(HoopoeProfilerBridge.class)
+            HoopoeProfilerFacade.instance = new ByteBuddy()
+                    .subclass(HoopoeProfilerFacade.class)
                     .method(isAbstract())
                     .intercept(MethodDelegation.to(profiler))
                     .make()
@@ -244,9 +244,9 @@ public class InstrumentationHelper {
                                  @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
                                  @PluginActions Object pluginActionIndicies) throws Exception {
 
-            if (HoopoeProfilerBridge.enabled && HoopoeProfilerBridge.profilingStartTime <= startTime) {
+            if (HoopoeProfilerFacade.enabled && HoopoeProfilerFacade.profilingStartTime <= startTime) {
                 // if plugin is attached to method, always report it
-                HoopoeProfilerBridge.instance.profileCall(
+                HoopoeProfilerFacade.instance.profileCall(
                         startTime, System.nanoTime(), className, methodSignature,
                         pluginActionIndicies, arguments, returnValue, thisInMethod
                 );
@@ -262,11 +262,11 @@ public class InstrumentationHelper {
                                  @MethodSignature String methodSignature,
                                  @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
 
-            if (HoopoeProfilerBridge.enabled && HoopoeProfilerBridge.profilingStartTime <= startTime) {
+            if (HoopoeProfilerFacade.enabled && HoopoeProfilerFacade.profilingStartTime <= startTime) {
                 long endTime = System.nanoTime();
 
                 if (endTime - startTime >= minimumTrackedTimeInNs) {
-                    HoopoeProfilerBridge.instance.profileCall(
+                    HoopoeProfilerFacade.instance.profileCall(
                             startTime, endTime, className, methodSignature, null, null, null, null
                     );
                 }
@@ -282,11 +282,11 @@ public class InstrumentationHelper {
                                  @MethodSignature String methodSignature,
                                  @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
 
-            if (HoopoeProfilerBridge.enabled && HoopoeProfilerBridge.profilingStartTime <= startTime) {
+            if (HoopoeProfilerFacade.enabled && HoopoeProfilerFacade.profilingStartTime <= startTime) {
                 long endTime = System.nanoTime();
 
                 if (endTime - startTime >= minimumTrackedTimeInNs) {
-                    HoopoeProfilerBridge.instance.profileCall(
+                    HoopoeProfilerFacade.instance.profileCall(
                             startTime, endTime, className, methodSignature, null, null, null, null
                     );
                 }
