@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
 import lombok.experimental.Delegate;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +31,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(DataProviderRunner.class)
+@Ignore
 public class HoopoeProfilerImplInstrumentationTest {
 
     @Rule

@@ -7,13 +7,21 @@ import hoopoe.core.configuration.Configuration;
 import hoopoe.core.configuration.ConfigurationFactory;
 import hoopoe.core.supplements.InstrumentationHelper;
 import hoopoe.core.supplements.ProfiledResultHelper;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.jar.JarFile;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Initializes the profiler and all related components.
  * <p>
  * Performs duties of dependency injection, decoupling components and externalizing dependencies initialization.
  */
+@Slf4j(topic = "hoopoe.profiler")
 public class HoopoeBootstrapper {
 
     /**
@@ -25,6 +33,15 @@ public class HoopoeBootstrapper {
     public static HoopoeProfilerImpl bootstrapHoopoe(
             String agentArgs,
             Instrumentation instrumentation) {
+
+        deployFacadeJar(instrumentation);
+        return initProfiler(agentArgs, instrumentation);
+    }
+
+    private static HoopoeProfilerImpl initProfiler(
+            String agentArgs,
+            Instrumentation instrumentation) {
+
         Environment environment = new Environment(agentArgs);
 
         Configuration configuration = ConfigurationFactory.createConfiguration(environment);
@@ -51,5 +68,22 @@ public class HoopoeBootstrapper {
         profiler.instrument(instrumentation);
 
         return profiler;
+    }
+
+    private static void deployFacadeJar(Instrumentation instrumentation) {
+        try {
+            Path tempDir = Files.createTempDirectory("hoopoe-");
+            File facadeJar = new File(tempDir.toFile(), "hoopoe-facade.jar");
+            try (InputStream resourceAsStream =
+                         HoopoeBootstrapper.class.getClassLoader().getResourceAsStream("hoopoe-facade.jar")) {
+
+                Files.copy(resourceAsStream, facadeJar.toPath());
+                log.info("generated profiler facade jar: {}", facadeJar);
+            }
+
+            instrumentation.appendToBootstrapClassLoaderSearch(new JarFile(facadeJar));
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

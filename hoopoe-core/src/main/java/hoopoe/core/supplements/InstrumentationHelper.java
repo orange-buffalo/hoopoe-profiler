@@ -5,45 +5,31 @@ import hoopoe.api.configuration.HoopoeConfiguration;
 import hoopoe.core.ClassMetadataReader;
 import hoopoe.core.HoopoeProfilerFacade;
 import hoopoe.core.components.PluginsManager;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.implementation.bytecode.constant.LongConstant;
 import net.bytebuddy.implementation.bytecode.constant.TextConstant;
 import net.bytebuddy.utility.JavaModule;
-import org.apache.commons.io.IOUtils;
-
-import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 
 @Slf4j(topic = "hoopoe.profiler")
 public class InstrumentationHelper {
 
     private Collection<Pattern> excludedClassesPatterns;
     private Collection<Pattern> includedClassesPatterns;
-    private HoopoeProfiler profiler;
-    
+
     private Instrumentation instrumentation;
     private Collection<ClassFileTransformer> transformers = new ArrayList<>(2);
 
@@ -62,10 +48,7 @@ public class InstrumentationHelper {
         HoopoeConfiguration configuration = profiler.getConfiguration();
         this.excludedClassesPatterns = configuration.getExcludedClassesPatterns();
         this.includedClassesPatterns = configuration.getIncludedClassesPatterns();
-        this.profiler = profiler;
         this.instrumentation = instrumentation;
-        deployBootstrapJar(instrumentation);
-        initProfilerBridge();
 
         AgentBuilder baseAgentConfig = new AgentBuilder.Default()
                 .disableClassFormatChanges()
@@ -117,49 +100,6 @@ public class InstrumentationHelper {
     public void unload() {
         transformers.forEach(transformer -> instrumentation.removeTransformer(transformer));
     }
-
-    private void deployBootstrapJar(Instrumentation instrumentation) {
-        try {
-            Path bootstrapJarDir = Files.createTempDirectory("hoopoe-bootstrap-");
-            File bootstrapJar = new File(bootstrapJarDir.toFile(), "hoopoe-bootstrap.jar");
-            InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("hoopoe-bootstrap.jar");
-            if (resourceAsStream == null) {
-                throw new IllegalStateException("no bootstrap");
-            }
-            IOUtils.copy(resourceAsStream,
-                    new FileOutputStream(bootstrapJar));
-            log.info("generated profiler bridge jar: {}", bootstrapJar);
-            instrumentation.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
-        }
-        catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    /**
-     * Creates delegator via ByteBuddy.
-     * In case of anonymous / inner classes HoopoeProfilerBridge is requested during this class loading,
-     * and it is not available as bootstrap jar is not yet deployed.
-     */
-    private void initProfilerBridge() {
-        try {
-            HoopoeProfilerFacade.instance = new ByteBuddy()
-                    .subclass(HoopoeProfilerFacade.class)
-                    .method(isAbstract())
-                    .intercept(MethodDelegation.to(profiler))
-                    .make()
-                    .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
-                    .getLoaded()
-                    .newInstance();
-        }
-        catch (InstantiationException | IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        }
-
-        log.info("profiler bridge initialized");
-    }
-
-
 
     private boolean matchesProfiledClass(TypeDescription target) {
         if (target.isInterface()) {
@@ -246,7 +186,7 @@ public class InstrumentationHelper {
 
             if (HoopoeProfilerFacade.enabled && HoopoeProfilerFacade.profilingStartTime <= startTime) {
                 // if plugin is attached to method, always report it
-                HoopoeProfilerFacade.instance.profileCall(
+                HoopoeProfilerFacade.methodInvocationProfiler.profileMethodInvocation(
                         startTime, System.nanoTime(), className, methodSignature,
                         pluginActionIndicies, arguments, returnValue, thisInMethod
                 );
@@ -266,7 +206,7 @@ public class InstrumentationHelper {
                 long endTime = System.nanoTime();
 
                 if (endTime - startTime >= minimumTrackedTimeInNs) {
-                    HoopoeProfilerFacade.instance.profileCall(
+                    HoopoeProfilerFacade.methodInvocationProfiler.profileMethodInvocation(
                             startTime, endTime, className, methodSignature, null, null, null, null
                     );
                 }
@@ -286,7 +226,7 @@ public class InstrumentationHelper {
                 long endTime = System.nanoTime();
 
                 if (endTime - startTime >= minimumTrackedTimeInNs) {
-                    HoopoeProfilerFacade.instance.profileCall(
+                    HoopoeProfilerFacade.methodInvocationProfiler.profileMethodInvocation(
                             startTime, endTime, className, methodSignature, null, null, null, null
                     );
                 }

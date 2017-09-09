@@ -7,7 +7,7 @@ package hoopoe.core;
  */
 public abstract class HoopoeProfilerFacade {
 
-    public static HoopoeProfilerFacade instance;
+    public static MethodInvocationProfiler methodInvocationProfiler;
 
     public static boolean enabled;
 
@@ -17,7 +17,13 @@ public abstract class HoopoeProfilerFacade {
      */
     public static long profilingStartTime;
 
-    public abstract void profileCall(
+    public static void startProfiling() {
+        enabled = true;
+        profilingStartTime = System.nanoTime();
+    }
+
+    public interface MethodInvocationProfiler {
+        void profileMethodInvocation(
             long startTimeInNs,
             long endTimeInNs,
             String className,
@@ -26,10 +32,5 @@ public abstract class HoopoeProfilerFacade {
             Object[] args,
             Object returnValue,
             Object thisInMethod);
-
-    public static void startProfiling() {
-        enabled = true;
-        profilingStartTime = System.nanoTime();
     }
-
 }

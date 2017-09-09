@@ -60,6 +60,8 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         this.instrumentationHelper = instrumentationHelper;
 
         extensionsManager.initExtensions(this);
+
+        HoopoeProfilerFacade.methodInvocationProfiler = this::profileMethodInvocation;
     }
 
     public void instrument(Instrumentation instrumentation) {
@@ -91,7 +93,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         return HoopoeProfilerFacade.enabled;
     }
 
-    public void profileCall(
+    private void profileMethodInvocation(
             long startTimeInNs,
             long endTimeInNs,
             String className,
