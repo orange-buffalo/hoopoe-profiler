@@ -4,7 +4,6 @@ import hoopoe.api.configuration.HoopoeConfiguration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import org.mockito.MockitoAnnotations;
@@ -25,11 +24,11 @@ public class TestConfiguration implements HoopoeConfiguration {
 
     @Getter
     @Setter
-    private static Collection<Pattern> includeClassesPatterns;
+    private static Collection<String> includeClassesPatterns;
 
     @Getter
     @Setter
-    private static Collection<Pattern> excludeClassesPatterns;
+    private static Collection<String> excludeClassesPatterns;
 
 //    @Override
 //    public HoopoePluginsProvider createPluginsProvider() {
@@ -52,12 +51,12 @@ public class TestConfiguration implements HoopoeConfiguration {
 //    }
 
     @Override
-    public Collection<Pattern> getIncludedClassesPatterns() {
+    public Collection<String> getIncludedClassesPatterns() {
         return includeClassesPatterns;
     }
 
     @Override
-    public Collection<Pattern> getExcludedClassesPatterns() {
+    public Collection<String> getExcludedClassesPatterns() {
         return excludeClassesPatterns;
     }
 
@@ -66,9 +65,9 @@ public class TestConfiguration implements HoopoeConfiguration {
         minimumTrackedInvocationTimeInNs = 0;
         includeClassesPatterns = new ArrayList<>();
         excludeClassesPatterns =  Arrays.asList(
-                Pattern.compile("hoopoe\\.core\\..*"),
-                Pattern.compile("org\\.mockito\\..*"),
-                Pattern.compile("org\\.hamcrest\\..*")
+                "hoopoe\\.core\\..*",
+                "org\\.mockito\\..*",
+                "org\\.hamcrest\\..*"
         );
     }
 

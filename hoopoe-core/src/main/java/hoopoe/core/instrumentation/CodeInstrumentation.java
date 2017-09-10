@@ -8,6 +8,7 @@ import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -36,8 +37,12 @@ public class CodeInstrumentation {
 
         this.pluginManager = pluginManager;
         this.classMetadataReader = classMetadataReader;
-        this.excludedClassesPatterns = configuration.getExcludedClassesPatterns();
-        this.includedClassesPatterns = configuration.getIncludedClassesPatterns();
+        this.excludedClassesPatterns = configuration.getExcludedClassesPatterns().stream()
+                .map(Pattern::compile)
+                .collect(Collectors.toList());
+        this.includedClassesPatterns = configuration.getIncludedClassesPatterns().stream()
+                .map(Pattern::compile)
+                .collect(Collectors.toList());
         this.minimumTrackedInvocationTimeInNs = configuration.getMinimumTrackedInvocationTimeInNs();
     }
 
@@ -57,7 +62,8 @@ public class CodeInstrumentation {
 
                 .bind(ClassName.class,
                         (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
-                                new TextConstant(classMetadataReader.getClassName(instrumentedMethod.getDeclaringType())))
+                                new TextConstant(
+                                        classMetadataReader.getClassName(instrumentedMethod.getDeclaringType())))
 
                 .bind(MinimumTrackedTime.class,
                         (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
@@ -66,14 +72,16 @@ public class CodeInstrumentation {
         transformers.add(baseAgentConfig
                 .type(this::matchesProfiledClass)
                 .transform((builder, typeDescription, classLoader, module) -> {
-                    if (classLoader != null && classLoader.getClass().getName().equals("hoopoe.utils.HoopoeClassLoader")) {
+                    if (classLoader != null && classLoader.getClass()
+                            .getName()
+                            .equals("hoopoe.utils.HoopoeClassLoader")) {
                         return builder;
                     }
                     return builder
                             .visit(baseAdviceConfig
                                     .bind(PluginActions.class,
                                             (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
-                                                     pluginManager.getPluginActions(instrumentedMethod)
+                                                    pluginManager.getPluginActions(instrumentedMethod)
                                     )
                                     .to(EnterAdvice.class, PluginsAwareAdvice.class)
                                     .on(this::matchesPluginAwareMethod)

@@ -6,7 +6,6 @@ import hoopoe.api.extensions.HoopoeProfilerExtension;
 import hoopoe.api.plugins.HoopoePlugin;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -107,13 +106,13 @@ public class Configuration implements HoopoeConfiguration {
     }
 
     @Override
-    public Collection<Pattern> getIncludedClassesPatterns() {
+    public Collection<String> getIncludedClassesPatterns() {
         // TODO read from config
         return Collections.emptyList();
     }
 
     @Override
-    public Collection<Pattern> getExcludedClassesPatterns() {
+    public Collection<String> getExcludedClassesPatterns() {
         // TODO read from config
         return Collections.emptyList();
     }
