@@ -5,7 +5,7 @@ import hoopoe.core.components.ExtensionsManager;
 import hoopoe.core.components.PluginsManager;
 import hoopoe.core.configuration.Configuration;
 import hoopoe.core.configuration.ConfigurationFactory;
-import hoopoe.core.supplements.InstrumentationHelper;
+import hoopoe.core.instrumentation.CodeInstrumentation;
 import hoopoe.core.supplements.ProfiledResultHelper;
 import java.io.File;
 import java.io.IOException;
@@ -52,8 +52,8 @@ public class HoopoeBootstrapper {
         PluginsManager pluginManager = new PluginsManager(configuration, componentLoader, classMetadataReader);
         ExtensionsManager extensionsManager = new ExtensionsManager(configuration, componentLoader);
 
-        InstrumentationHelper instrumentationHelper = new InstrumentationHelper(pluginManager,
-                classMetadataReader);
+        CodeInstrumentation codeInstrumentation = new CodeInstrumentation(pluginManager,
+                classMetadataReader, configuration);
 
         ProfiledResultHelper profiledResultHelper = new ProfiledResultHelper();
 
@@ -61,7 +61,7 @@ public class HoopoeBootstrapper {
                 .configuration(configuration)
                 .pluginsManager(pluginManager)
                 .extensionsManager(extensionsManager)
-                .instrumentationHelper(instrumentationHelper)
+                .codeInstrumentation(codeInstrumentation)
                 .profiledResultHelper(profiledResultHelper)
                 .build();
 

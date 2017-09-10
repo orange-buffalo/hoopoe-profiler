@@ -7,7 +7,7 @@ import hoopoe.api.plugins.HoopoeInvocationAttribute;
 import hoopoe.core.components.ExtensionsManager;
 import hoopoe.core.components.PluginsManager;
 import hoopoe.core.configuration.Configuration;
-import hoopoe.core.supplements.InstrumentationHelper;
+import hoopoe.core.instrumentation.CodeInstrumentation;
 import hoopoe.core.supplements.ProfiledResultHelper;
 import hoopoe.core.supplements.TraceNode;
 import hoopoe.core.supplements.TraceNodesWrapper;
@@ -35,7 +35,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     @Getter
     private HoopoeConfiguration configuration;
 
-    private InstrumentationHelper instrumentationHelper;
+    private CodeInstrumentation codeInstrumentation;
 
     private ProfiledResultHelper profiledResultHelper;
 
@@ -48,7 +48,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     private HoopoeProfilerImpl(
             Configuration configuration,
             PluginsManager pluginsManager,
-            InstrumentationHelper instrumentationHelper,
+            CodeInstrumentation codeInstrumentation,
             ProfiledResultHelper profiledResultHelper,
             ExtensionsManager extensionsManager) {
 
@@ -57,7 +57,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
         this.configuration = configuration;
         this.profiledResultHelper = profiledResultHelper;
         this.pluginsManager = pluginsManager;
-        this.instrumentationHelper = instrumentationHelper;
+        this.codeInstrumentation = codeInstrumentation;
 
         extensionsManager.initExtensions(this);
 
@@ -65,11 +65,11 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     }
 
     public void instrument(Instrumentation instrumentation) {
-        instrumentationHelper.createClassFileTransformer(instrumentation, this);
+        codeInstrumentation.createClassFileTransformer(instrumentation);
     }
 
     public void unload() {
-        instrumentationHelper.unload();
+        codeInstrumentation.unload();
     }
 
     @Override
