@@ -21,7 +21,7 @@ public class AgentJarEnvIT {
     public static HoopoeIntegrationTest integrationTest = new HoopoeIntegrationTest().withHoopoeContainer(container);
 
     @Test
-    public void verifyEnvVariableIsAvailable() throws IOException, InterruptedException {
+    public void testEnvVariableIsAvailable() throws IOException, InterruptedException {
         Container.ExecResult printEnvResult = container.execInContainer(
                 "printenv", HoopoeIntegrationTest.HOOPOE_AGENT_ENV);
 

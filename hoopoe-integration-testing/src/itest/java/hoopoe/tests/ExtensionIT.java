@@ -26,7 +26,7 @@ public class ExtensionIT {
     public static HoopoeIntegrationTest integrationTest = new HoopoeIntegrationTest().withHoopoeContainer(container);
 
     @Test
-    public void verifyProfileResultIsNotNullForNoExecutions() throws InterruptedException {
+    public void testProfiledResultIsNotNullForNoExecutions() throws InterruptedException {
         container.followOutput(new Slf4jLogConsumer(log));
         HoopoeProfiledResult profiledResult = integrationTest.executeProfiled(() -> {
         });
@@ -35,7 +35,7 @@ public class ExtensionIT {
     }
 
     @Test
-    public void verifyProfileResultHasDataForSimpleExecution() throws InterruptedException {
+    public void testProfiledResultHasDataForSimpleExecution() throws InterruptedException {
         container.followOutput(new Slf4jLogConsumer(log));
         HoopoeProfiledResult profiledResult = integrationTest.executeProfiled(() -> {
             try {

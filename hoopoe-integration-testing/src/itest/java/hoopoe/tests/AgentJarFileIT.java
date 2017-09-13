@@ -21,7 +21,7 @@ public class AgentJarFileIT {
     public static HoopoeIntegrationTest integrationTest = new HoopoeIntegrationTest().withHoopoeContainer(container);
 
     @Test
-    public void verifyFileExists() throws InterruptedException, IOException {
+    public void testFileExists() throws InterruptedException, IOException {
         Container.ExecResult printEnvResult = container.execInContainer(
                 "ls", HoopoeIntegrationTest.HOOPOE_AGENT_JAR_CONTAINER_PATH);
 
