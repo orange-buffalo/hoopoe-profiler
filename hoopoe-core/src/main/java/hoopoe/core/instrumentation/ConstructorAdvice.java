@@ -7,8 +7,8 @@ class ConstructorAdvice {
 
     @Advice.OnMethodExit
     public static void after(@Advice.Enter long startTime,
-                             @ClassName String className,
-                             @MethodSignature String methodSignature,
+                             @Advice.Origin("#t") String className,
+                             @Advice.Origin("#m#s") String methodSignature,
                              @MinimumTrackedTime long minimumTrackedTimeInNs) throws Exception {
 
         if (HoopoeProfilerFacade.enabled && HoopoeProfilerFacade.profilingStartTime <= startTime) {

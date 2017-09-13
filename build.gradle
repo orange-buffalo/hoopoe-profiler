@@ -18,7 +18,7 @@ ext.libraries = [
         slf4j           : 'org.slf4j:slf4j-api:1.7.22',
         commonsLang3    : 'org.apache.commons:commons-lang3:3.5',
         commonsIo       : 'commons-io:commons-io:2.5',
-        byteBuddy       : 'net.bytebuddy:byte-buddy:1.6.3',
+        byteBuddy       : 'net.bytebuddy:byte-buddy:1.7.5',
         logback         : 'ch.qos.logback:logback-classic:1.1.8',
         // todo: IDEA does not see annotation processor when upgraded to later versions
         lombok          : 'org.projectlombok:lombok:1.14.8',

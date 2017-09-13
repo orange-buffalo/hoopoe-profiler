@@ -8,8 +8,8 @@ class PluginsAwareAdvice {
 
     @Advice.OnMethodExit
     public static void after(@Advice.Enter long startTime,
-                             @ClassName String className,
-                             @MethodSignature String methodSignature,
+                             @Advice.Origin("#t") String className,
+                             @Advice.Origin("#m#s") String methodSignature,
                              @MinimumTrackedTime long minimumTrackedTimeInNs,
                              @Advice.AllArguments Object[] arguments,
                              @Advice.This(optional = true) Object thisInMethod,

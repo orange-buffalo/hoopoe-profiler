@@ -14,8 +14,6 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.constant.LongConstant;
-import net.bytebuddy.implementation.bytecode.constant.TextConstant;
 
 @Slf4j(topic = "hoopoe.profiler")
 public class CodeInstrumentation {
@@ -55,19 +53,7 @@ public class CodeInstrumentation {
 
         Advice.WithCustomMapping baseAdviceConfig = Advice
                 .withCustomMapping()
-
-                .bind(MethodSignature.class,
-                        (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
-                                new TextConstant(classMetadataReader.getMethodSignature(instrumentedMethod)))
-
-                .bind(ClassName.class,
-                        (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
-                                new TextConstant(
-                                        classMetadataReader.getClassName(instrumentedMethod.getDeclaringType())))
-
-                .bind(MinimumTrackedTime.class,
-                        (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
-                                LongConstant.forValue(minimumTrackedInvocationTimeInNs));
+                .bind(MinimumTrackedTime.class, minimumTrackedInvocationTimeInNs);
 
         transformers.add(baseAgentConfig
                 .type(this::matchesProfiledClass)
@@ -80,9 +66,9 @@ public class CodeInstrumentation {
                     return builder
                             .visit(baseAdviceConfig
                                     .bind(PluginActions.class,
-                                            (instrumentedType, instrumentedMethod, target, annotation, assigner, initialized) ->
-                                                    pluginManager.getPluginActions(instrumentedMethod)
-                                    )
+                                            (instrumentedType, instrumentedMethod, assigner, context) ->
+                                                    new Advice.OffsetMapping.Target.ForStackManipulation(
+                                                            pluginManager.getPluginActions(instrumentedMethod)))
                                     .to(EnterAdvice.class, PluginsAwareAdvice.class)
                                     .on(this::matchesPluginAwareMethod)
                             )
