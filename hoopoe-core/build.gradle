@@ -21,6 +21,9 @@ dependencies {
 
 sourceSets.create("hoopoeFacade")
 sourceSets.main.compileClasspath += sourceSets.hoopoeFacade.output
+sourceSets.main.runtimeClasspath += sourceSets.hoopoeFacade.output
+sourceSets.test.compileClasspath += sourceSets.hoopoeFacade.output
+sourceSets.test.runtimeClasspath += sourceSets.hoopoeFacade.output
 
 task prepareBootstrapJar(type: Jar) {
     archiveName "hoopoe-facade.jar"
