@@ -28,7 +28,7 @@ public abstract class HoopoeProfilerFacade {
             long endTimeInNs,
             String className,
             String methodSignature,
-            Object pluginActionIndicies,
+            long pluginRecordersReference,
             Object[] args,
             Object returnValue,
             Object thisInMethod);

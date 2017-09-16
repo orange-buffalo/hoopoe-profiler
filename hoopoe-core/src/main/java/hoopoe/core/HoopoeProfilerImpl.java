@@ -98,7 +98,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
             long endTimeInNs,
             String className,
             String methodSignature,
-            Object pluginActionIndicies,
+            long pluginRecordersReference,
             Object[] args,
             Object returnValue,
             Object thisInMethod) {
@@ -111,11 +111,11 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
             profiledTraceNodeWrappers.add(traceNodesWrapper);
         }
 
-        if (pluginActionIndicies == null) {
+        if (pluginRecordersReference == 0) {
             traceNodes.add(
                     new TraceNode(className, methodSignature, startTimeInNs, endTimeInNs, null));
         } else {
-            Collection<HoopoeInvocationAttribute> attributes = pluginsManager.getRecorders(pluginActionIndicies).stream()
+            Collection<HoopoeInvocationAttribute> attributes = pluginsManager.getRecorders(pluginRecordersReference).stream()
                     .flatMap(pluginAction -> pluginAction.getAttributes(args, returnValue, thisInMethod).stream())
                     .collect(Collectors.toList());
 

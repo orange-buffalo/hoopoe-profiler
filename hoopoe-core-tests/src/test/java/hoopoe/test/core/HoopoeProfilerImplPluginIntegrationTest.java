@@ -32,7 +32,7 @@ public class HoopoeProfilerImplPluginIntegrationTest {
 //        doAnswer(invocation -> {
 //            actualRequests.add((HoopoeMethodInfoImpl) invocation.getArguments()[0]);
 //            return null;
-//        }).when(pluginMock).createActionIfSupported(any());
+//        }).when(pluginMock).createRecorderIfSupported(any());
 //
 //        Class guineaPigClass = PluginGuineaPig.class;
 //
@@ -78,7 +78,7 @@ public class HoopoeProfilerImplPluginIntegrationTest {
 //    @Test
 //    public void testUnsupportedPlugin() throws Exception {
 //        HoopoePlugin pluginMock = preparePluginMock();
-//        when(pluginMock.createActionIfSupported(any())).thenReturn(null);
+//        when(pluginMock.createRecorderIfSupported(any())).thenReturn(null);
 //
 //        Class guineaPigClass = PluginGuineaPig.class;
 //
@@ -94,7 +94,7 @@ public class HoopoeProfilerImplPluginIntegrationTest {
 //    public void testSupportedPlugin() throws Exception {
 //        HoopoePlugin pluginMock = preparePluginMock();
 //        HoopoeInvocationRecorder pluginActionMock = Mockito.mock(HoopoeInvocationRecorder.class);
-//        when(pluginMock.createActionIfSupported(any())).thenReturn(pluginActionMock);
+//        when(pluginMock.createRecorderIfSupported(any())).thenReturn(pluginActionMock);
 //        when(pluginActionMock.getAttributes(any(), any(), any(), any())).thenReturn(Collections.emptyList());
 //
 //        TestConfiguration.getIncludeClassesPatterns().add(Pattern.compile(".*PluginAttributesGuineaPig.*"));
@@ -117,7 +117,7 @@ public class HoopoeProfilerImplPluginIntegrationTest {
 //                Object.class.getCanonicalName(), Serializable.class.getCanonicalName())
 //        );
 //        verify(pluginMock, times(1))
-//                .createActionIfSupported(
+//                .createRecorderIfSupported(
 //                        eq(new HoopoeMethodInfoImpl(
 //                                guineaPigClass.getCanonicalName(),
 //                                "methodForAttributes(java.lang.Object)",
@@ -184,7 +184,7 @@ public class HoopoeProfilerImplPluginIntegrationTest {
 //                actualSuperclasses.addAll(methodInfo.getSuperclasses());
 //            }
 //            return null;
-//        }).when(pluginMock).createActionIfSupported(any());
+//        }).when(pluginMock).createRecorderIfSupported(any());
 //
 //        HoopoeTestExecutor.create()
 //                .withPackage("hoopoe.test.core.guineapigs.hierarchy")

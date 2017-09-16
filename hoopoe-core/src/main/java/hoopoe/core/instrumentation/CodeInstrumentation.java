@@ -2,6 +2,7 @@ package hoopoe.core.instrumentation;
 
 import hoopoe.api.configuration.HoopoeConfiguration;
 import hoopoe.core.ClassMetadataReader;
+import hoopoe.core.HoopoeMethodInfoImpl;
 import hoopoe.core.components.PluginsManager;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -13,7 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.constant.LongConstant;
 
 @Slf4j(topic = "hoopoe.profiler")
 public class CodeInstrumentation {
@@ -68,7 +71,10 @@ public class CodeInstrumentation {
                                     .bind(PluginActions.class,
                                             (instrumentedType, instrumentedMethod, assigner, context) ->
                                                     new Advice.OffsetMapping.Target.ForStackManipulation(
-                                                            pluginManager.getPluginActions(instrumentedMethod)))
+                                                            LongConstant.forValue(
+                                                                    pluginManager.getPluginRecordersReference(
+                                                                            createMethodInfo(instrumentedMethod))))
+                                    )
                                     .to(EnterAdvice.class, PluginsAwareAdvice.class)
                                     .on(this::matchesPluginAwareMethod)
                             )
@@ -86,6 +92,18 @@ public class CodeInstrumentation {
 
     public void unload() {
         transformers.forEach(transformer -> instrumentation.removeTransformer(transformer));
+    }
+
+    private HoopoeMethodInfoImpl createMethodInfo(MethodDescription method) {
+        TypeDefinition declaringType = method.getDeclaringType();
+        String className = classMetadataReader.getClassName(declaringType);
+        String methodSignature = classMetadataReader.getMethodSignature(method);
+
+        // todo lazy calculate
+        return new HoopoeMethodInfoImpl(
+                className,
+                methodSignature,
+                classMetadataReader.getSuperClassesNames(declaringType));
     }
 
     private boolean matchesProfiledClass(TypeDescription target) {
@@ -119,12 +137,14 @@ public class CodeInstrumentation {
 
     private boolean matchesPluginAwareMethod(MethodDescription target) {
         return !target.isConstructor() && !target.isNative() && !target.isAbstract()
-                && !target.isTypeInitializer() && pluginManager.getPluginActions(target) != null;
+                && !target.isTypeInitializer()
+                && pluginManager.getPluginRecordersReference(createMethodInfo(target)) != 0;
     }
 
     private boolean matchesPluginUnawareMethod(MethodDescription target) {
         return !target.isConstructor() && !target.isNative() && !target.isAbstract()
-                && !target.isTypeInitializer() && pluginManager.getPluginActions(target) == null;
+                && !target.isTypeInitializer()
+                && pluginManager.getPluginRecordersReference(createMethodInfo(target)) == 0;
     }
 
     private boolean matchesConstructor(MethodDescription target) {

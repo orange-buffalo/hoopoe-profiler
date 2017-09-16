@@ -17,12 +17,19 @@ public interface HoopoePlugin {
      * Is called by profiler core components when new method is instrumented. Plugin responsibility is to check if
      * method is supported by this plugin and return implementation of {@link HoopoeInvocationRecorder} for this method.
      * Recorder will be called whenever application code executes the method described by {@code methodInfo}.
+     * <p>
+     * Important: plugin should reuse recorder instances. First, it is more memory-efficient. Second, Hoopoe Profiler
+     * supports maximum number of 64 recorders total for all plugins (in order to support instrumentation
+     * optimization).
+     * <p>
+     * Important: as this method is called for every instrumented method in application, it should be as efficient as
+     * possible.
      *
      * @param methodInfo description of the method being instrumented.
      *
      * @return recorder to be called when application code executes the method; {@code null} if method is not supported
      * by the plugin.
      */
-    HoopoeInvocationRecorder createActionIfSupported(HoopoeMethodInfo methodInfo);
+    HoopoeInvocationRecorder createRecorderIfSupported(HoopoeMethodInfo methodInfo);
 
 }

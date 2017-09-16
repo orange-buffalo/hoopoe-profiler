@@ -49,11 +49,11 @@ public class HoopoeBootstrapper {
         ClassLoader currentClassLoader = HoopoeBootstrapper.class.getClassLoader();
         ComponentLoader componentLoader = new ComponentLoader(currentClassLoader);
 
-        PluginsManager pluginManager = new PluginsManager(configuration, componentLoader, classMetadataReader);
+        PluginsManager pluginManager = new PluginsManager(configuration, componentLoader);
         ExtensionsManager extensionsManager = new ExtensionsManager(configuration, componentLoader);
 
-        CodeInstrumentation codeInstrumentation = new CodeInstrumentation(pluginManager,
-                classMetadataReader, configuration);
+        CodeInstrumentation codeInstrumentation = new CodeInstrumentation(
+                pluginManager, classMetadataReader, configuration);
 
         ProfiledResultHelper profiledResultHelper = new ProfiledResultHelper();
 

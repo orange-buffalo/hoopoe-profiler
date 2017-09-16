@@ -11,7 +11,7 @@ public class SqlQueriesPlugin implements HoopoePlugin {
     public static final String ATTRIBUTE_NAME = "SQL Query";
 
     @Override
-    public HoopoeInvocationRecorder createActionIfSupported(HoopoeMethodInfo methodInfo) {
+    public HoopoeInvocationRecorder createRecorderIfSupported(HoopoeMethodInfo methodInfo) {
         if (methodInfo.isInstanceOf("java.sql.Connection")) {
             switch (methodInfo.getMethodSignature()) {
                 case "prepareCall(java.lang.String)":
