@@ -1,4 +1,4 @@
-package hoopoe.core;
+package hoopoe.core.instrumentation;
 
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;

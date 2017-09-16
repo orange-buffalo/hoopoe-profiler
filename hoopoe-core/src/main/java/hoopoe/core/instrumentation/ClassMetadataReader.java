@@ -1,5 +1,6 @@
-package hoopoe.core;
+package hoopoe.core.instrumentation;
 
+import hoopoe.core.HoopoeMethodInfoImpl;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -77,6 +78,7 @@ public class ClassMetadataReader {
      * @return method signature.
      */
     public String getMethodSignature(MethodDescription methodDescription) {
+        // todo should match net.bytebuddy.asm.Advice.Dispatcher.OffsetMapping.ForOrigin.Renderer.ForJavaSignature#INSTANCE
         StringBuilder builder = new StringBuilder();
         if (methodDescription.isConstructor()) {
             TypeDefinition declaringType = methodDescription.getDeclaringType();
@@ -105,4 +107,16 @@ public class ClassMetadataReader {
         return builder.toString();
     }
 
+    // todo cover with tests
+    public HoopoeMethodInfoImpl createMethodInfo(MethodDescription method) {
+        TypeDefinition declaringType = method.getDeclaringType();
+        String className = getClassName(declaringType);
+        String methodSignature = getMethodSignature(method);
+
+        // todo lazy calculate
+        return new HoopoeMethodInfoImpl(
+                className,
+                methodSignature,
+                getSuperClassesNames(declaringType));
+    }
 }

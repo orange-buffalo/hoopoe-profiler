@@ -1,12 +1,9 @@
 package hoopoe.core.instrumentation;
 
 import hoopoe.api.configuration.HoopoeConfiguration;
-import hoopoe.core.ClassMetadataReader;
-import hoopoe.core.HoopoeMethodInfoImpl;
 import hoopoe.core.components.PluginsManager;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -14,9 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.constant.LongConstant;
 
 @Slf4j(topic = "hoopoe.profiler")
 public class CodeInstrumentation {
@@ -26,7 +21,7 @@ public class CodeInstrumentation {
     private long minimumTrackedInvocationTimeInNs;
 
     private Instrumentation instrumentation;
-    private Collection<ClassFileTransformer> transformers = new ArrayList<>(2);
+    private ClassFileTransformer transformer;
 
     private PluginsManager pluginManager;
     private ClassMetadataReader classMetadataReader;
@@ -49,64 +44,37 @@ public class CodeInstrumentation {
 
     public void createClassFileTransformer(Instrumentation instrumentation) {
         this.instrumentation = instrumentation;
-
-        AgentBuilder baseAgentConfig = new AgentBuilder.Default()
+        this.transformer = new AgentBuilder.Default()
                 .disableClassFormatChanges()
-                .with(new InstrumentationListener());
-
-        Advice.WithCustomMapping baseAdviceConfig = Advice
-                .withCustomMapping()
-                .bind(MinimumTrackedTime.class, minimumTrackedInvocationTimeInNs);
-
-        transformers.add(baseAgentConfig
+                .with(new InstrumentationListener())
                 .type(this::matchesProfiledClass)
                 .transform((builder, typeDescription, classLoader, module) -> {
-                    if (classLoader != null && classLoader.getClass()
-                            .getName()
-                            .equals("hoopoe.utils.HoopoeClassLoader")) {
+                    if (classLoader != null
+                            && classLoader.getClass().getName().equals("hoopoe.utils.HoopoeClassLoader")) {
                         return builder;
                     }
-                    return builder
-                            .visit(baseAdviceConfig
-                                    .bind(PluginActions.class,
-                                            (instrumentedType, instrumentedMethod, assigner, context) ->
-                                                    new Advice.OffsetMapping.Target.ForStackManipulation(
-                                                            LongConstant.forValue(
-                                                                    pluginManager.getPluginRecordersReference(
-                                                                            createMethodInfo(instrumentedMethod))))
+                    return builder.visit(Advice
+                            .withCustomMapping()
+                            .bind(MinimumTrackedTime.class, minimumTrackedInvocationTimeInNs)
+                            .bind(PluginRecorders.class, (instrumentedType, instrumentedMethod, assigner, context) ->
+                                    Advice.OffsetMapping.Target.ForStackManipulation.of(
+                                            pluginManager.getPluginRecordersReference(
+                                                    classMetadataReader.createMethodInfo(instrumentedMethod))
                                     )
-                                    .to(EnterAdvice.class, PluginsAwareAdvice.class)
-                                    .on(this::matchesPluginAwareMethod)
                             )
-                            .visit(baseAdviceConfig
-                                    .to(EnterAdvice.class, PluginsUnawareAdvice.class)
-                                    .on(this::matchesPluginUnawareMethod)
-                            )
-                            .visit(baseAdviceConfig
-                                    .to(EnterAdvice.class, ConstructorAdvice.class)
-                                    .on(this::matchesConstructor)
-                            );
+                            .to(HoopoeAdvice.class)
+                            .on(this::nonNativeNonAbstractMethod)
+                    );
                 })
-                .installOn(instrumentation));
+                .installOn(instrumentation);
     }
 
     public void unload() {
-        transformers.forEach(transformer -> instrumentation.removeTransformer(transformer));
-    }
-
-    private HoopoeMethodInfoImpl createMethodInfo(MethodDescription method) {
-        TypeDefinition declaringType = method.getDeclaringType();
-        String className = classMetadataReader.getClassName(declaringType);
-        String methodSignature = classMetadataReader.getMethodSignature(method);
-
-        // todo lazy calculate
-        return new HoopoeMethodInfoImpl(
-                className,
-                methodSignature,
-                classMetadataReader.getSuperClassesNames(declaringType));
+        instrumentation.removeTransformer(transformer);
     }
 
     private boolean matchesProfiledClass(TypeDescription target) {
+        // todo why? how about default methods?
         if (target.isInterface()) {
             return false;
         }
@@ -135,20 +103,7 @@ public class CodeInstrumentation {
         return true;
     }
 
-    private boolean matchesPluginAwareMethod(MethodDescription target) {
-        return !target.isConstructor() && !target.isNative() && !target.isAbstract()
-                && !target.isTypeInitializer()
-                && pluginManager.getPluginRecordersReference(createMethodInfo(target)) != 0;
+    private boolean nonNativeNonAbstractMethod(MethodDescription target) {
+        return !target.isNative() && !target.isAbstract();
     }
-
-    private boolean matchesPluginUnawareMethod(MethodDescription target) {
-        return !target.isConstructor() && !target.isNative() && !target.isAbstract()
-                && !target.isTypeInitializer()
-                && pluginManager.getPluginRecordersReference(createMethodInfo(target)) == 0;
-    }
-
-    private boolean matchesConstructor(MethodDescription target) {
-        return target.isConstructor();
-    }
-
 }

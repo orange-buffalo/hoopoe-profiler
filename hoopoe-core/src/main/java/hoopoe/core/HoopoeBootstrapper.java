@@ -5,6 +5,7 @@ import hoopoe.core.components.ExtensionsManager;
 import hoopoe.core.components.PluginsManager;
 import hoopoe.core.configuration.Configuration;
 import hoopoe.core.configuration.ConfigurationFactory;
+import hoopoe.core.instrumentation.ClassMetadataReader;
 import hoopoe.core.instrumentation.CodeInstrumentation;
 import hoopoe.core.supplements.ProfiledResultHelper;
 import java.io.File;
