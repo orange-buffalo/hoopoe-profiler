@@ -1,13 +1,15 @@
 package hoopoe.core.instrumentation;
 
-import hoopoe.core.HoopoeMethodInfoImpl;
+import hoopoe.api.plugins.HoopoeMethodInfo;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.description.type.TypeList;
 
 public class ClassMetadataReader {
 
@@ -43,8 +45,8 @@ public class ClassMetadataReader {
     }
 
     /**
-     * Gets canonical name of target class. For generics, generic parameters are excluded.
-     * If class does not have a canonical name, binary class name is returned.
+     * Gets canonical name of target class. For generics, generic parameters are excluded. If class does not have a
+     * canonical name, binary class name is returned.
      *
      * @param classDescription target class to get the name for.
      *
@@ -65,8 +67,8 @@ public class ClassMetadataReader {
      * For constructors, simple class name is used as method name.
      * <p>
      * Every argument type is a Java class name (as defined in {@link ClassMetadataReader#getClassName(TypeDefinition)})
-     * or primitive type name. For array arguments {@code []} is added after type name.
-     * Argument types do not include generic parameters.
+     * or primitive type name. For array arguments {@code []} is added after type name. Argument types do not include
+     * generic parameters.
      * <p>
      * Does not include return type.
      * <p>
@@ -75,27 +77,15 @@ public class ClassMetadataReader {
      * multipleArgumentsMethod(java.lang.String,int[])}.
      *
      * @param methodDescription description to build signature by.
+     *
      * @return method signature.
      */
     public String getMethodSignature(MethodDescription methodDescription) {
-        // todo should match net.bytebuddy.asm.Advice.Dispatcher.OffsetMapping.ForOrigin.Renderer.ForJavaSignature#INSTANCE
-        StringBuilder builder = new StringBuilder();
-        if (methodDescription.isConstructor()) {
-            TypeDefinition declaringType = methodDescription.getDeclaringType();
-            if (declaringType instanceof TypeDescription) {
-                builder.append(((TypeDescription) declaringType).getSimpleName());
-            } else {
-                String typeName = declaringType.getTypeName();
-                builder.append(typeName.substring(typeName.lastIndexOf('.')));
-            }
-        } else {
-            builder.append(methodDescription.getName());
-        }
+        StringBuilder builder = new StringBuilder(methodDescription.getInternalName());
         builder.append('(');
 
-        TypeList typeDescriptions = methodDescription.getParameters().asTypeList().asErasures();
         boolean first = true;
-        for (TypeDescription next : typeDescriptions) {
+        for (TypeDescription next : methodDescription.getParameters().asTypeList().asErasures()) {
             if (!first) {
                 builder.append(',');
             }
@@ -107,8 +97,14 @@ public class ClassMetadataReader {
         return builder.toString();
     }
 
-    // todo cover with tests
-    public HoopoeMethodInfoImpl createMethodInfo(MethodDescription method) {
+    /**
+     * Returns {@link HoopoeMethodInfo} describing provided {@link MethodDescription}.
+     *
+     * @param method method description to adapt.
+     *
+     * @return instance of {@link HoopoeMethodInfo}, maybe with lazy initialization.
+     */
+    public HoopoeMethodInfo createMethodInfo(MethodDescription method) {
         TypeDefinition declaringType = method.getDeclaringType();
         String className = getClassName(declaringType);
         String methodSignature = getMethodSignature(method);
@@ -118,5 +114,33 @@ public class ClassMetadataReader {
                 className,
                 methodSignature,
                 getSuperClassesNames(declaringType));
+    }
+
+    @EqualsAndHashCode
+    @ToString
+    private static class HoopoeMethodInfoImpl implements HoopoeMethodInfo {
+
+        @Getter
+        private String canonicalClassName;
+
+        @Getter
+        private String methodSignature;
+
+        @Getter
+        private Collection<String> superclasses;
+
+        public HoopoeMethodInfoImpl(
+                String canonicalClassName,
+                String methodSignature,
+                Collection<String> superclasses) {
+            this.canonicalClassName = canonicalClassName;
+            this.methodSignature = methodSignature;
+            this.superclasses = new HashSet<>(superclasses);
+        }
+
+        @Override      //fixme check hosted class
+        public boolean isInstanceOf(String className) {
+            return superclasses.contains(className);
+        }
     }
 }

@@ -3,6 +3,8 @@ package hoopoe.core.instrumentation;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
+import hoopoe.api.plugins.HoopoeMethodInfo;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -20,12 +22,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
 @RunWith(DataProviderRunner.class)
 public class ClassMetadataReaderTest {
 
     private static final Supplier SUPPLIER_LAMBDA = () -> null;
 
+    @SuppressWarnings("Convert2Lambda")
     private static final Supplier SUPPLIER_ANONYMOUS_IMPL = new Supplier() {
         @Override
         public Object get() {
@@ -39,10 +43,10 @@ public class ClassMetadataReaderTest {
     public static Object[][] testGetClassName() {
         return new Object[][] {
                 {new TypeDescription.ForLoadedType(ClassMetadataReader.class),
-                        "hoopoe.core.ClassMetadataReader"},
+                        "hoopoe.core.instrumentation.ClassMetadataReader"},
 
                 {new TypeDescription.ForLoadedType(NestedClass.class),
-                        "hoopoe.core.ClassMetadataReaderTest.NestedClass"},
+                        "hoopoe.core.instrumentation.ClassMetadataReaderTest.NestedClass"},
 
                 {new TypeDescription.ForLoadedType(ArrayList.class),
                         "java.util.ArrayList"},
@@ -51,10 +55,10 @@ public class ClassMetadataReaderTest {
                         "java.util.AbstractList"},
 
                 {new TypeDescription.ForLoadedType(SUPPLIER_LAMBDA.getClass()), "" +
-                        "hoopoe.core.ClassMetadataReaderTest$$Lambda$"},
+                        "hoopoe.core.instrumentation.ClassMetadataReaderTest$$Lambda$"},
 
                 {new TypeDescription.ForLoadedType(SUPPLIER_ANONYMOUS_IMPL.getClass()),
-                        "hoopoe.core.ClassMetadataReaderTest$"}
+                        "hoopoe.core.instrumentation.ClassMetadataReaderTest$"}
         };
     }
 
@@ -81,6 +85,10 @@ public class ClassMetadataReaderTest {
                                 "java.io.Serializable", "java.util.AbstractList", "java.util.AbstractCollection",
                                 "java.util.Collection", "java.lang.Object", "java.lang.Iterable"
                         )
+                },
+
+                {new TypeDescription.ForLoadedType(MethodInfoClass.class),
+                        Arrays.asList("java.lang.Object", "java.io.Serializable")
                 }
         };
     }
@@ -100,13 +108,13 @@ public class ClassMetadataReaderTest {
                 new Object[] {
                         new MethodDescription.ForLoadedConstructor(
                                 MethodsHolder.class.getConstructor()),
-                        "MethodsHolder()"
+                        "<init>()"
                 },
 
                 new Object[] {
                         new MethodDescription.ForLoadedConstructor(
                                 MethodsHolder.class.getConstructor(String.class)),
-                        "MethodsHolder(java.lang.String)"
+                        "<init>(java.lang.String)"
                 },
 
                 new Object[] {
@@ -136,13 +144,19 @@ public class ClassMetadataReaderTest {
                 new Object[] {
                         new MethodDescription.ForLoadedMethod(
                                 getMethodForGetMethodSignatureTest("nestedClassParameter")),
-                        "nestedClassParameter(hoopoe.core.ClassMetadataReaderTest.NestedClass)"
+                        "nestedClassParameter(hoopoe.core.instrumentation.ClassMetadataReaderTest.NestedClass)"
                 },
 
                 new Object[] {
                         new MethodDescription.ForLoadedMethod(
                                 getMethodForGetMethodSignatureTest("multipleParametersMethod")),
                         "multipleParametersMethod(java.lang.Double[],java.lang.String,int)"
+                },
+
+                new Object[] {
+                        new MethodDescription.Latent.TypeInitializer(
+                                new TypeDescription.ForLoadedType(NestedClass.class)),
+                        "<clinit>()"
                 }
         };
     }
@@ -164,10 +178,45 @@ public class ClassMetadataReaderTest {
         assertThat(actualMethodSignature, equalTo(expectedSignature));
     }
 
+    @Test
+    public void testCreateMethodInfo() throws NoSuchMethodException {
+        ClassMetadataReader classMetadataReader = new ClassMetadataReader();
+        HoopoeMethodInfo methodInfo = classMetadataReader.createMethodInfo(
+                new MethodDescription.ForLoadedMethod(MethodInfoClass.class.getMethod("doMethod", String.class))
+        );
+
+        assertThat("Method info should be created", methodInfo, notNullValue());
+
+        assertThat("Class name should be calculated",
+                methodInfo.getCanonicalClassName(),
+                equalTo("hoopoe.core.instrumentation.ClassMetadataReaderTest.MethodInfoClass"));
+
+        assertThat("Method signature should be calculated",
+                methodInfo.getMethodSignature(),
+                equalTo("doMethod(java.lang.String)"));
+
+        assertThat("Owner class superclasses should be calculated",
+                methodInfo.getSuperclasses(),
+                containsInAnyOrder("java.lang.Object", "java.io.Serializable"));
+    }
+
+    @SuppressWarnings("unused")
+    public static class MethodInfoClass implements Serializable {
+
+        public int doMethod(String param) {
+            return 42;
+        }
+    }
+
     public static class NestedClass {
+
+        static {
+            // describe me!
+        }
 
     }
 
+    @SuppressWarnings("unused")
     public static class MethodsHolder {
 
         public MethodsHolder() {

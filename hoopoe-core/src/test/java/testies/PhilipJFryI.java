@@ -1,5 +1,6 @@
 package testies;
 
+@SuppressWarnings("unused")
 public class PhilipJFryI {
 
     public void deliverPizza(String address) {
