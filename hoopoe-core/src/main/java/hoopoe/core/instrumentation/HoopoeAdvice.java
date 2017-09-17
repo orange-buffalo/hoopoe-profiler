@@ -1,6 +1,10 @@
 package hoopoe.core.instrumentation;
 
 import hoopoe.core.HoopoeProfilerFacade;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import net.bytebuddy.asm.Advice;
@@ -18,7 +22,7 @@ final class HoopoeAdvice {
     public static void after(
             @Advice.Enter long startTime,
             @Advice.Origin("#t") String className,
-            @Advice.Origin("#m#s") String methodSignature,
+            @MethodSignature String methodSignature,
             @MinimumTrackedTime long minimumTrackedTimeInNs,
             @Advice.AllArguments Object[] arguments,
             @Advice.This(optional = true) Object thisInMethod,
@@ -43,5 +47,20 @@ final class HoopoeAdvice {
                 }
             }
         }
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.PARAMETER)
+    @interface MinimumTrackedTime {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.PARAMETER)
+    @interface PluginRecorders {
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.PARAMETER)
+    @interface MethodSignature {
     }
 }

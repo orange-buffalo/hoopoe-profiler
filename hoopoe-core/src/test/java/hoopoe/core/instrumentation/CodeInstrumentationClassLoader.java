@@ -30,19 +30,14 @@ class CodeInstrumentationClassLoader extends ClassLoader {
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
             Class<?> clazz = findLoadedClass(name);
-            if (clazz == null && getParent() != null) {
-                ClassLoader parent = getParent();
-
-                byte[] classBytes = null;
-
+            ClassLoader parent = getParent();
+            if (clazz == null) {
                 if (className.equals(name)) {
-                    classBytes = this.classBytes;
-                }
-
-                if (classBytes == null) {
-                    clazz = parent.loadClass(name);
-                } else {
+                    byte[] classBytes = this.classBytes;
                     clazz = defineClass(name, classBytes, 0, classBytes.length);
+
+                } else if (parent != null) {
+                    clazz = parent.loadClass(name);
                 }
             }
 

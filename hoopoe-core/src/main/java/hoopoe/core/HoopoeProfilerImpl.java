@@ -69,7 +69,7 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     }
 
     public void unload() {
-        codeInstrumentation.unload();
+//        codeInstrumentation.unload();
     }
 
     @Override

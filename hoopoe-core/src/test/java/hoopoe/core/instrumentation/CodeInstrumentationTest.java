@@ -13,14 +13,18 @@ import java.util.stream.Stream;
 import lombok.ToString;
 import lombok.experimental.Builder;
 import net.bytebuddy.agent.ByteBuddyAgent;
+import net.bytebuddy.description.method.MethodDescription;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
+import org.mockito.stubbing.Answer;
+import testies.BenderBendingRodriguez;
 import testies.PhilipJFryI;
 import testies.TurangaLeela;
 
@@ -40,7 +44,7 @@ public class CodeInstrumentationTest {
             = new MethodInvocation.MethodInvocationBuilder[0];
 
     @Rule
-    public MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
+    public MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.WARN);
 
     @Mock
     private PluginsManager pluginsManagerMock;
@@ -52,9 +56,12 @@ public class CodeInstrumentationTest {
     private HoopoeConfiguration hoopoeConfigurationMock;
 
     private List<MethodInvocation> actualInvocations = new ArrayList<>();
+    private Instrumentation instrumentation;
 
     @Before
     public void setup() {
+        instrumentation = ByteBuddyAgent.install();
+
         HoopoeProfilerFacade.methodInvocationProfiler = (
                 startTimeInNs, endTimeInNs, className, methodSignature,
                 pluginRecordersReference, args, returnValue, thisInMethod) ->
@@ -69,6 +76,11 @@ public class CodeInstrumentationTest {
                         .build()
                 );
         HoopoeProfilerFacade.enabled = true;
+
+        when(classMetadataReaderMock.getMethodSignature(any())).thenAnswer((Answer<String>) invocation -> {
+            MethodDescription methodDescription = invocation.getArgument(0);
+            return methodDescription.getInternalName();
+        });
     }
 
     @After
@@ -87,7 +99,7 @@ public class CodeInstrumentationTest {
         assertInvocations(
                 defaultInvocationBuilder()
                         .className("testies.PhilipJFryI")
-                        .methodSignature("<init>()")
+                        .methodSignature("<init>")
                         .thisInMethod(fry)
         );
     }
@@ -101,7 +113,7 @@ public class CodeInstrumentationTest {
         assertInvocations(
                 defaultInvocationBuilder()
                         .className("testies.TurangaLeela")
-                        .methodSignature("<clinit>()")
+                        .methodSignature("<clinit>")
         );
     }
 
@@ -114,14 +126,34 @@ public class CodeInstrumentationTest {
         assertInvocations(
                 defaultInvocationBuilder()
                         .className("testies.PhilipJFryI")
-                        .methodSignature("<init>()")
+                        .methodSignature("<init>")
                         .thisInMethod(fry),
 
                 defaultInvocationBuilder()
                         .className("testies.PhilipJFryI")
-                        .methodSignature("deliverPizza(java.lang.String)")
+                        .methodSignature("deliverPizza")
                         .thisInMethod(fry)
                         .args(new Object[] {"Fox Network"})
+        );
+    }
+
+    @Test
+    @Ignore //todo default method is not instrumented. try to reproduce on a simple project
+    public void testDefaultInterfaceMethodIsInstrumented() throws Exception {
+        Class<?> instrumentedClass = instrumentClass(BenderBendingRodriguez.class);
+        Object bender = instrumentedClass.newInstance();
+        instrumentedClass.getMethod("tankWithAlcohol").invoke(bender);
+
+        assertInvocations(
+                defaultInvocationBuilder()
+                        .className("testies.BenderBendingRodriguez")
+                        .methodSignature("<init>")
+                        .thisInMethod(bender),
+
+                defaultInvocationBuilder()
+                        .className("testies.BenderBendingRodriguez")
+                        .methodSignature("tankWithAlcohol")
+                        .thisInMethod(bender)
         );
     }
 
@@ -133,7 +165,7 @@ public class CodeInstrumentationTest {
         assertInvocations(
                 defaultInvocationBuilder()
                         .className("testies.PhilipJFryI")
-                        .methodSignature("getQuote()")
+                        .methodSignature("getQuote")
                         .returnValue("Why am I sticky and naked? Did I miss something fun?")
         );
     }
@@ -158,6 +190,9 @@ public class CodeInstrumentationTest {
                         && argument.getDeclaringType().getTypeName().equals("testies.PhilipJFryI")
         ));
 
+        // every method should ask for a signature
+        verify(classMetadataReaderMock, times(3)).getMethodSignature(any());
+
         verifyNoMoreInteractions(classMetadataReaderMock);
 
         // verify that recorders are requested for each of instrumented methods
@@ -177,7 +212,7 @@ public class CodeInstrumentationTest {
         assertInvocations(
                 defaultInvocationBuilder()
                         .className("testies.PhilipJFryI")
-                        .methodSignature("<init>()")
+                        .methodSignature("<init>")
                         .thisInMethod(fry)
                         .pluginRecordersReference(42L)
         );
@@ -212,7 +247,7 @@ public class CodeInstrumentationTest {
         assertInvocations(
                 defaultInvocationBuilder()
                         .className("testies.PhilipJFryI")
-                        .methodSignature("<init>()")
+                        .methodSignature("<init>")
                         .thisInMethod(fry)
 
                 // static initializer of TurangaLeela should not be instrumented
@@ -269,7 +304,7 @@ public class CodeInstrumentationTest {
         assertInvocations(
                 defaultInvocationBuilder()
                         .className("testies.PhilipJFryI")
-                        .methodSignature("<init>()")
+                        .methodSignature("<init>")
                         .thisInMethod(fry)
                         .pluginRecordersReference(42L)
         );
@@ -319,13 +354,14 @@ public class CodeInstrumentationTest {
         CodeInstrumentation codeInstrumentation = new CodeInstrumentation(
                 pluginsManagerMock, classMetadataReaderMock, hoopoeConfigurationMock);
 
-        CodeInstrumentationClassLoader classLoader = new CodeInstrumentationClassLoader(sourceClass);
-
-        Instrumentation instrumentation = ByteBuddyAgent.install();
+        // warmup instrumentation to initialize all the internal classes and reset the transformations
         codeInstrumentation.createClassFileTransformer(instrumentation);
+        codeInstrumentation.reset();
 
+        // loaded target class and disable further transformations
+        CodeInstrumentationClassLoader classLoader = new CodeInstrumentationClassLoader(sourceClass);
+        codeInstrumentation.createClassFileTransformer(instrumentation);
         Class<?> instrumentedClass = classLoader.loadClass(sourceClass.getCanonicalName(), true);
-
         codeInstrumentation.unload();
 
         return instrumentedClass;
