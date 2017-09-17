@@ -6,6 +6,7 @@ import hoopoe.core.components.PluginsManager;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,8 +27,17 @@ import testies.TurangaLeela;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class CodeInstrumentationTest {
+
+    private static final MethodInvocation.MethodInvocationBuilder[] NO_INVOCATIONS
+            = new MethodInvocation.MethodInvocationBuilder[0];
 
     @Rule
     public MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
@@ -47,12 +57,12 @@ public class CodeInstrumentationTest {
     public void setup() {
         HoopoeProfilerFacade.methodInvocationProfiler = (
                 startTimeInNs, endTimeInNs, className, methodSignature,
-                pluginActionIndicies, args, returnValue, thisInMethod) ->
+                pluginRecordersReference, args, returnValue, thisInMethod) ->
 
                 actualInvocations.add(MethodInvocation.builder()
                         .className(className)
                         .methodSignature(methodSignature)
-                        .pluginActionIndicies(pluginActionIndicies)
+                        .pluginRecordersReference(pluginRecordersReference)
                         .args(args)
                         .returnValue(returnValue)
                         .thisInMethod(thisInMethod)
@@ -65,37 +75,203 @@ public class CodeInstrumentationTest {
     public void tearDown() {
         HoopoeProfilerFacade.methodInvocationProfiler = null;
         HoopoeProfilerFacade.enabled = false;
+        HoopoeProfilerFacade.profilingStartTime = 0;
     }
 
     @Test
     public void testConstructorIsInstrumented() throws Exception {
         Class<?> instrumentedClass = instrumentClass(PhilipJFryI.class);
 
-        instrumentedClass.newInstance();
+        Object fry = instrumentedClass.newInstance();
 
         assertInvocations(
-                MethodInvocation.builder()
+                defaultInvocationBuilder()
                         .className("testies.PhilipJFryI")
                         .methodSignature("<init>()")
-                        .thisInMethod(null)
-                        .returnValue(null)
-                        .pluginActionIndicies(0)
+                        .thisInMethod(fry)
         );
     }
 
     @Test
     public void testStaticInitializationIsInstrumented() throws Exception {
-        Class<?> instrumentClass = instrumentClass(TurangaLeela.class);
+        Class<?> instrumentedClass = instrumentClass(TurangaLeela.class);
         // force class initialization
-        instrumentClass.getField("yearBorn").set(null, 2975);
+        instrumentedClass.getField("yearBorn").set(null, 2975);
 
         assertInvocations(
-                MethodInvocation.builder()
+                defaultInvocationBuilder()
                         .className("testies.TurangaLeela")
                         .methodSignature("<clinit>()")
-                        .thisInMethod(null)
-                        .returnValue(null)
-                        .pluginActionIndicies(0)
+        );
+    }
+
+    @Test
+    public void testMethodIsInstrumented() throws Exception {
+        Class<?> instrumentedClass = instrumentClass(PhilipJFryI.class);
+        Object fry = instrumentedClass.newInstance();
+        instrumentedClass.getMethod("deliverPizza", String.class).invoke(fry, "Fox Network");
+
+        assertInvocations(
+                defaultInvocationBuilder()
+                        .className("testies.PhilipJFryI")
+                        .methodSignature("<init>()")
+                        .thisInMethod(fry),
+
+                defaultInvocationBuilder()
+                        .className("testies.PhilipJFryI")
+                        .methodSignature("deliverPizza(java.lang.String)")
+                        .thisInMethod(fry)
+                        .args(new Object[] {"Fox Network"})
+        );
+    }
+
+    @Test
+    public void testMethodReturnedValueIsRecorded() throws Exception {
+        Class<?> instrumentedClass = instrumentClass(PhilipJFryI.class);
+        instrumentedClass.getMethod("getQuote").invoke(null);
+
+        assertInvocations(
+                defaultInvocationBuilder()
+                        .className("testies.PhilipJFryI")
+                        .methodSignature("getQuote()")
+                        .returnValue("Why am I sticky and naked? Did I miss something fun?")
+        );
+    }
+
+    @Test
+    public void testPluginRecordersAreRequested() throws Exception {
+        instrumentClass(PhilipJFryI.class);
+
+        // verify that proper method info is requested
+        verify(classMetadataReaderMock).createMethodInfo(argThat(argument ->
+                argument.getInternalName().equals("<init>")
+                        && argument.getDeclaringType().getTypeName().equals("testies.PhilipJFryI")
+        ));
+
+        verify(classMetadataReaderMock).createMethodInfo(argThat(argument ->
+                argument.getInternalName().equals("getQuote")
+                        && argument.getDeclaringType().getTypeName().equals("testies.PhilipJFryI")
+        ));
+
+        verify(classMetadataReaderMock).createMethodInfo(argThat(argument ->
+                argument.getInternalName().equals("deliverPizza")
+                        && argument.getDeclaringType().getTypeName().equals("testies.PhilipJFryI")
+        ));
+
+        verifyNoMoreInteractions(classMetadataReaderMock);
+
+        // verify that recorders are requested for each of instrumented methods
+        verify(pluginsManagerMock, times(3)).getPluginRecordersReference(any());
+        verifyNoMoreInteractions(pluginsManagerMock);
+    }
+
+    @Test
+    public void testPluginRecordersArePropagated() throws Exception {
+        when(pluginsManagerMock.getPluginRecordersReference(any()))
+                .thenReturn(42L);
+
+        Class<?> instrumentedClass = instrumentClass(PhilipJFryI.class);
+
+        Object fry = instrumentedClass.newInstance();
+
+        assertInvocations(
+                defaultInvocationBuilder()
+                        .className("testies.PhilipJFryI")
+                        .methodSignature("<init>()")
+                        .thisInMethod(fry)
+                        .pluginRecordersReference(42L)
+        );
+    }
+
+    @Test
+    public void testExcludeClassesConfigurationIsConsidered() throws Exception {
+        when(hoopoeConfigurationMock.getExcludedClassesPatterns())
+                .thenReturn(Collections.singleton(".*"));
+
+        Class<?> instrumentedClass = instrumentClass(PhilipJFryI.class);
+        Object fry = instrumentedClass.newInstance();
+        instrumentedClass.getMethod("deliverPizza", String.class).invoke(fry, "Fox Network");
+
+        assertInvocations(NO_INVOCATIONS);
+    }
+
+    @Test
+    public void testIncludeClassesConfigurationHasHigherPriorityThanExcludeClasses() throws Exception {
+        when(hoopoeConfigurationMock.getExcludedClassesPatterns())
+                .thenReturn(Collections.singleton(".*"));
+        when(hoopoeConfigurationMock.getIncludedClassesPatterns())
+                .thenReturn(Collections.singleton("testies\\.PhilipJFryI"));
+
+        Class<?> instrumentedClass = instrumentClass(PhilipJFryI.class);
+        Object fry = instrumentedClass.newInstance();
+
+        instrumentedClass = instrumentClass(TurangaLeela.class);
+        // force class initialization
+        instrumentedClass.getField("yearBorn").set(null, 2975);
+
+        assertInvocations(
+                defaultInvocationBuilder()
+                        .className("testies.PhilipJFryI")
+                        .methodSignature("<init>()")
+                        .thisInMethod(fry)
+
+                // static initializer of TurangaLeela should not be instrumented
+        );
+    }
+
+    @Test
+    public void testNoInvocationsRecordedWhenFacadeIsDisabled() throws Exception {
+        Class<?> instrumentedClass = instrumentClass(PhilipJFryI.class);
+
+        HoopoeProfilerFacade.enabled = false;
+
+        Object fry = instrumentedClass.newInstance();
+        instrumentedClass.getMethod("deliverPizza", String.class).invoke(fry, "Fox Network");
+
+        assertInvocations(NO_INVOCATIONS);
+    }
+
+    @Test
+    public void testNoInvocationsRecordedIfMethodHadEnteredBeforeProfilingStarted() throws Exception {
+        Class<?> instrumentedClass = instrumentClass(PhilipJFryI.class);
+
+        // "method enter" time is before profiling start time
+        HoopoeProfilerFacade.profilingStartTime = System.nanoTime() * 2;
+
+        Object fry = instrumentedClass.newInstance();
+        instrumentedClass.getMethod("deliverPizza", String.class).invoke(fry, "Fox Network");
+
+        assertInvocations(NO_INVOCATIONS);
+    }
+
+    @Test
+    public void testMinimumTrackedTimeConfigurationIsRespected() throws Exception {
+        when(hoopoeConfigurationMock.getMinimumTrackedInvocationTimeInNs())
+                .thenReturn(Long.MAX_VALUE);
+
+        Class<?> instrumentedClass = instrumentClass(PhilipJFryI.class);
+        Object fry = instrumentedClass.newInstance();
+        instrumentedClass.getMethod("deliverPizza", String.class).invoke(fry, "Fox Network");
+
+        assertInvocations(NO_INVOCATIONS);
+    }
+
+    @Test
+    public void testEvenShortInvocationRecorderWhenPluginRecordersAreReferenced() throws Exception {
+        when(hoopoeConfigurationMock.getMinimumTrackedInvocationTimeInNs())
+                .thenReturn(Long.MAX_VALUE);
+        when(pluginsManagerMock.getPluginRecordersReference(any()))
+                .thenReturn(42L);
+
+        Class<?> instrumentedClass = instrumentClass(PhilipJFryI.class);
+        Object fry = instrumentedClass.newInstance();
+
+        assertInvocations(
+                defaultInvocationBuilder()
+                        .className("testies.PhilipJFryI")
+                        .methodSignature("<init>()")
+                        .thisInMethod(fry)
+                        .pluginRecordersReference(42L)
         );
     }
 
@@ -115,8 +291,8 @@ public class CodeInstrumentationTest {
             assertThat("Method signature recorded for invocation #" + invocationNo + " does not match expected one",
                     actualInvocation.methodSignature, equalTo(expectedInvocation.methodSignature));
 
-            assertThat("Plugin indicies recorded for invocation #" + invocationNo + " do not match expected one",
-                    actualInvocation.pluginActionIndicies, equalTo(expectedInvocation.pluginActionIndicies));
+            assertThat("Plugin recorders reference for invocation #" + invocationNo + " do not match expected one",
+                    actualInvocation.pluginRecordersReference, equalTo(expectedInvocation.pluginRecordersReference));
 
             assertThat("Return value recorded for invocation #" + invocationNo + " does not match expected one",
                     actualInvocation.returnValue, equalTo(expectedInvocation.returnValue));
@@ -155,12 +331,17 @@ public class CodeInstrumentationTest {
         return instrumentedClass;
     }
 
+    private MethodInvocation.MethodInvocationBuilder defaultInvocationBuilder() {
+        return MethodInvocation.builder()
+                .args(new Object[] {});
+    }
+
     @Builder
     @ToString
     private static class MethodInvocation {
         private String className;
         private String methodSignature;
-        private long pluginActionIndicies;
+        private long pluginRecordersReference;
         private Object[] args;
         private Object returnValue;
         private Object thisInMethod;

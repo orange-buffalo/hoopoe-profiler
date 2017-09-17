@@ -38,7 +38,7 @@ final class HoopoeAdvice {
 
                 if (endTime - startTime >= minimumTrackedTimeInNs) {
                     HoopoeProfilerFacade.methodInvocationProfiler.profileMethodInvocation(
-                            startTime, endTime, className, methodSignature, 0, null, null, null
+                            startTime, endTime, className, methodSignature, 0, arguments, returnValue, thisInMethod
                     );
                 }
             }
