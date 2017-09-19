@@ -14,9 +14,9 @@ import lombok.ToString;
 import lombok.experimental.Builder;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.description.method.MethodDescription;
+import org.apache.commons.lang3.ArrayUtils;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -26,6 +26,7 @@ import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import testies.BenderBendingRodriguez;
 import testies.PhilipJFryI;
+import testies.Robot;
 import testies.TurangaLeela;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -138,21 +139,19 @@ public class CodeInstrumentationTest {
     }
 
     @Test
-    @Ignore //todo default method is not instrumented. try to reproduce on a simple project
     public void testDefaultInterfaceMethodIsInstrumented() throws Exception {
-        Class<?> instrumentedClass = instrumentClass(BenderBendingRodriguez.class);
+        Class<?> instrumentedClass = instrumentClass(BenderBendingRodriguez.class, Robot.class);
         Object bender = instrumentedClass.newInstance();
-        instrumentedClass.getMethod("tankWithAlcohol").invoke(bender);
 
         assertInvocations(
                 defaultInvocationBuilder()
-                        .className("testies.BenderBendingRodriguez")
-                        .methodSignature("<init>")
+                        .className("testies.Robot")
+                        .methodSignature("tankWithAlcohol")
                         .thisInMethod(bender),
 
                 defaultInvocationBuilder()
                         .className("testies.BenderBendingRodriguez")
-                        .methodSignature("tankWithAlcohol")
+                        .methodSignature("<init>")
                         .thisInMethod(bender)
         );
     }
@@ -349,7 +348,8 @@ public class CodeInstrumentationTest {
     }
 
     private Class<?> instrumentClass(
-            Class<?> sourceClass) throws IOException, ClassNotFoundException {
+            Class<?> sourceClass,
+            Class<?>... additionalClassesToInstrument) throws IOException, ClassNotFoundException {
 
         CodeInstrumentation codeInstrumentation = new CodeInstrumentation(
                 pluginsManagerMock, classMetadataReaderMock, hoopoeConfigurationMock);
@@ -358,8 +358,9 @@ public class CodeInstrumentationTest {
         codeInstrumentation.createClassFileTransformer(instrumentation);
         codeInstrumentation.reset();
 
-        // loaded target class and disable further transformations
-        CodeInstrumentationClassLoader classLoader = new CodeInstrumentationClassLoader(sourceClass);
+        // load target class and disable further transformations
+        CodeInstrumentationClassLoader classLoader = new CodeInstrumentationClassLoader(
+                ArrayUtils.add(additionalClassesToInstrument, sourceClass));
         codeInstrumentation.createClassFileTransformer(instrumentation);
         Class<?> instrumentedClass = classLoader.loadClass(sourceClass.getCanonicalName(), true);
         codeInstrumentation.unload();

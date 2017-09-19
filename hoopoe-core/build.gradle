@@ -16,6 +16,7 @@ dependencies {
     runtime libraries.logback
 
     testCompile libraries.commonTestDependencies
+    testCompile 'net.bytebuddy:byte-buddy-agent:1.7.5'
     testCompileOnly libraries.lombok
 }
 

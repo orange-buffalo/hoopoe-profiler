@@ -2,23 +2,28 @@ package hoopoe.core.instrumentation;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 
 class CodeInstrumentationClassLoader extends ClassLoader {
 
-    private final byte[] classBytes;
-    private final String className;
+    private final Map<String, byte[]> classesBytes = new HashMap<>();
 
     static {
         registerAsParallelCapable();
     }
 
-    public CodeInstrumentationClassLoader(Class clazz) throws IOException {
+    public CodeInstrumentationClassLoader(Class... classes) throws IOException {
         super(CodeInstrumentationClassLoader.class.getClassLoader());
 
-        this.className = clazz.getTypeName();
-        try (InputStream classStream = getParent().getResourceAsStream(classNameToClassPath(this.className))) {
-            this.classBytes = IOUtils.toByteArray(classStream);
+        for (Class clazz : classes) {
+            String className = clazz.getTypeName();
+            byte[] classBytes;
+            try (InputStream classStream = getParent().getResourceAsStream(classNameToClassPath(className))) {
+                classBytes = IOUtils.toByteArray(classStream);
+            }
+            classesBytes.put(className, classBytes);
         }
     }
 
@@ -32,8 +37,8 @@ class CodeInstrumentationClassLoader extends ClassLoader {
             Class<?> clazz = findLoadedClass(name);
             ClassLoader parent = getParent();
             if (clazz == null) {
-                if (className.equals(name)) {
-                    byte[] classBytes = this.classBytes;
+                if (classesBytes.containsKey(name)) {
+                    byte[] classBytes = classesBytes.get(name);
                     clazz = defineClass(name, classBytes, 0, classBytes.length);
 
                 } else if (parent != null) {
