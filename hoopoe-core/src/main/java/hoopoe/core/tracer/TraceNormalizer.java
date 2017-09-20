@@ -1,4 +1,4 @@
-package hoopoe.core.supplements;
+package hoopoe.core.tracer;
 
 import hoopoe.api.HoopoeProfiledInvocationRoot;
 import hoopoe.api.HoopoeProfiledResult;
@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 
-public class ProfiledResultHelper {
+public class TraceNormalizer {
 
-    public HoopoeProfiledResult calculateProfiledResult(Collection<TraceNodesWrapper> profiledTraceNodeWrappers) {
+    public HoopoeProfiledResult calculateProfiledResult(Collection<ThreadTracer> profiledTraceNodeWrappers) {
         Collection<Pair<String, TraceNode>> traceRoots = calculateTraceRoots(profiledTraceNodeWrappers);
 
         List<HoopoeProfiledInvocationRoot> invocationRoots = traceRoots.stream()
@@ -21,10 +21,10 @@ public class ProfiledResultHelper {
     }
 
     private Collection<Pair<String, TraceNode>> calculateTraceRoots(
-            Collection<TraceNodesWrapper> profiledTraceNodeWrappers) {
+            Collection<ThreadTracer> profiledTraceNodeWrappers) {
 
         Collection<Pair<String, TraceNode>> traceRoots = new ArrayList<>();
-        for (TraceNodesWrapper traceNodesWrapper : profiledTraceNodeWrappers) {
+        for (ThreadTracer traceNodesWrapper : profiledTraceNodeWrappers) {
 
             // nodes are naturally organized in a way, that child node is always before its parent node
             List<TraceNode> traceNodes = traceNodesWrapper.getTraceNodes();

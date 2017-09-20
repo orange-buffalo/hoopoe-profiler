@@ -23,6 +23,6 @@ public class TestAgent {
     }
 
     public static void unload() {
-        profiler.unload();
+//        profiler.unload();
     }
 }

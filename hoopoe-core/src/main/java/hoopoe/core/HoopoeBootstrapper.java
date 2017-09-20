@@ -7,7 +7,7 @@ import hoopoe.core.configuration.Configuration;
 import hoopoe.core.configuration.ConfigurationFactory;
 import hoopoe.core.instrumentation.ClassMetadataReader;
 import hoopoe.core.instrumentation.CodeInstrumentation;
-import hoopoe.core.supplements.ProfiledResultHelper;
+import hoopoe.core.tracer.TraceNormalizer;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,14 +56,14 @@ public class HoopoeBootstrapper {
         CodeInstrumentation codeInstrumentation = new CodeInstrumentation(
                 pluginManager, classMetadataReader, configuration);
 
-        ProfiledResultHelper profiledResultHelper = new ProfiledResultHelper();
+        TraceNormalizer traceNormalizer = new TraceNormalizer();
 
         HoopoeProfilerImpl profiler = HoopoeProfilerImpl.builder()
                 .configuration(configuration)
                 .pluginsManager(pluginManager)
                 .extensionsManager(extensionsManager)
                 .codeInstrumentation(codeInstrumentation)
-                .profiledResultHelper(profiledResultHelper)
+                .traceNormalizer(traceNormalizer)
                 .build();
 
         profiler.instrument(instrumentation);

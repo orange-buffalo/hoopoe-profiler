@@ -1,10 +1,10 @@
-package hoopoe.core.supplements;
+package hoopoe.core.tracer;
 
 import java.util.LinkedList;
 import java.util.List;
 import lombok.Getter;
 
-public class TraceNodesWrapper {
+public class ThreadTracer {
 
     @Getter
     private List<TraceNode> traceNodes;
