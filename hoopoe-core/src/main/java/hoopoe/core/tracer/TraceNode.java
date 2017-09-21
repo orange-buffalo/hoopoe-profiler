@@ -17,10 +17,13 @@ import org.apache.commons.lang3.StringUtils;
 
 public class TraceNode {
 
+    @Getter
     private List<TraceNode> children;
 
+    @Getter
     private String className;
 
+    @Getter
     private String methodSignature;
 
     @Getter
@@ -29,23 +32,28 @@ public class TraceNode {
     @Getter
     private long endTimeInNs;
 
+    @Getter
     private Collection<HoopoeInvocationAttribute> attributes;
 
     /**
      * Duration of this method body without descendant method calls and without profiler overhead.
      */
+    @Getter
     private long ownTimeInNs;
 
     /**
      * Accumulative profiler overhead of this method and all its children.
      */
+    @Getter
     private long profilerOverheadInNs;
 
     /**
      * ownTimeInNs + totalTimeInNs of all children (profiler overhead is excluded).
      */
+    @Getter
     private long totalTimeInNs;
 
+    @Getter
     private int invocationsCount;
 
     public TraceNode(String className,
