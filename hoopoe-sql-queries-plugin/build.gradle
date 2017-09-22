@@ -7,7 +7,6 @@ ext.librariesVersions = [
 dependencies {
     compileOnly project(':hoopoe-api')
 
-    testCompile project(':hoopoe-common-test')
     testCompile libraries.commonTestDependencies
     testCompile "com.h2database:h2:${librariesVersions.h2}"
 }
