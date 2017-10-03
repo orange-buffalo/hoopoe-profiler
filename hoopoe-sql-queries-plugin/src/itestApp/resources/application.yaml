@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    data: "classpath:/db-scripts/data.sql"
+    separator: "-- boot-init-statement-end"
+---
+spring:
+  profiles: "mysql"
+  datasource:
+    url: "jdbc:mysql://db:3306/app"
+    username: "root"
+    password: "password"
+    driver-class-name: "com.mysql.jdbc.Driver"
+    schema: "classpath:/db-scripts/schema-mysql.sql"
+---
+spring:
+  profiles: "postgres"
+  datasource:
+    url: "jdbc:postgresql://db:5432/postgres"
+    username: "postgres"
+    password: "postgres"
+    driver-class-name: "org.postgresql.Driver"
+    schema: "classpath:/db-scripts/schema-postgres.sql"

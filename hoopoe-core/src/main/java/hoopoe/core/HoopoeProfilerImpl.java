@@ -3,7 +3,7 @@ package hoopoe.core;
 import hoopoe.api.HoopoeProfiledResult;
 import hoopoe.api.HoopoeProfiler;
 import hoopoe.api.configuration.HoopoeConfiguration;
-import hoopoe.api.plugins.HoopoeInvocationAttribute;
+import hoopoe.api.HoopoeInvocationAttribute;
 import hoopoe.core.components.ExtensionsManager;
 import hoopoe.core.components.PluginsManager;
 import hoopoe.core.configuration.Configuration;

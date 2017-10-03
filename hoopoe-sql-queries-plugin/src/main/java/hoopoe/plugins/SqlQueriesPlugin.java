@@ -1,14 +1,51 @@
 package hoopoe.plugins;
 
-import hoopoe.api.plugins.HoopoeInvocationAttribute;
+import hoopoe.api.HoopoeInvocationAttribute;
 import hoopoe.api.plugins.HoopoeInvocationRecorder;
 import hoopoe.api.plugins.HoopoeMethodInfo;
 import hoopoe.api.plugins.HoopoePlugin;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j(topic = "hoopoe.profiler.sql")
 public class SqlQueriesPlugin implements HoopoePlugin {
 
     public static final String ATTRIBUTE_NAME = "SQL Query";
+
+    private static final ThreadLocal<Collection<String>> queryCache = ThreadLocal.withInitial(ArrayList::new);
+
+    private static final HoopoeInvocationRecorder WRITE_QUERY_CACHE_RECORDER = (arguments, returnValue, thisInMethod) -> {
+        String query = (String) arguments[0];
+        queryCache.get().add(query);
+
+        log.debug("registering query: {}", query);
+        return Collections.emptyList();
+    };
+
+    private static final HoopoeInvocationRecorder READ_QUERY_CACHE_RECORDER = (arguments, returnValue, thisInMethod) -> {
+        Collection<String> queries = queryCache.get();
+        log.debug("recording registered queries: {}", queries);
+
+        if (queries.isEmpty()) {
+            return Collections.singleton(
+                    HoopoeInvocationAttribute.withTimeContribution(ATTRIBUTE_NAME, "unknown query"));
+        } else {
+            queryCache.remove();
+            return queries.stream()
+                    .map(query -> HoopoeInvocationAttribute.withTimeContribution(ATTRIBUTE_NAME, query))
+                    .collect(Collectors.toList());
+        }
+    };
+
+    private static final HoopoeInvocationRecorder SIMPLE_QUERY_RECORDER = (arguments, returnValue, thisInMethod) -> {
+        String query = (String) arguments[0];
+
+        log.debug("recording query: {}", query);
+        return Collections.singleton(HoopoeInvocationAttribute.withTimeContribution(ATTRIBUTE_NAME, query));
+    };
 
     @Override
     public HoopoeInvocationRecorder createRecorderIfSupported(HoopoeMethodInfo methodInfo) {
@@ -23,13 +60,7 @@ public class SqlQueriesPlugin implements HoopoePlugin {
                 case "prepareStatement(java.lang.String,int,int)":
                 case "prepareStatement(java.lang.String,int,int,int)":
                 case "prepareStatement(java.lang.String,java.lang.String[])":
-                    return (arguments, returnValue, thisInMethod) -> {
-                        //todo use one instance
-                        // todo vendor-specific code
-                        // todo javadoc on interface about minimum objects or thing about design
-//                        cache.set(returnValue, arguments[0]);
-                        return Collections.emptyList();
-                    };
+                    return WRITE_QUERY_CACHE_RECORDER;
             }
         }
 
@@ -39,13 +70,7 @@ public class SqlQueriesPlugin implements HoopoePlugin {
                 case "executeQuery()":
                 case "executeUpdate()":
                 case "executeBatch()":
-                    return (arguments, returnValue, thisInMethod) -> {
-                        //todo see above
-//                        String query = cache.get(thisInMethod);
-//                        query = query == null ? "unknown query" : query;
-                        //todo query
-                        return Collections.singleton(HoopoeInvocationAttribute.withTimeContribution(ATTRIBUTE_NAME, ""));
-                    };
+                    return READ_QUERY_CACHE_RECORDER;
             }
         }
 
@@ -60,38 +85,14 @@ public class SqlQueriesPlugin implements HoopoePlugin {
                 case "executeUpdate(java.lang.String,int)":
                 case "executeUpdate(java.lang.String,int[])":
                 case "executeUpdate(java.lang.String,java.lang.String[])":
-                    return (arguments, returnValue, thisInMethod) -> {
-                        String query = (String) arguments[0];
-                        return Collections.singleton(HoopoeInvocationAttribute.withTimeContribution(ATTRIBUTE_NAME, query));
-                    };
+                    return SIMPLE_QUERY_RECORDER;
 
                 case "addBatch(java.lang.String)":
-                    return (arguments, returnValue, thisInMethod) -> {
-                        // todo see above
-//                        Collection<String> queriesInBatch = cache.get(thisInMethod);
-//                        if (queriesInBatch == null) {
-//                            queriesInBatch = new ArrayList<>();
-//                            cache.set(thisInMethod, queriesInBatch);
-//                        }
-//                        queriesInBatch.add((String) arguments[0]);
-                        return Collections.emptyList();
-                    };
+                    return WRITE_QUERY_CACHE_RECORDER;
 
                 // works in conjunction with addBatch(java.lang.String)
                 case "executeBatch()":
-                    return (arguments, returnValue, thisInMethod) -> {
-                        // todo see above
-//                        Collection<String> queriesInBatch = cache.get(thisInMethod);
-//                        if (queriesInBatch == null) {
-                            return Collections.singleton(HoopoeInvocationAttribute.withTimeContribution(ATTRIBUTE_NAME, "unknown query"));
-//                        }
-//                        else {
-//                            cache.remove(thisInMethod);
-//                            return queriesInBatch.stream()
-//                                    .map(query -> new HoopoeInvocationAttribute(ATTRIBUTE_NAME, query, true))
-//                                    .collect(Collectors.toList());
-//                        }
-                    };
+                    return READ_QUERY_CACHE_RECORDER;
             }
         }
 

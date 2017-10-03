@@ -1,5 +1,6 @@
 package hoopoe.api.plugins;
 
+import hoopoe.api.HoopoeInvocationAttribute;
 import java.util.Collection;
 
 /**

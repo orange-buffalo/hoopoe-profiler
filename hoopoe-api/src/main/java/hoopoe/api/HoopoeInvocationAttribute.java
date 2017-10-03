@@ -1,11 +1,16 @@
-package hoopoe.api.plugins;
+package hoopoe.api;
+
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * Describes additional information to be attached to profiled method invocation.
  * <p>
  * Typical example would be a JPQL statement executed in this method.
  */
-public interface HoopoeInvocationAttribute {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class HoopoeInvocationAttribute {
 
     /**
      * Distinct name of this information type. Used as a key to aggregate data on.
@@ -14,7 +19,8 @@ public interface HoopoeInvocationAttribute {
      *
      * @return distinct name of information type; must not be null.
      */
-    String getName();
+    @Getter
+    private String name;
 
     /**
      * Any additional information to be provided to users. May be also used in aggregations as secondary key.
@@ -23,32 +29,45 @@ public interface HoopoeInvocationAttribute {
      *
      * @return additional information or {@code null} if no additional information exists for this invocation.
      */
-    String getDetails();
+    @Getter
+    private String details;
 
     /**
      * Determines whether or not this attribute should be accounted in time-based reports and aggregations.
+     *
      * @return {@code true} to include this attribute in time-based reporting; {@code false} to exclude.
      */
-    boolean isContributingTime();
+    @Getter
+    private boolean contributingTime;
+
+    private HoopoeInvocationAttribute(String name, String details, boolean contributingTime) {
+        this.name = name;
+        this.details = details;
+        this.contributingTime = contributingTime;
+    }
 
     /**
      * Creates default implementation, which does not contribute to time-based reports.
-     * @param name attribute name
+     *
+     * @param name    attribute name
      * @param details attribute details
+     *
      * @return default implementation, which does not contribute to time-based reports.
      */
-    static HoopoeInvocationAttribute noTimeContribution(String name, String details) {
-        return new DefaultHoopoeInvocationAttribute(name, details, false);
+    public static HoopoeInvocationAttribute noTimeContribution(String name, String details) {
+        return new HoopoeInvocationAttribute(name, details, false);
     }
 
     /**
      * Creates default implementation, which contributes to time-based reports.
-     * @param name attribute name
+     *
+     * @param name    attribute name
      * @param details attribute details
+     *
      * @return default implementation, which contributes to time-based reports.
      */
-    static HoopoeInvocationAttribute withTimeContribution(String name, String details) {
-        return new DefaultHoopoeInvocationAttribute(name, details, true);
+    public static HoopoeInvocationAttribute withTimeContribution(String name, String details) {
+        return new HoopoeInvocationAttribute(name, details, true);
     }
 
 }

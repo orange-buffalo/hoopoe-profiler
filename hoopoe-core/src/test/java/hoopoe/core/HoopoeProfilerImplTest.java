@@ -1,7 +1,7 @@
 package hoopoe.core;
 
 import hoopoe.api.HoopoeProfiledResult;
-import hoopoe.api.plugins.HoopoeInvocationAttribute;
+import hoopoe.api.HoopoeInvocationAttribute;
 import hoopoe.api.plugins.HoopoeInvocationRecorder;
 import hoopoe.core.components.ExtensionsManager;
 import hoopoe.core.components.PluginsManager;

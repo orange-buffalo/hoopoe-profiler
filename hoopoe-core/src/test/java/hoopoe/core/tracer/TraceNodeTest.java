@@ -1,7 +1,7 @@
 package hoopoe.core.tracer;
 
 import hoopoe.api.HoopoeProfiledInvocation;
-import hoopoe.api.plugins.HoopoeInvocationAttribute;
+import hoopoe.api.HoopoeInvocationAttribute;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Collections;

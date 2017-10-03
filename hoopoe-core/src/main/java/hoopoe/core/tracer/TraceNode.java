@@ -1,6 +1,6 @@
 package hoopoe.core.tracer;
 
-import hoopoe.api.plugins.HoopoeInvocationAttribute;
+import hoopoe.api.HoopoeInvocationAttribute;
 import hoopoe.api.HoopoeProfiledInvocation;
 import java.util.ArrayList;
 import java.util.Collection;

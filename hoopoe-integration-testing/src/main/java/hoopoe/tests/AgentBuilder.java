@@ -12,7 +12,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
@@ -60,11 +59,12 @@ class AgentBuilder {
             Collection<HoopoeIntegrationTest.HoopoeComponent> components) throws URISyntaxException, IOException {
 
         for (HoopoeIntegrationTest.HoopoeComponent component : components) {
-            Path componentSource = Paths.get(component.getArchiveUrl().toURI());
-            Path componentTarget = agentJarFs.getPath(component.getComponentFile());
-            Files.copy(componentSource, componentTarget);
+            try (InputStream componentSource = component.getArchiveUrl().openStream()) {
+                Path componentTarget = agentJarFs.getPath(component.getComponentFile());
+                Files.copy(componentSource, componentTarget);
 
-            log.info("{} is written", component);
+                log.info("{} is written", component);
+            }
         }
     }
 

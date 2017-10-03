@@ -33,6 +33,7 @@ public class HoopoeIntegrationTest implements TestRule {
 
     public static final String HOOPOE_AGENT_ENV = "HOOPOE_AGENT";
     public static final String HOOPOE_AGENT_JAR_CONTAINER_PATH = "/opt/hoopoe-agent.jar";
+    public static final String HOOPOE_AGENT_JMV_ARG = "-javaagent:" + HOOPOE_AGENT_JAR_CONTAINER_PATH;
 
     private static final String HOOPOE_AGENT_JAR_NAME = "hoopoe-test-agent.jar";
     private static final String INTEGRATION_TESTING_EXTENSION_PATH = "/hoopoe-integration-testing.zip";
@@ -49,7 +50,7 @@ public class HoopoeIntegrationTest implements TestRule {
     private List<HoopoeComponent> extensions = new ArrayList<>();
     private int integrationTestExtensionPort = 9271;
     private int hoopoeComponentsCount = 0;
-    private GenericContainer hoopoeContainer;
+    private GenericContainer<?> hoopoeContainer;
 
     /**
      * Adds plugin to be deployed to target container within Hoopoe agent.
@@ -162,6 +163,37 @@ public class HoopoeIntegrationTest implements TestRule {
         extensionConnector.startProfiling();
         code.run();
         return extensionConnector.stopProfiling();
+    }
+
+    /**
+     * Creates an {@link HttpEndpoint} for provided {@code path}, using the first exposed port by the container provided
+     * to {@link #withContainer(GenericContainer)} method . If no ports are exposed, throws an exception.
+     * <p>
+     * If container exposes multiple ports, {@link #httpEndpoint(int, String)} should be used instead.
+     *
+     * @param path endpoint path.
+     *
+     * @return new instance of endpoint.
+     */
+    public HttpEndpoint httpEndpoint(String path) {
+        int userPort = hoopoeContainer.getExposedPorts().stream()
+                .filter(port -> port != integrationTestExtensionPort)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No ports are exposed, cannot create endpoint"));
+        return httpEndpoint(userPort, path);
+    }
+
+    /**
+     * Creates an {@link HttpEndpoint} for provided {@code path} and {@code port}, using the container provided to
+     * {@link #withContainer(GenericContainer)} method.
+     *
+     * @param exposedPort exposed port to connect to.
+     * @param path        endpoint path.
+     *
+     * @return new instance of endpoint.
+     */
+    public HttpEndpoint httpEndpoint(int exposedPort, String path) {
+        return HttpEndpoint.forContainer(hoopoeContainer, exposedPort, path);
     }
 
     private void prepareContainers() throws Exception {

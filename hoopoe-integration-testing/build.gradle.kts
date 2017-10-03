@@ -19,6 +19,7 @@ dependencies {
     "compile"("org.yaml:snakeyaml:1.18")
     "compile"("org.apache.httpcomponents:httpclient:4.5.3")
     "compile"("com.fasterxml.jackson.core:jackson-databind:2.9.0")
+    "compile"(project(":hoopoe-core"))
     "compile"(project(":hoopoe-core", "hoopoe"))
     "compile"(project(":hoopoe-api"))
     "compileOnly"("org.projectlombok:lombok:1.16.18")
