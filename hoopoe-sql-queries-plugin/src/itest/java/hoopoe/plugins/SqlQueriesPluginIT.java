@@ -6,7 +6,6 @@ import hoopoe.api.HoopoeProfiledResult;
 import hoopoe.tests.HoopoeIntegrationTest;
 import hoopoe.tests.StdoutConsumer;
 import hoopoe.tests.TestContainersUtils;
-import java.time.Duration;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
@@ -56,8 +55,7 @@ public class SqlQueriesPluginIT {
                             CONTAINER_APP_PATH
                     )
                     .withLogConsumer(new StdoutConsumer())
-                    .waitingFor(TestContainersUtils.waitForHttp("/heart-beat", ENDPOINT_PORT)
-                            .withStartupTimeout(Duration.ofSeconds(30)))
+                    .waitingFor(TestContainersUtils.waitForHttp("/heart-beat", ENDPOINT_PORT))
             )
             .withPlugin(SqlQueriesPluginIT.class.getResource("/sql-plugin.zip"));
 
