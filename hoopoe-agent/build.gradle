@@ -2,8 +2,7 @@ plugins {
     id "com.jfrog.bintray" version "1.7.3" //todo verify if this is a proper place to use this plugin
 }
 
-apply plugin: HoopoeDependencyPlugin
-
+apply plugin: 'hoopoe-dependency-plugin'
 apply plugin: 'rebel'
 
 dependencies {

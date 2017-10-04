@@ -1,5 +1,4 @@
-apply plugin: HoopoeAssemblyPlugin
-
+apply plugin: 'hoopoe-assemble-plugin'
 apply plugin: 'rebel'
 
 ext.librariesVersions = [

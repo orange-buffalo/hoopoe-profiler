@@ -1,4 +1,4 @@
-apply plugin: HoopoeAssemblyPlugin
+apply plugin: 'hoopoe-assemble-plugin'
 
 ext.librariesVersions = [
         h2: '1.4.193'
