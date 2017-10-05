@@ -14,24 +14,27 @@ configure<JavaPluginConvention> {
 }
 
 dependencies {
-    compile("junit:junit:4.12")
-    compile("org.testcontainers:testcontainers:1.4.2")
-    compile("org.yaml:snakeyaml:1.18")
-    compile("org.apache.httpcomponents:httpclient:4.5.3")
-    compile("com.fasterxml.jackson.core:jackson-databind:2.9.0")
-    compile(project(":hoopoe-core", "hoopoe"))
-    compile(project(":hoopoe-api"))
-    "compileOnly"("org.projectlombok:lombok-maven:1.16.18.1")
+    "compile"("junit:junit:4.12")
+    "compile"("org.testcontainers:testcontainers:1.4.2")
+    "compile"("org.yaml:snakeyaml:1.18")
+    "compile"("org.apache.httpcomponents:httpclient:4.5.3")
+    "compile"("com.fasterxml.jackson.core:jackson-databind:2.9.0")
+    "compile"(project(":hoopoe-core", "hoopoe"))
+    "compile"(project(":hoopoe-api"))
+    "compileOnly"("org.projectlombok:lombok:1.16.18")
     "runtime"("ch.qos.logback:logback-classic:1.2.3")
 
     "hoopoeExtensionCompileOnly"(project(":hoopoe-api"))
     "hoopoeExtensionCompileOnly"("org.slf4j:slf4j-api:1.7.22")
+    "hoopoeExtensionCompileOnly"("org.projectlombok:lombok:1.16.18")
     "hoopoeExtensionCompile"("org.eclipse.jetty:jetty-server:9.4.0.v20161208")
     "hoopoeExtensionCompile"("com.fasterxml.jackson.core:jackson-databind:2.9.0")
 
     "hoopoeAgentCompile"(project(":hoopoe-classloader"))
+    "hoopoeAgentCompileOnly"("org.projectlombok:lombok:1.16.18")
 
     "itestCompile"("org.hamcrest:hamcrest-all:1.3")
+    "itestCompileOnly"("org.projectlombok:lombok:1.16.18")
 }
 
 val sourceSets: SourceSetContainer = properties["sourceSets"] as SourceSetContainer
@@ -64,7 +67,7 @@ tasks {
         from(sourceSets["hoopoeAgent"].output.resourcesDir)
         from(sourceSets["hoopoeAgent"].output.classesDirs)
         from(configurations["hoopoeAgentCompile"].resolvedConfiguration.resolvedArtifacts.map { zipTree(it.file) })
-        from(configurations.compile) {
+        from(configurations["compile"]) {
             include("**/hoopoe-core.zip")
         }
 

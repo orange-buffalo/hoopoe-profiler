@@ -5,7 +5,7 @@ ext.librariesVersions = [
 ]
 
 dependencies {
-    provided project(':hoopoe-api')
+    compileOnly project(':hoopoe-api')
 
     testCompile project(':hoopoe-common-test')
     testCompile libraries.commonTestDependencies

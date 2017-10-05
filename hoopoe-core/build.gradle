@@ -9,13 +9,14 @@ dependencies {
     compile libraries.byteBuddy
     compile libraries.guava
     compile libraries.snakeyaml
-
     compile project(':hoopoe-api')
-    provided libraries.lombok
+
+    compileOnly libraries.lombok
 
     runtime libraries.logback
 
     testCompile libraries.commonTestDependencies
+    testCompileOnly libraries.lombok
 }
 
 task prepareBootstrapJar(type: Zip) {
