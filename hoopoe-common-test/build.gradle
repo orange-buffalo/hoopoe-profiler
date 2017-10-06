@@ -7,7 +7,7 @@ dependencies {
     compile libraries.agentLoader
     compile libraries.guava
 
-    provided libraries.lombok
+    compileOnly libraries.lombok
 
     runtime libraries.logback
 }

@@ -15,8 +15,8 @@ dependencies {
         exclude module: 'slf4j-api'    // todo check why this dependency fails
     }
 
-    provided project(':hoopoe-api')
-    provided "javax.portlet:portlet-api:${librariesVersions.portletApi}"
+    compileOnly project(':hoopoe-api')
+    compileOnly "javax.portlet:portlet-api:${librariesVersions.portletApi}"
 }
 
 hoopoeAssembly {

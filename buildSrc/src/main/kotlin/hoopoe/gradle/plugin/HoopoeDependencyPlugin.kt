@@ -10,7 +10,6 @@ import java.util.concurrent.Callable
 open class HoopoeDependencyPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
-
         project.plugins.apply("java")
 
         val sourceSets = project.properties["sourceSets"] as SourceSetContainer
@@ -26,12 +25,10 @@ open class HoopoeDependencyPlugin : Plugin<Project> {
         }
 
         val hoopoeUberTask = project.createTask("hoopoeUberTask", Copy::class) {
-
             from(Callable {
-                (project.configurations.getByName("runtime").resolvedConfiguration.resolvedArtifacts -
-                        project.configurations.getByName("provided").resolvedConfiguration.resolvedArtifacts)
+                project.configurations.getByName("runtime").resolvedConfiguration.resolvedArtifacts
                         .filter { it.classifier != "hoopoe" }
-                        .map({ project.zipTree(it.file) })
+                        .map { project.zipTree(it.file) }
             })
             into(mainSourceSet.java.outputDir)
             include("**/*.class")

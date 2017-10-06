@@ -1,10 +1,11 @@
 apply plugin: 'java'
 
 dependencies {
-    provided libraries.lombok
+    compileOnly libraries.lombok
 
     testCompile project(':hoopoe-common-test')
     testCompile project(':hoopoe-core')
+    testCompileOnly libraries.lombok
 }
 
 jacocoTestReport {
