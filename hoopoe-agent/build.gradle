@@ -3,11 +3,9 @@ plugins {
 }
 
 apply plugin: 'hoopoe-dependency-plugin'
-apply plugin: 'rebel'
 
 dependencies {
     compile project(':hoopoe-classloader')
-    compile project(':hoopoe-api')
     compile project(path: ':hoopoe-core', configuration: 'hoopoe')
     compile project(path: ':hoopoe-sql-queries-plugin', configuration: 'hoopoe')
     compile project(path: ':hoopoe-web-view-extension', configuration: 'hoopoe')
@@ -18,17 +16,6 @@ jar {
         attributes('Premain-Class': 'hoopoe.core.HoopoeAgent')
     }
     archiveName = "${jar.baseName}.${jar.extension}"
-}
-
-rebel {
-  classpath {
-    resource {
-      directory = "${project(':hoopoe-api').buildDir}/classes/main"
-    }
-
-    resource {}
-
-  }
 }
 
 bintray {
