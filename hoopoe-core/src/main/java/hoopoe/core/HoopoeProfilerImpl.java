@@ -3,15 +3,14 @@ package hoopoe.core;
 import hoopoe.api.HoopoeProfiledResult;
 import hoopoe.api.HoopoeProfiler;
 import hoopoe.api.configuration.HoopoeConfiguration;
-import hoopoe.api.plugins.HoopoeInvocationAttribute;
-import hoopoe.core.bootstrap.HoopoeProfilerBridge;
+import hoopoe.api.HoopoeInvocationAttribute;
 import hoopoe.core.components.ExtensionsManager;
 import hoopoe.core.components.PluginsManager;
 import hoopoe.core.configuration.Configuration;
-import hoopoe.core.supplements.InstrumentationHelper;
-import hoopoe.core.supplements.ProfiledResultHelper;
-import hoopoe.core.supplements.TraceNode;
-import hoopoe.core.supplements.TraceNodesWrapper;
+import hoopoe.core.instrumentation.CodeInstrumentation;
+import hoopoe.core.tracer.TraceNormalizer;
+import hoopoe.core.tracer.TraceNode;
+import hoopoe.core.tracer.ThreadTracer;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,18 +26,16 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     // we know we will not be able to clean this thread local.
     // that's why we will clean the wrapper content, leaving tiny small wrapper hanging in thread local
-    private static final ThreadLocal<TraceNodesWrapper> threadTraceNodesWrapper =
-            ThreadLocal.withInitial(TraceNodesWrapper::new);
+    private static final ThreadLocal<ThreadTracer> threadTracer = ThreadLocal.withInitial(ThreadTracer::new);
 
-    private Collection<TraceNodesWrapper> profiledTraceNodeWrappers =
-            Collections.synchronizedCollection(new ArrayList<>());
+    private Collection<ThreadTracer> threadTracers = Collections.synchronizedCollection(new ArrayList<>());
 
     @Getter
     private HoopoeConfiguration configuration;
 
-    private InstrumentationHelper instrumentationHelper;
+    private CodeInstrumentation codeInstrumentation;
 
-    private ProfiledResultHelper profiledResultHelper;
+    private TraceNormalizer traceNormalizer;
 
     @Getter
     private HoopoeProfiledResult lastProfiledResult;
@@ -49,73 +46,72 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     private HoopoeProfilerImpl(
             Configuration configuration,
             PluginsManager pluginsManager,
-            InstrumentationHelper instrumentationHelper,
-            ProfiledResultHelper profiledResultHelper,
+            CodeInstrumentation codeInstrumentation,
+            TraceNormalizer traceNormalizer,
             ExtensionsManager extensionsManager) {
 
         log.info("starting profiler");
 
         this.configuration = configuration;
-        this.profiledResultHelper = profiledResultHelper;
+        this.traceNormalizer = traceNormalizer;
         this.pluginsManager = pluginsManager;
-        this.instrumentationHelper = instrumentationHelper;
+        this.codeInstrumentation = codeInstrumentation;
 
         extensionsManager.initExtensions(this);
+
+        HoopoeProfilerFacade.methodInvocationProfiler = this::profileMethodInvocation;
     }
 
     public void instrument(Instrumentation instrumentation) {
-        instrumentationHelper.createClassFileTransformer(instrumentation, this);
-    }
-
-    public void unload() {
-        instrumentationHelper.unload();
+        codeInstrumentation.createClassFileTransformer(instrumentation);
     }
 
     @Override
     public void startProfiling() {
-        HoopoeProfilerBridge.startProfiling();
+        HoopoeProfilerFacade.startProfiling();
         lastProfiledResult = null;
     }
 
     @Override
     public HoopoeProfiledResult stopProfiling() {
-        HoopoeProfilerBridge.enabled = false;
+        HoopoeProfilerFacade.enabled = false;
 
-        lastProfiledResult = profiledResultHelper.calculateProfiledResult(profiledTraceNodeWrappers);
-        profiledTraceNodeWrappers.clear();
+        lastProfiledResult = traceNormalizer.calculateProfiledResult(threadTracers);
+        threadTracers.clear();
 
         return lastProfiledResult;
     }
 
     @Override
     public boolean isProfiling() {
-        return HoopoeProfilerBridge.enabled;
+        return HoopoeProfilerFacade.enabled;
     }
 
-    public void profileCall(
+    private void profileMethodInvocation(
             long startTimeInNs,
             long endTimeInNs,
             String className,
             String methodSignature,
-            Object pluginActionIndicies,
+            long pluginRecordersReference,
             Object[] args,
             Object returnValue,
             Object thisInMethod) {
 
-        TraceNodesWrapper traceNodesWrapper = threadTraceNodesWrapper.get();
-        List<TraceNode> traceNodes = traceNodesWrapper.getTraceNodes();
+        ThreadTracer threadTracer = HoopoeProfilerImpl.threadTracer.get();
+        List<TraceNode> traceNodes = threadTracer.getTraceNodes();
         if (traceNodes == null) {
-            traceNodes = traceNodesWrapper.init();
-            threadTraceNodesWrapper.set(traceNodesWrapper);
-            profiledTraceNodeWrappers.add(traceNodesWrapper);
+            traceNodes = threadTracer.init();
+            HoopoeProfilerImpl.threadTracer.set(threadTracer);
+            threadTracers.add(threadTracer);
         }
 
-        if (pluginActionIndicies == null) {
-            traceNodes.add(
-                    new TraceNode(className, methodSignature, startTimeInNs, endTimeInNs, null));
+        if (pluginRecordersReference == 0) {
+            traceNodes.add(new TraceNode(className, methodSignature, startTimeInNs, endTimeInNs, null));
+
         } else {
-            Collection<HoopoeInvocationAttribute> attributes = pluginsManager.getRecorders(pluginActionIndicies).stream()
-                    .flatMap(pluginAction -> pluginAction.getAttributes(args, returnValue, thisInMethod).stream())
+            Collection<HoopoeInvocationAttribute> attributes = pluginsManager.getRecorders(pluginRecordersReference)
+                    .stream()
+                    .flatMap(pluginRecorder -> pluginRecorder.getAttributes(args, returnValue, thisInMethod).stream())
                     .collect(Collectors.toList());
 
             traceNodes.add(new TraceNode(className, methodSignature, startTimeInNs, endTimeInNs, attributes));

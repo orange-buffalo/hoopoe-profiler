@@ -5,7 +5,7 @@ import java.util.Collection;
 /**
  * Describes Java method, including hosting class, its superclasses and interfaces, method arguments.
  *
- * @see HoopoePlugin#createActionIfSupported(HoopoeMethodInfo)
+ * @see HoopoePlugin#createRecorderIfSupported(HoopoeMethodInfo)
  */
 public interface HoopoeMethodInfo {
 

@@ -1,5 +1,6 @@
 package hoopoe.api.plugins;
 
+import hoopoe.api.HoopoeInvocationAttribute;
 import java.util.Collection;
 
 /**
@@ -8,6 +9,8 @@ import java.util.Collection;
  * This will be called <b>after</b> method body invocation, including cases of exceptions.
  * <p>
  * Should be optimized by performance and should never throw exceptions.
+ * <p>
+ * Must have proper implementation of {@code equals} and {@code hashCode}.
  *
  * @see HoopoeInvocationAttribute
  */

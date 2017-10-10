@@ -15,23 +15,21 @@ apply plugin: 'pl.allegro.tech.build.axion-release'
 apply plugin: 'com.github.ben-manes.versions'
 
 ext.libraries = [
-        slf4j           : 'org.slf4j:slf4j-api:1.7.22',
-        commonsLang3    : 'org.apache.commons:commons-lang3:3.5',
-        commonsIo       : 'commons-io:commons-io:2.5',
-        byteBuddy       : 'net.bytebuddy:byte-buddy:1.6.3',
-        logback         : 'ch.qos.logback:logback-classic:1.1.8',
+        slf4j       : 'org.slf4j:slf4j-api:1.7.22',
+        commonsLang3: 'org.apache.commons:commons-lang3:3.5',
+        commonsIo   : 'commons-io:commons-io:2.5',
+        byteBuddy   : 'net.bytebuddy:byte-buddy:1.7.6',
+        logback     : 'ch.qos.logback:logback-classic:1.1.8',
         // todo: IDEA does not see annotation processor when upgraded to later versions
-        lombok          : 'org.projectlombok:lombok:1.14.8',
-        junit           : [
+        lombok      : 'org.projectlombok:lombok:1.14.8',
+        junit       : [
                 'junit:junit:4.12',
                 'com.tngtech.java:junit-dataprovider:1.12.0'
         ],
-        agentLoader     : 'com.ea.agentloader:ea-agent-loader:1.0.2',
-        reflections     : 'org.reflections:reflections:0.9.10',
-        mockito         : 'org.mockito:mockito-core:2.8.9',
-        hamcrest        : 'org.hamcrest:hamcrest-all:1.3',
-        guava           : 'com.google.guava:guava:21.0',
-        snakeyaml       : 'org.yaml:snakeyaml:1.18'
+        mockito     : 'org.mockito:mockito-core:2.8.9',
+        hamcrest    : 'org.hamcrest:hamcrest-all:1.3',
+        guava       : 'com.google.guava:guava:21.0',
+        snakeyaml   : 'org.yaml:snakeyaml:1.18'
 ]
 
 ext.libraries.commonTestDependencies = [
@@ -45,7 +43,7 @@ scmVersion {
     }
     versionIncrementer 'incrementPrerelease'
     hooks {
-        pre {context ->
+        pre { context ->
             project.ext.set('releaseVersion', context.currentVersion)
             println "Releasing $project.ext.releaseVersion"
         }
@@ -79,19 +77,19 @@ subprojects {
 
     plugins.withType(JavaPlugin) {
         plugins.apply(JacocoPlugin)
-        sourceSets {
-            itest {
-                compileClasspath += project.sourceSets["main"].output
-                runtimeClasspath += project.sourceSets["main"].output
-            }
-        }
-    }
 
-    afterEvaluate {  project ->
-        project.tasks.create("integration-tests", Test) {
+        sourceSets{itest {
+                compileClasspath += sourceSets["main"].output
+                runtimeClasspath += sourceSets["main"].output}
+            }
+
+        tasks.create("integration-tests", Test) {
             testClassesDirs = sourceSets.itest.output.classesDirs
             classpath = sourceSets.itest.runtimeClasspath
         }
+    }
+
+    afterEvaluate { project ->
 
         project.tasks.withType(Test) {
             testLogging {
@@ -121,7 +119,7 @@ subprojects {
 
         def generateRebelTask = project.tasks.findByName('generateRebel')
         if (generateRebelTask) {
-           generateRebelTask.onlyIf { !releasing }
+            generateRebelTask.onlyIf { !releasing }
         }
 
         if (!releasing) {
@@ -164,7 +162,7 @@ subprojects {
 }
 
 task wrapper(type: Wrapper) {
-  distributionUrl = 'https://services.gradle.org/distributions/gradle-4.2.1-all.zip'
+    distributionUrl = 'https://services.gradle.org/distributions/gradle-4.2.1-all.zip'
 }
 
 tasks.remove(tasks.findByName('release'));

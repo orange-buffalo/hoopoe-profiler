@@ -1,43 +1,32 @@
 package hoopoe.core.components;
 
+import com.google.common.math.LongMath;
 import hoopoe.api.plugins.HoopoeInvocationRecorder;
+import hoopoe.api.plugins.HoopoeMethodInfo;
 import hoopoe.api.plugins.HoopoePlugin;
-import hoopoe.core.ClassMetadataReader;
-import hoopoe.core.HoopoeMethodInfoImpl;
+import hoopoe.core.HoopoeException;
 import hoopoe.core.configuration.Configuration;
 import hoopoe.core.configuration.EnabledComponentData;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import lombok.AllArgsConstructor;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.type.TypeDefinition;
-import net.bytebuddy.implementation.bytecode.StackManipulation;
-import net.bytebuddy.implementation.bytecode.constant.SerializedConstant;
-import org.apache.commons.lang3.ArrayUtils;
 
 public class PluginsManager {
 
-    private List<PluginActionWrapper> pluginActions = new CopyOnWriteArrayList<>();
+    private static final int MAX_RECORDERS = 64;
 
-    // todo multithreading
-    // todo cleanup
-    private Map<String, StackManipulation> pluginActionsCache = new HashMap<>();
+    private static final long[] BIT_FLAGS = new long[MAX_RECORDERS];
 
-    private ClassMetadataReader classMetadataReader;
+    static {
+        for (int i = 0; i < MAX_RECORDERS; i++) {
+            BIT_FLAGS[i] = LongMath.pow(2, i);
+        }
+    }
 
-    private Collection<HoopoePlugin> plugins;
+    private final Collection<HoopoePlugin> plugins;
+    private final List<HoopoeInvocationRecorder> recorders = new ArrayList<>(MAX_RECORDERS);
 
-    public PluginsManager(
-            Configuration configuration,
-            ComponentLoader componentLoader,
-            ClassMetadataReader classMetadataReader) {
-
-        this.classMetadataReader = classMetadataReader;
-
+    public PluginsManager(Configuration configuration, ComponentLoader componentLoader) {
         this.plugins = new ArrayList<>();
         for (EnabledComponentData enabledPlugin : configuration.getEnabledPlugins()) {
             HoopoePlugin plugin = componentLoader.loadComponent(
@@ -47,54 +36,43 @@ public class PluginsManager {
         }
     }
 
-    private int[] addPluginActions(HoopoeMethodInfoImpl methodInfo) {
-        List<Integer> pluginActionIndicies = new ArrayList<>(0);
-        for (HoopoePlugin plugin : plugins) {
-            HoopoeInvocationRecorder pluginAction = plugin.createActionIfSupported(methodInfo);
-            if (pluginAction != null) {
-                pluginActions.add(new PluginActionWrapper(pluginAction, plugin));
-                pluginActionIndicies.add(pluginActions.size() - 1);
+    public Collection<HoopoeInvocationRecorder> getRecorders(long pluginRecordersReference) {
+        Collection<HoopoeInvocationRecorder> referencedRecorders = new ArrayList<>();
+        for (int i = 0; i < MAX_RECORDERS; i++) {
+            long bitFlag = BIT_FLAGS[i];
+            if ((pluginRecordersReference & bitFlag) == bitFlag) {
+                referencedRecorders.add(recorders.get(i));
             }
         }
-        return ArrayUtils.toPrimitive(pluginActionIndicies.toArray(new Integer[pluginActionIndicies.size()]));
+        return referencedRecorders;
     }
 
-    public Collection<HoopoeInvocationRecorder> getRecorders(Object pluginActionIndicies) {
-        Collection<HoopoeInvocationRecorder> actions = new ArrayList<>();
-        for (int pluginActionIndex : (int[]) pluginActionIndicies) {
-            PluginActionWrapper pluginActionWrapper = pluginActions.get(pluginActionIndex);
-            actions.add(pluginActionWrapper.pluginAction);
+    public long getPluginRecordersReference(HoopoeMethodInfo methodInfo) {
+        long recordersReference = 0;
+
+        for (HoopoePlugin plugin : plugins) {
+            HoopoeInvocationRecorder recorder = plugin.createRecorderIfSupported(methodInfo);
+            if (recorder != null) {
+                synchronized (recorders) {
+                    int recordersCount = recorders.size();
+
+                    if (recordersCount == MAX_RECORDERS) {
+                        throw new HoopoeException("Maximum number of " + MAX_RECORDERS + " recorders is reached. "
+                                + "Probably some of plugins are not optimized.");
+                    }
+
+                    int registeredRecorderIndex = recorders.indexOf(recorder);
+                    if (registeredRecorderIndex < 0) {
+                        registeredRecorderIndex = recordersCount;
+                        recorders.add(registeredRecorderIndex, recorder);
+                    }
+
+                    recordersReference |= BIT_FLAGS[registeredRecorderIndex];
+                }
+            }
         }
-        return actions;
-    }
 
-    public StackManipulation getPluginActions(MethodDescription method) {
-        TypeDefinition declaringType = method.getDeclaringType();
-        String className = classMetadataReader.getClassName(declaringType);
-        String methodSignature = classMetadataReader.getMethodSignature(method);
-
-        String methodKey = className + methodSignature;
-        // todo use weak cache instead, maybe with MethodDescription as a key (check what will be faster)
-        if (pluginActionsCache.containsKey(methodKey)) {
-            return pluginActionsCache.get(methodKey);
-        }
-
-        // todo lazy calculate
-        HoopoeMethodInfoImpl methodInfo = new HoopoeMethodInfoImpl(
-                className,
-                methodSignature,
-                classMetadataReader.getSuperClassesNames(declaringType));
-
-        int[] rawPluginActionIndicies = addPluginActions(methodInfo);
-        StackManipulation stackManipulation = SerializedConstant.of(rawPluginActionIndicies);
-        pluginActionsCache.put(methodKey, stackManipulation);
-        return stackManipulation;
-    }
-
-    @AllArgsConstructor
-    private static class PluginActionWrapper {
-        HoopoeInvocationRecorder pluginAction;
-        HoopoePlugin plugin;
+        return recordersReference;
     }
 
 }

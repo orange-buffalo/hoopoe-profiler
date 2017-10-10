@@ -9,6 +9,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -18,7 +19,9 @@ import static org.hamcrest.Matchers.greaterThan;
 public class ExtensionIT {
 
     private static final GenericContainer container =
-            new GenericContainer("orange-buffalo-docker-hoopoe.bintray.io/tomcat8-hoopoe:latest")
+            new GenericContainer(new ImageFromDockerfile()
+                    .withFileFromClasspath("Dockerfile", "/tomcat8.Dockerfile"))
+
                     .withExposedPorts(8080)
                     .waitingFor(TestContainersUtils.waitForHttp("/", 8080));
 
@@ -26,7 +29,7 @@ public class ExtensionIT {
     public static HoopoeIntegrationTest integrationTest = new HoopoeIntegrationTest().withHoopoeContainer(container);
 
     @Test
-    public void verifyProfileResultIsNotNullForNoExecutions() throws InterruptedException {
+    public void testProfiledResultIsNotNullForNoExecutions() throws InterruptedException {
         container.followOutput(new Slf4jLogConsumer(log));
         HoopoeProfiledResult profiledResult = integrationTest.executeProfiled(() -> {
         });
@@ -35,7 +38,7 @@ public class ExtensionIT {
     }
 
     @Test
-    public void verifyProfileResultHasDataForSimpleExecution() throws InterruptedException {
+    public void testProfiledResultHasDataForSimpleExecution() throws InterruptedException {
         container.followOutput(new Slf4jLogConsumer(log));
         HoopoeProfiledResult profiledResult = integrationTest.executeProfiled(() -> {
             try {
