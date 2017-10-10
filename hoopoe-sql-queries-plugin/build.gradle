@@ -13,10 +13,6 @@ plugins {
 
 apply plugin: 'hoopoe-assemble-plugin'
 
-ext.librariesVersions = [
-        h2: '1.4.193'
-]
-
 sourceSets.create("itestApp")
 
 configurations {
@@ -24,11 +20,9 @@ configurations {
 }
 
 dependencies {
-    compileOnly project(':hoopoe-api')
     compileOnly libraries.slf4j
-
-    testCompile libraries.commonTestDependencies
-    testCompile "com.h2database:h2:${librariesVersions.h2}"
+    compileOnly project(':hoopoe-api')
+    compileOnly libraries.lombok
 
     itestAppCompile "org.springframework.boot:spring-boot-starter-jdbc"
     itestAppCompile "org.springframework.boot:spring-boot-starter-web"
@@ -36,8 +30,10 @@ dependencies {
     itestAppCompile "mysql:mysql-connector-java:5.1.44"
     itestAppCompile "org.postgresql:postgresql:42.1.4"
 
+    itestCompile libraries.commonTestDependencies
     itestCompile project(":hoopoe-integration-testing")
     itestCompile libraries.commonTestDependencies
+    itestCompile libraries.lombok
 }
 
 hoopoeAssembly {
@@ -66,8 +62,8 @@ task copyItestApp(type: Copy) {
 }
 
 task copyPlugin(type: Copy) {
-    dependsOn hoopoeZipTask
-    from hoopoeZipTask.outputs.files
+    dependsOn assembleHoopoeZip
+    from assembleHoopoeZip.outputs.files
     into sourceSets.itest.output.resourcesDir
     rename {
       "sql-plugin.zip"
