@@ -1,3 +1,4 @@
+import hoopoe.gradle.plugin.HoopoeAssemblyTask
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Jar
@@ -49,7 +50,6 @@ tasks {
             HoopoeAssemblyTask.resolveLibsByConfiguration(project, "hoopoeExtensionCompile")
         }
         extensionClassName = Callable { "hoopoe.tests.extension.IntegrationTestExtension" }
-        attachToArtifacts = Callable { false }
         archiveName = Callable { "hoopoe-integration-testing.zip" }
 
         dependsOn("hoopoeExtensionClasses")
