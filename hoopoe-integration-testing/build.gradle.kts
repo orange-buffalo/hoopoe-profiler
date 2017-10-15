@@ -10,8 +10,10 @@ apply {
     plugin("java")
 }
 
-sourceSets.create("hoopoeExtension")
-sourceSets.create("hoopoeAgent")
+sourceSets {
+    "hoopoeExtension" {}
+    "hoopoeAgent" {}
+}
 
 dependencies {
     "compile"(libraries.junit)

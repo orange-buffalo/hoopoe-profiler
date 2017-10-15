@@ -27,7 +27,6 @@ repositories {
     maven("https://repo.spring.io/libs-milestone")
 }
 
-val sourceSets = project.properties["sourceSets"] as SourceSetContainer
 val itestAppSourceSet = sourceSets.create("itestApp")
 val itestSourceSet = sourceSets.getByName("itest")
 

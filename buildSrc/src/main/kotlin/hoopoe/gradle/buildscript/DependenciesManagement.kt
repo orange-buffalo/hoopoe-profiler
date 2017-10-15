@@ -1,7 +1,9 @@
 package hoopoe.gradle.buildscript
 
 import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.kotlin.dsl.the
 
 object Versions {
     val lombok = "1.16.18"
@@ -17,6 +19,9 @@ object Versions {
     val jackson = "2.9.0"
     val logback = "1.2.3"
     val jetty = "9.4.0.v20161208"
+    val commonsLang3 = "3.5"
+    val byteBuddy = "1.7.6"
+    val guava = "21.0"
 }
 
 object Libraries {
@@ -33,10 +38,14 @@ object Libraries {
     val jacksonDatabind = "com.fasterxml.jackson.core:jackson-databind:${Versions.jackson}"
     val logback = "ch.qos.logback:logback-classic:${Versions.logback}"
     val jettyServer = "org.eclipse.jetty:jetty-server:${Versions.jetty}"
+    val commonsLang3= "org.apache.commons:commons-lang3:${Versions.commonsLang3}"
+    val byteBuddy = "net.bytebuddy:byte-buddy:${Versions.byteBuddy}"
+    val byteBuddyAgent = "net.bytebuddy:byte-buddy-agent:${Versions.byteBuddy}"
+    val guava = "com.google.guava:guava:${Versions.guava}"
 }
 
 val Project.libraries: Libraries
     get() = Libraries
 
 val Project.sourceSets: SourceSetContainer
-    get() = properties["sourceSets"] as SourceSetContainer
+    get() = the<JavaPluginConvention>().sourceSets
