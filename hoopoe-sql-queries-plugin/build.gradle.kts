@@ -4,6 +4,7 @@ import hoopoe.gradle.plugin.*
 import io.spring.gradle.dependencymanagement.dsl.*
 import org.springframework.boot.gradle.tasks.*
 import org.springframework.boot.gradle.tasks.bundling.BootJar
+import hoopoe.gradle.buildscript.*
 
 buildscript {
     repositories {
@@ -43,9 +44,9 @@ configure<DependencyManagementConfigurer> {
 }
 
 dependencies {
-    "compileOnly"(Libraries.slf4j)
+    "compileOnly"(libraries.slf4j)
     "compileOnly"(project(":hoopoe-api"))
-    "compileOnly"(Libraries.lombok)
+    "compileOnly"(libraries.lombok)
 
     "itestAppCompile"("org.springframework.boot:spring-boot-starter-jdbc")
     "itestAppCompile"("org.springframework.boot:spring-boot-starter-web")
@@ -53,11 +54,11 @@ dependencies {
     "itestAppCompile"("mysql:mysql-connector-java:5.1.44")
     "itestAppCompile"("org.postgresql:postgresql:42.1.4")
 
-    "itestCompile"(Libraries.junit)
-    "itestCompile"(Libraries.junitDataProvider)
+    "itestCompile"(libraries.junit)
+    "itestCompile"(libraries.junitDataProvider)
     "itestCompile"(project(":hoopoe-integration-testing"))
-    "itestCompile"(Libraries.lombok)
-    "itestCompile"(Libraries.hamcrest)
+    "itestCompile"(libraries.lombok)
+    "itestCompile"(libraries.hamcrest)
 }
 
 configure<HoopoeAssemblyConfig> {
@@ -65,19 +66,19 @@ configure<HoopoeAssemblyConfig> {
 }
 
 tasks {
-    "itestAppBootJar"(BootJar::class) {
+    task<BootJar>("itestAppBootJar") {
         classpath(itestAppSourceSet.runtimeClasspath)
         mainClass = "hoopoe.plugins.sql.app.SqlPluginTestApp"
     }
 
-    "copyItestApp"(Copy::class) {
+    task<Copy>("copyItestApp") {
         from(tasks["itestAppBootJar"])
         into(itestSourceSet.output.resourcesDir)
         rename { "itest-app.jar" }
     }
 
-    "copyPlugin"(Copy::class) {
-        from(tasks["assembleHoopoeZip"])
+    task<Copy>("copyPlugin") {
+       from(tasks["assembleHoopoeZip"])
         into(itestSourceSet.output.resourcesDir)
         rename { "sql-plugin.zip" }
     }

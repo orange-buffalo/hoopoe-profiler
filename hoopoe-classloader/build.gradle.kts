@@ -1,15 +1,16 @@
 import org.gradle.kotlin.dsl.*
+import hoopoe.gradle.buildscript.*
 
 apply {
     plugin("java")
 }
 
 dependencies {
-    "compileOnly"(Libraries.lombok)
+    "compileOnly"(libraries.lombok)
 
-    "testCompile"(Libraries.junit)
-    "testCompile"(Libraries.junitDataProvider)
-    "testCompile"(Libraries.hamcrest)
-    "testCompile"(Libraries.mockito)
-    "testCompile"(Libraries.commonsIo)
+    "testCompile"(libraries.junit)
+    "testCompile"(libraries.junitDataProvider)
+    "testCompile"(libraries.hamcrest)
+    "testCompile"(libraries.mockito)
+    "testCompile"(libraries.commonsIo)
 }

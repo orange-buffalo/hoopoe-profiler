@@ -1,3 +1,7 @@
+package hoopoe.gradle.buildscript
+
+import org.gradle.api.Project
+
 object Versions {
     val lombok = "1.16.18"
     val commonIo = "2.5"
@@ -18,3 +22,5 @@ object Libraries {
     val slf4j = "org.slf4j:slf4j-api:${Versions.slf4j}"
 }
 
+val Project.libraries: Libraries
+    get() = Libraries

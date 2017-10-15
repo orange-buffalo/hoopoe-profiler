@@ -1,5 +1,6 @@
 import org.gradle.kotlin.dsl.*
 import hoopoe.gradle.plugin.*
+import hoopoe.gradle.buildscript.*
 
 object LibrariesVersions {
     val jetty = "9.4.0.v20161208"
@@ -14,7 +15,7 @@ apply {
 dependencies {
     "compile"("org.eclipse.jetty:jetty-server:${LibrariesVersions.jetty}")
     "compile"("org.eclipse.jetty:jetty-servlet:${LibrariesVersions.jetty}")
-    "compile"(Libraries.commonsIo)
+    "compile"(libraries.commonsIo)
     "compile"("com.github.briandilley.jsonrpc4j:jsonrpc4j:${LibrariesVersions.jsonRpc}") {
         exclude(module = "slf4j-api")    // todo check why this dependency fails
     }
