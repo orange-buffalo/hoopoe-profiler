@@ -18,7 +18,7 @@ jobs:
         - sudo apt-get install jq
         - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
       script:
-        - ./gradlew --build-scan clean build
+        - ./gradlew --scan clean build
       before_cache:
         - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
         - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -36,7 +36,7 @@ jobs:
 
     - stage: integration tests
       script:
-        - ./gradlew --build-scan clean integration-tests
+        - ./gradlew --scan clean integration-tests
       before_cache:
         - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
         - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -47,7 +47,7 @@ jobs:
 
     - env: ITEST_DB=postgres
       script:
-        - ./gradlew --build-scan hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integration-tests
+        - ./gradlew --scan hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integration-tests
       before_cache:
         - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
         - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -58,7 +58,7 @@ jobs:
 
     - env: ITEST_DB=mysql
       script:
-        - ./gradlew --build-scan hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integration-tests
+        - ./gradlew --scan hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integration-tests
       before_cache:
         - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
         - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
