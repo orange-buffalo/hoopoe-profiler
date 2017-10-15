@@ -5,6 +5,7 @@ object Versions {
     val hamcrest = "1.3"
     val junit = "4.12"
     val junitDataProvider = "1.12.0"
+    val slf4j = "1.7.22"
 }
 
 object Libraries {
@@ -14,5 +15,6 @@ object Libraries {
     val hamcrest = "org.hamcrest:hamcrest-all:${Versions.hamcrest}"
     val junit = "junit:junit:${Versions.junit}"
     val junitDataProvider = "com.tngtech.java:junit-dataprovider:${Versions.junitDataProvider}"
+    val slf4j = "org.slf4j:slf4j-api:${Versions.slf4j}"
 }
 
