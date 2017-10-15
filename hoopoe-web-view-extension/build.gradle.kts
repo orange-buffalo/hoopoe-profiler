@@ -22,7 +22,6 @@ dependencies {
 
     "compileOnly"(project(":hoopoe-api"))
     "compileOnly"("javax.portlet:portlet-api:${LibrariesVersions.portletApi}")
-
 }
 
 configure<HoopoeAssemblyConfig> {
