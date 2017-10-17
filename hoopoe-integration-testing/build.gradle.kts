@@ -8,6 +8,7 @@ import hoopoe.gradle.buildscript.*
 
 apply {
     plugin("java")
+    plugin("hoopoe-integration-testing-plugin")
 }
 
 sourceSets {

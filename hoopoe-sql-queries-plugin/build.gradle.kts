@@ -20,6 +20,7 @@ buildscript {
 apply {
     plugin("io.spring.dependency-management")
     plugin("hoopoe-assemble-plugin")
+    plugin("hoopoe-integration-testing-plugin")
 }
 
 repositories {
