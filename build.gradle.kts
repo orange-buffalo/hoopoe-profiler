@@ -1,5 +1,6 @@
 import hoopoe.gradle.buildscript.*
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.internal.scan.config.BuildScanConfig
 import pl.allegro.tech.build.axion.release.domain.ChecksConfig
 import pl.allegro.tech.build.axion.release.domain.TagNameSerializationConfig
 import pl.allegro.tech.build.axion.release.domain.VersionConfig
@@ -22,9 +23,19 @@ buildscript {
     }
 }
 
+plugins {
+    `build-scan`
+}
+
 apply {
     plugin("pl.allegro.tech.build.axion-release")
     plugin("com.github.ben-manes.versions")
+}
+
+buildScan {
+    setLicenseAgreementUrl("https://gradle.com/terms-of-service")
+    setLicenseAgree("yes")
+    publishAlwaysIf(System.getenv("CI") == "true")
 }
 
 configure<VersionConfig> {
