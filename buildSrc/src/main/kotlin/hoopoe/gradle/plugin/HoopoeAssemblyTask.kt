@@ -15,9 +15,11 @@ open class HoopoeAssemblyTask : DefaultTask() {
     var outputArchive: Callable<File> = Callable { File(temporaryDir, archiveName.call()) }
 
     @get:Input
+    @Optional
     var pluginClassName: Callable<String?> = Callable { null }
 
     @get:Input
+    @Optional
     var extensionClassName: Callable<String?> = Callable { null }
 
     @get:Input

@@ -1,47 +1,48 @@
+import hoopoe.gradle.plugin.HoopoeAssemblyTask
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.*
 import java.util.concurrent.Callable
+import hoopoe.gradle.buildscript.*
 
 apply {
     plugin("java")
+    plugin("hoopoe-integration-testing-plugin")
 }
 
-configure<JavaPluginConvention> {
-    sourceSets.create("hoopoeExtension")
-    sourceSets.create("hoopoeAgent")
+sourceSets {
+    "hoopoeExtension" {}
+    "hoopoeAgent" {}
 }
 
 dependencies {
-    "compile"("junit:junit:4.12")
-    "compile"("org.testcontainers:testcontainers:1.4.2")
-    "compile"("org.yaml:snakeyaml:1.18")
-    "compile"("org.apache.httpcomponents:httpclient:4.5.3")
-    "compile"("com.fasterxml.jackson.core:jackson-databind:2.9.0")
+    "compile"(libraries.junit)
+    "compile"(libraries.testContainers)
+    "compile"(libraries.snakeYaml)
+    "compile"(libraries.httpClient)
+    "compile"(libraries.jacksonDatabind)
     "compile"(project(":hoopoe-core"))
     "compile"(project(":hoopoe-core", "hoopoe"))
     "compile"(project(":hoopoe-api"))
-    "compileOnly"("org.projectlombok:lombok:1.16.18")
-    "runtime"("ch.qos.logback:logback-classic:1.2.3")
+    "compileOnly"(libraries.lombok)
+    "runtime"(libraries.logback)
 
     "hoopoeExtensionCompileOnly"(project(":hoopoe-api"))
-    "hoopoeExtensionCompileOnly"("org.slf4j:slf4j-api:1.7.22")
-    "hoopoeExtensionCompileOnly"("org.projectlombok:lombok:1.16.18")
-    "hoopoeExtensionCompile"("org.eclipse.jetty:jetty-server:9.4.0.v20161208")
-    "hoopoeExtensionCompile"("com.fasterxml.jackson.core:jackson-databind:2.9.0")
+    "hoopoeExtensionCompileOnly"(libraries.slf4j)
+    "hoopoeExtensionCompileOnly"(libraries.lombok)
+    "hoopoeExtensionCompile"(libraries.jettyServer)
+    "hoopoeExtensionCompile"(libraries.jacksonDatabind)
 
     "hoopoeAgentCompile"(project(":hoopoe-classloader"))
-    "hoopoeAgentCompileOnly"("org.projectlombok:lombok:1.16.18")
+    "hoopoeAgentCompileOnly"(libraries.lombok)
 
-    "itestCompile"("org.hamcrest:hamcrest-all:1.3")
-    "itestCompileOnly"("org.projectlombok:lombok:1.16.18")
+    "itestCompile"(libraries.hamcrest)
+    "itestCompileOnly"(libraries.lombok)
 }
 
-val sourceSets: SourceSetContainer = properties["sourceSets"] as SourceSetContainer
-
 tasks {
-    "buildHoopoeExtension"(HoopoeAssemblyTask::class) {
+    task<HoopoeAssemblyTask>("buildHoopoeExtension") {
         classesDirs = Callable {
             HoopoeAssemblyTask.resolveClassesAndResourcesBySourceSet(project, "hoopoeExtension")
         }
@@ -49,7 +50,6 @@ tasks {
             HoopoeAssemblyTask.resolveLibsByConfiguration(project, "hoopoeExtensionCompile")
         }
         extensionClassName = Callable { "hoopoe.tests.extension.IntegrationTestExtension" }
-        attachToArtifacts = Callable { false }
         archiveName = Callable { "hoopoe-integration-testing.zip" }
 
         dependsOn("hoopoeExtensionClasses")
@@ -62,7 +62,7 @@ tasks {
         }
     }
 
-    "buildTestAgent"(Jar::class) {
+    task<Jar>("buildTestAgent") {
         destinationDir = sourceSets["main"].output.resourcesDir
         archiveName = "hoopoe-test-agent.jar"
         from(sourceSets["hoopoeAgent"].output.resourcesDir)
