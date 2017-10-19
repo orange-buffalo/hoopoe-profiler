@@ -17,9 +17,9 @@ buildscript {
     }
 
     dependencies {
-        classpath("org.zeroturnaround:gradle-jrebel-plugin:1.1.4")
-        classpath("pl.allegro.tech.build:axion-release-plugin:1.4.1")
-        classpath("com.github.ben-manes:gradle-versions-plugin:0.13.0")
+        classpath("org.zeroturnaround:gradle-jrebel-plugin:1.1.7")
+        classpath("pl.allegro.tech.build:axion-release-plugin:1.8.1")
+        classpath("com.github.ben-manes:gradle-versions-plugin:0.15.0")
     }
 }
 

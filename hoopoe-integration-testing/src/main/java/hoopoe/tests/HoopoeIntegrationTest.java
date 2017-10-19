@@ -203,11 +203,7 @@ public class HoopoeIntegrationTest implements TestRule {
         enableIntegrationTestExtension();
         File agentJar = buildAgentJar();
 
-        // workaround for https://github.com/testcontainers/testcontainers-java/issues/451
-        List<Integer> exposedPorts = new ArrayList<>(hoopoeContainer.getExposedPorts());
-        exposedPorts.add(integrationTestExtensionPort);
-        hoopoeContainer.withExposedPorts(exposedPorts.toArray(new Integer[exposedPorts.size()]));
-
+        hoopoeContainer.addExposedPort(integrationTestExtensionPort);
         hoopoeContainer.addFileSystemBind(
                 agentJar.getAbsolutePath(), HOOPOE_AGENT_JAR_CONTAINER_PATH, BindMode.READ_ONLY);
         hoopoeContainer.addEnv(HOOPOE_AGENT_ENV, HOOPOE_AGENT_JAR_CONTAINER_PATH);
