@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import hoopoe.api.HoopoeProfiler;
+import hoopoe.api.configuration.HoopoeConfigurableComponent;
 import hoopoe.api.extensions.HoopoeProfilerExtension;
 import hoopoe.extensions.webview.controllers.JsonRpcServletHolder;
 import hoopoe.extensions.webview.controllers.ProfilerService;
@@ -18,6 +19,7 @@ import java.time.ZonedDateTime;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.server.Handler;
@@ -29,18 +31,31 @@ import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.log.Log;
+import org.eclipse.jetty.util.log.Slf4jLog;
 import org.eclipse.jetty.util.resource.Resource;
 
-public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
+@Slf4j(topic = "hoopoe.profiler")
+public class HoopoeWebViewExtension
+        implements HoopoeProfilerExtension, HoopoeConfigurableComponent<Configuration> {
+
+    static {
+        Log.setLog(new Slf4jLog(log.getName()));
+    }
 
     private HoopoeProfiler profiler;
+
+    private Configuration configuration = new Configuration();
 
     @Override
     public void init(HoopoeProfiler profiler) {
         this.profiler = profiler;
 
+        Integer port = configuration.getPort();
         try {
-            Server server = new Server(9786);  //todo setup port here from config
+            log.info("starting web view at port {}", port);
+
+            Server server = new Server(port);
 
             GzipHandler gzipHandler = new GzipHandler();
             HandlerList handlers = new HandlerList();
@@ -54,9 +69,9 @@ public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
             server.setHandler(gzipHandler);
 
             server.start();
-        }
-        catch (Exception e) {
-            throw new IllegalStateException(e); //todo think about correct processing
+
+        } catch (Exception e) {
+            throw new IllegalStateException("Cannot start web view at port " + port, e);
         }
     }
 
@@ -64,10 +79,11 @@ public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
         return new AbstractHandler() {
 
             @Override
-            public void handle(String target,
-                               Request baseRequest,
-                               HttpServletRequest request,
-                               HttpServletResponse response) throws IOException, ServletException {
+            public void handle(
+                    String target,
+                    Request baseRequest,
+                    HttpServletRequest request,
+                    HttpServletResponse response) throws IOException, ServletException {
                 if (response.isCommitted() || baseRequest.isHandled()) {
                     return;
                 }
@@ -117,9 +133,10 @@ public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
 
         hoopoeJacksonModule.addSerializer(ZonedDateTime.class, new JsonSerializer<ZonedDateTime>() {
             @Override
-            public void serialize(ZonedDateTime value,
-                                  JsonGenerator gen,
-                                  SerializerProvider serializers) throws IOException {
+            public void serialize(
+                    ZonedDateTime value,
+                    JsonGenerator gen,
+                    SerializerProvider serializers) throws IOException {
                 gen.writeString(String.valueOf(1000 * value.toEpochSecond()));
             }
         });
@@ -127,6 +144,11 @@ public class HoopoeWebViewExtension implements HoopoeProfilerExtension {
         objectMapper.registerModule(hoopoeJacksonModule);
 
         return objectMapper;
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+        return configuration;
     }
 
 }
