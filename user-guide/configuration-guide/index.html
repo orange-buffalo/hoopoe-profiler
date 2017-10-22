@@ -83,7 +83,7 @@ extensions:
 <div class="sect2">
 <h3 id="bundled-plugins-and-extensions">Bundled Plugins and Extensions</h3>
 <div class="paragraph">
-<p>Hoopoe provides SQL Queries plugin (<code>sql-queries</code> id in default configuration) and Web UI extensions (<code>web-view</code> id)
+<p>Hoopoe provides SQL Queries plugin (<code>sql-queries</code> ID in default configuration) and Web UI extensions (<code>web-view</code> ID)
 bundled with the agent.</p>
 </div>
 <div class="paragraph">
@@ -111,6 +111,25 @@ extensions:
 </div>
 <div class="paragraph">
 <p>The default value for Web UI port is <code>9786</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="external-plugins-and-extension">External Plugins and Extension</h3>
+<div class="paragraph">
+<p>You can add any external plugin or extension to be loaded by the profiler. Just create a new entry in the corresponding
+section of the configuration file (feel free to choose ID you like) and provide the <code>path</code> to the archive:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">extensions:
+  my-extension:
+    enabled: true
+    path: "file:/path/to/extension.zip"
+plugins:
+  my-plugin:
+    enabled: true
+    path: "file:/path/to/plugin.zip"</code></pre>
+</div>
 </div>
 </div>
 <div class="sect2">
