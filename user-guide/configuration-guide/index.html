@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+
+<!-- Begin Jekyll SEO tag v2.2.3 -->
+<title>hoopoe-profiler | Open Source and forever free Java Profiler</title>
+<meta property="og:title" content="hoopoe-profiler" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Open Source and forever free Java Profiler" />
+<meta property="og:description" content="Open Source and forever free Java Profiler" />
+<link rel="canonical" href="https://orange-buffalo.github.io/hoopoe-profiler/user-guide/configuration-guide/" />
+<meta property="og:url" content="https://orange-buffalo.github.io/hoopoe-profiler/user-guide/configuration-guide/" />
+<meta property="og:site_name" content="hoopoe-profiler" />
+<script type="application/ld+json">
+{"@context":"http://schema.org","@type":"WebPage","headline":"hoopoe-profiler","description":"Open Source and forever free Java Profiler","url":"https://orange-buffalo.github.io/hoopoe-profiler/user-guide/configuration-guide/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <meta name="description" content="Open Source and forever free Java Profiler
+"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/hoopoe-profiler/assets/css/style.css?v=">
+  </head>
+  <body>
+    <section class="main-content">
+      <div class="sect1">
+<h2 id="profiler-configuration">Profiler Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Hoopoe can load configuration from external YAML file. To specify the configuration file, use <code>config.file</code>
+setting of <code>javaagent</code> option:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">-javaagent:hoopoe-profiler.jar=config.file=/path/to/my/config.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Hoopoe is shipped with the default configuration bundled. Values provided in user configuration file
+override corresponding values specified in the default config file.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Empty values are ignored, and thus it is not possible to override default value with <code>null</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="configurations-files-structure">Configurations Files Structure</h3>
+<div class="paragraph">
+<p>Configurations Files have the following structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">core:
+  minimum-tracked-invocation-time: !!java.lang.Long 1000000
+  included-classes-patterns:
+    - java\.lang\..*
+  excluded-classes-patterns:
+    - com\.sun\..*
+  profile: default
+plugins:
+  &lt;plugin-id&gt;:
+    enabled: true
+    path: "classpath:&lt;plugin-zip-path&gt;"
+    &lt;plugin-specific-property&gt;: &lt;some-value&gt;
+extensions:
+  &lt;extension-id&gt;:
+    enabled: true
+    path: "file:&lt;extension-zip-path&gt;"
+    &lt;extension-specific-property&gt;: &lt;some-value&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="bundled-plugins-and-extensions">Bundled Plugins and Extensions</h3>
+<div class="paragraph">
+<p>Hoopoe provides SQL Queries plugin (<code>sql-queries</code> id in default configuration) and Web UI extensions (<code>web-view</code> id)
+bundled with the agent.</p>
+</div>
+<div class="paragraph">
+<p>If you would like to disable any of this, override the <code>enabled</code> property:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">plugins:
+  sql-queries:
+    enabled: false
+extensions:
+  web-view:
+    enabled: false</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Web UI extension also has configurable port of Jetty server it starts. This can be overridden via <code>port</code> property:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">extensions:
+  web-view:
+    port: 8181</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The default value for Web UI port is <code>9786</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="configuration-profiles">Configuration Profiles</h3>
+<div class="paragraph">
+<p>Hoopoe supports configuration profiles. They are useful if you like to keep your configuration in one place,
+though having flexibility to define different config per application.</p>
+</div>
+<div class="paragraph">
+<p>When configuration profile is used, Hoopoe will merge profile configuration with the default one (if provided)
+ from user configuration file, and then merge the result with the default bundled configuration.</p>
+</div>
+<div class="paragraph">
+<p>Configuration file with profiles is a multi-document YAML file, where <code>core.profile</code> defines the unique profile name,
+configuration without profile specified is the default one.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">core:
+  minimum-tracked-invocation-time: !!java.lang.Long 10000000
+---
+core:
+  profile: my-micro-service
+  minimum-tracked-invocation-time: !!java.lang.Long 0
+  excluded-classes-patterns:
+    - org\.springframework\..*</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To run an application with profile chosen (rather than default), use <code>config.profile</code> setting of <code>javaagent</code> option:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">-javaagent:hoopoe-profiler.jar=config.file=/path/to/my/config.yaml,config.profile=my-micro-service</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="supported-notations">Supported Notations</h3>
+<div class="paragraph">
+<p>Hoopoe supports two types of notations:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Dot-separated properties names</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">core.profile: default</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Hierarchical YAML document</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml">core:
+  profile: default</code></pre>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+      <footer class="site-footer">
+        
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+      </footer>
+    </section>
+
+    
+  </body>
+</html>
