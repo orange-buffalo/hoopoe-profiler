@@ -34,7 +34,7 @@ extensions:
 
 === Bundled Plugins and Extensions
 
-Hoopoe provides SQL Queries plugin (`sql-queries` id in default configuration) and Web UI extensions (`web-view` id)
+Hoopoe provides SQL Queries plugin (`sql-queries` ID in default configuration) and Web UI extensions (`web-view` ID)
 bundled with the agent.
 
 If you would like to disable any of this, override the `enabled` property:
@@ -54,6 +54,21 @@ extensions:
     port: 8181
 
 The default value for Web UI port is `9786`.
+
+=== External Plugins and Extension
+
+You can add any external plugin or extension to be loaded by the profiler. Just create a new entry in the corresponding
+section of the configuration file (feel free to choose ID you like) and provide the `path` to the archive:
+
+[source,yaml]
+extensions:
+  my-extension:
+    enabled: true
+    path: "file:/path/to/extension.zip"
+plugins:
+  my-plugin:
+    enabled: true
+    path: "file:/path/to/plugin.zip"
 
 === Configuration Profiles
 
