@@ -72,6 +72,15 @@ public class YamlDocumentsReaderTest {
                                 )
                         ))
                         .forDataProvider(),
+
+                new YamlDocumentsReaderTestData("Dot-separated properties must be parsed into nested maps")
+                        .withInput("empty-property.yml")
+                        .expectDocument(ImmutableMap.of(
+                                "firstProperty", ImmutableMap.of(
+                                        "one", "one"
+                                )
+                        ))
+                        .forDataProvider()
         };
     }
 

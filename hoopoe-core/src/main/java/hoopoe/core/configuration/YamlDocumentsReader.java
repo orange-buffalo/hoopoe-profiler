@@ -14,10 +14,14 @@ import org.yaml.snakeyaml.Yaml;
 class YamlDocumentsReader {
 
     /**
-     * Reads and parses input data. For every document in the YAML source generates a map.
-     * Resulting map may have nested maps for nested properties.
-     * All the keys are normalized to camel-style, i.e. underscore and dashes are converted to camel humps.
+     * Reads and parses input data. For every document in the YAML source generates a map. Resulting map may have nested
+     * maps for nested properties. All the keys are normalized to camel-style, i.e. underscore and dashes are converted
+     * to camel humps.
+     * <p>
+     * Does not support {@code null} values - keys without values will not be added to the result map.
+     *
      * @param dataStream YAML data.
+     *
      * @return collection of maps, every represents a document in YAML source.
      */
     public Collection<Map<String, Object>> readDocuments(InputStream dataStream) {
@@ -35,16 +39,18 @@ class YamlDocumentsReader {
     private Map<String, Object> processRawYamlDocument(Map<String, Object> rawYaml) {
         Map<String, Object> document = new HashMap<>();
         rawYaml.forEach((compositeRawYamlKey, value) -> {
-            String[] rawYamlKeys = compositeRawYamlKey.split("\\.");
-            
-            Map<String, Object> targetMap = createNestedMapsAndGetTargetMap(document, rawYamlKeys);
+            if (value != null) {
+                String[] rawYamlKeys = compositeRawYamlKey.split("\\.");
 
-            if (value instanceof Map) {
-                value = processRawYamlDocument((Map<String, Object>) value);
+                Map<String, Object> targetMap = createNestedMapsAndGetTargetMap(document, rawYamlKeys);
+
+                if (value instanceof Map) {
+                    value = processRawYamlDocument((Map<String, Object>) value);
+                }
+
+                String normalizedKey = normalizeYamlKey(rawYamlKeys[rawYamlKeys.length - 1]);
+                targetMap.put(normalizedKey, value);
             }
-
-            String normalizedKey = normalizeYamlKey(rawYamlKeys[rawYamlKeys.length - 1]);
-            targetMap.put(normalizedKey, value);
         });
         return document;
     }
