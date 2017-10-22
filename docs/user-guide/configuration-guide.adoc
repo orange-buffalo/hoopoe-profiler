@@ -1,0 +1,94 @@
+== Profiler Configuration
+
+Hoopoe can load configuration from external YAML file. To specify the configuration file, use `config.file`
+setting of `javaagent` option:
+[source,sh]
+-javaagent:hoopoe-profiler.jar=config.file=/path/to/my/config.yaml
+
+Hoopoe is shipped with the default configuration bundled. Values provided in user configuration file
+override corresponding values specified in the default config file.
+
+NOTE: Empty values are ignored, and thus it is not possible to override default value with `null`.
+
+=== Configurations Files Structure
+Configurations Files have the following structure:
+
+[source,yaml]
+core:
+  minimum-tracked-invocation-time: !!java.lang.Long 1000000
+  included-classes-patterns:
+    - java\.lang\..*
+  excluded-classes-patterns:
+    - com\.sun\..*
+  profile: default
+plugins:
+  <plugin-id>:
+    enabled: true
+    path: "classpath:<plugin-zip-path>"
+    <plugin-specific-property>: <some-value>
+extensions:
+  <extension-id>:
+    enabled: true
+    path: "file:<extension-zip-path>"
+    <extension-specific-property>: <some-value>
+
+=== Bundled Plugins and Extensions
+
+Hoopoe provides SQL Queries plugin (`sql-queries` id in default configuration) and Web UI extensions (`web-view` id)
+bundled with the agent.
+
+If you would like to disable any of this, override the `enabled` property:
+
+[source,yaml]
+plugins:
+  sql-queries:
+    enabled: false
+extensions:
+  web-view:
+    enabled: false
+
+Web UI extension also has configurable port of Jetty server it starts. This can be overridden via `port` property:
+[source,yaml]
+extensions:
+  web-view:
+    port: 8181
+
+The default value for Web UI port is `9786`.
+
+=== Configuration Profiles
+
+Hoopoe supports configuration profiles. They are useful if you like to keep your configuration in one place,
+though having flexibility to define different config per application.
+
+When configuration profile is used, Hoopoe will merge profile configuration with the default one (if provided)
+ from user configuration file, and then merge the result with the default bundled configuration.
+
+Configuration file with profiles is a multi-document YAML file, where `core.profile` defines the unique profile name,
+configuration without profile specified is the default one.
+
+[source,yaml]
+core:
+  minimum-tracked-invocation-time: !!java.lang.Long 10000000
+---
+core:
+  profile: my-micro-service
+  minimum-tracked-invocation-time: !!java.lang.Long 0
+  excluded-classes-patterns:
+    - org\.springframework\..*
+
+To run an application with profile chosen (rather than default), use `config.profile` setting of `javaagent` option:
+[source,sh]
+-javaagent:hoopoe-profiler.jar=config.file=/path/to/my/config.yaml,config.profile=my-micro-service
+
+=== Supported Notations
+
+Hoopoe supports two types of notations:
+
+* Dot-separated properties names
+[source,yaml]
+core.profile: default
+
+* Hierarchical YAML document
+[source,yaml]
+core:
+  profile: default
