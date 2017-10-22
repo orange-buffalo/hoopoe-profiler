@@ -1,0 +1,12 @@
+core:
+  minimum-tracked-invocation-time: !!java.lang.Long 1000000
+  included-classes-patterns:
+  excluded-classes-patterns:
+plugins:
+  sql-queries:
+    enabled: true
+    path: "classpath:hoopoe-sql-queries-plugin.zip"
+extensions:
+  web-view:
+    enabled: true
+    path: "classpath:hoopoe-web-view-extension.zip"

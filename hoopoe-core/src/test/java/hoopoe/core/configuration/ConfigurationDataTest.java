@@ -15,6 +15,7 @@ import org.mockito.Mockito;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -253,4 +254,73 @@ public class ConfigurationDataTest {
         verifyNoMoreInteractions(emptyPropertySetterMock);
     }
 
+    @Test
+    public void testGetMinimumTrackedInvocationTimeInNs() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "core", ImmutableMap.of("minimumTrackedInvocationTime", 100L)
+        ));
+
+        long actualMinimumTrackedInvocationTimeInNs = configurationData.getMinimumTrackedInvocationTimeInNs();
+
+        assertThat(actualMinimumTrackedInvocationTimeInNs, equalTo(100L));
+    }
+
+    @Test
+    public void testGetMinimumTrackedInvocationTimeInNsNoValue() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "core", ImmutableMap.of()
+        ));
+
+        long actualMinimumTrackedInvocationTimeInNs = configurationData.getMinimumTrackedInvocationTimeInNs();
+
+        assertThat(actualMinimumTrackedInvocationTimeInNs, equalTo(0L));
+    }
+
+    @Test
+    public void testIncludedClassesPatterns() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "core", ImmutableMap.of("includedClassesPatterns", Arrays.asList("first", "second"))
+        ));
+
+        Collection<String> actualIncludedClassesPatterns = configurationData.getIncludedClassesPatterns();
+
+        assertThat(actualIncludedClassesPatterns, notNullValue());
+        assertThat(actualIncludedClassesPatterns, containsInAnyOrder("first", "second"));
+    }
+
+    @Test
+    public void testIncludedClassesPatternsNoValues() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "core", ImmutableMap.of()
+        ));
+
+        Collection<String> actualIncludedClassesPatterns = configurationData.getIncludedClassesPatterns();
+
+        assertThat(actualIncludedClassesPatterns, notNullValue());
+        assertThat(actualIncludedClassesPatterns, empty());
+    }
+
+    @Test
+    public void testExcludedClassesPatterns() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "core", ImmutableMap.of("excludedClassesPatterns", Arrays.asList("first", "second"))
+        ));
+
+        Collection<String> actualExcludedClassesPatterns = configurationData.getExcludedClassesPatterns();
+
+        assertThat(actualExcludedClassesPatterns, notNullValue());
+        assertThat(actualExcludedClassesPatterns, containsInAnyOrder("first", "second"));
+    }
+
+    @Test
+    public void testExcludedClassesPatternsNoValues() {
+        ConfigurationData configurationData = new ConfigurationData(ImmutableMap.of(
+                "core", ImmutableMap.of()
+        ));
+
+        Collection<String> actualExcludedClassesPatterns = configurationData.getExcludedClassesPatterns();
+
+        assertThat(actualExcludedClassesPatterns, notNullValue());
+        assertThat(actualExcludedClassesPatterns, empty());
+    }
 }

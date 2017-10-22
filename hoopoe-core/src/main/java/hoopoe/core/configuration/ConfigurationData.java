@@ -1,8 +1,10 @@
 package hoopoe.core.configuration;
 
+import hoopoe.api.configuration.HoopoeConfiguration;
 import hoopoe.core.HoopoeException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,16 +18,49 @@ class ConfigurationData {
 
     public static final String CORE_NAMESPACE = "core";
     public static final String PROFILE_KEY = "profile";
+    public static final String MINIMUM_TRACKED_INVOCATION_TIME = "minimumTrackedInvocationTime";
+    public static final String INCLUDED_CLASSES_PATTERNS = "includedClassesPatterns";
+    public static final String EXCLUDED_CLASSES_PATTERNS = "excludedClassesPatterns";
 
     public static final String PLUGINS_NAMESPACE = "plugins";
-    private static final String EXTENSIONS_NAMESPACE = "extensions";
     public static final String ENABLED_KEY = "enabled";
     public static final String PATH_KEY = "path";
+    public static final String EXTENSIONS_NAMESPACE = "extensions";
 
     private final Map<String, Object> configurationData;
 
     public ConfigurationData(Map<String, Object> configurationData) {
         this.configurationData = configurationData;
+    }
+
+    /**
+     * See {@link HoopoeConfiguration#getMinimumTrackedInvocationTimeInNs()}
+     */
+    public long getMinimumTrackedInvocationTimeInNs() {
+        return getConfigurationValue(configurationData,
+                Path.of(CORE_NAMESPACE, MINIMUM_TRACKED_INVOCATION_TIME),
+                Long.class,
+                0L);
+    }
+
+    /**
+     * See {@link HoopoeConfiguration#getIncludedClassesPatterns()}
+     */
+    public Collection<String> getIncludedClassesPatterns() {
+        return getConfigurationValue(configurationData,
+                Path.of(CORE_NAMESPACE, INCLUDED_CLASSES_PATTERNS),
+                Collection.class,
+                Collections.emptyList());
+    }
+
+    /**
+     * See {@link HoopoeConfiguration#getExcludedClassesPatterns()}
+     */
+    public Collection<String> getExcludedClassesPatterns() {
+        return getConfigurationValue(configurationData,
+                Path.of(CORE_NAMESPACE, EXCLUDED_CLASSES_PATTERNS),
+                Collection.class,
+                Collections.emptyList());
     }
 
     /**
@@ -47,8 +82,8 @@ class ConfigurationData {
     }
 
     /**
-     * Updates {@code pluginConfiguration} with values of plugins configuration section for {@code pluginId},
-     * for all the {@code properties}. Does not set {@code null} values.
+     * Updates {@code pluginConfiguration} with values of plugins configuration section for {@code pluginId}, for all
+     * the {@code properties}. Does not set {@code null} values.
      *
      * @param pluginId            ID of plugins to lookup values by.
      * @param pluginConfiguration configuration object to update.
@@ -133,8 +168,11 @@ class ConfigurationData {
 
     /**
      * Reads the configuration value by provided path.
+     * <p>
      * If value is {@code null} or node is missing in the middle of the path, returns {@code defaultValue}.
+     * <p>
      * If any of the intermediate nodes is of any other type but map, fails.
+     * <p>
      * If {@code expectedValueType} is not assignable from actual value type, fails.
      *
      * @param path              dot-separated path to traverse by.

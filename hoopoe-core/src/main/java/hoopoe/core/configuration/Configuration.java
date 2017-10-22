@@ -5,7 +5,6 @@ import hoopoe.api.configuration.HoopoeConfiguration;
 import hoopoe.api.extensions.HoopoeProfilerExtension;
 import hoopoe.api.plugins.HoopoePlugin;
 import java.util.Collection;
-import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -101,19 +100,16 @@ public class Configuration implements HoopoeConfiguration {
 
     @Override
     public long getMinimumTrackedInvocationTimeInNs() {
-        // TODO read from config
-        return 1_000_000;
+        return configurationData.getMinimumTrackedInvocationTimeInNs();
     }
 
     @Override
     public Collection<String> getIncludedClassesPatterns() {
-        // TODO read from config
-        return Collections.emptyList();
+        return configurationData.getIncludedClassesPatterns();
     }
 
     @Override
     public Collection<String> getExcludedClassesPatterns() {
-        // TODO read from config
-        return Collections.emptyList();
+        return configurationData.getExcludedClassesPatterns();
     }
 }
