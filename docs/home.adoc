@@ -33,6 +33,9 @@ instructions].
 . Start the application.
 . The web-ui for hoopoe-profiler is deployed at http://localhost:9786/[http://localhost:9786/,window=_blank].
 
+Hoopoe can be configured in a flexible manner. Please check our link:user-guide/configuration-guide[Configuration Guide]
+for more details.
+
 NOTE: We instrument a lot of code to give the best profiling results we can.
 It means the time to load any class will increase, as well as the total startup time of the application.
 
