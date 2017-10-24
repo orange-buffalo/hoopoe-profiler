@@ -1,6 +1,11 @@
+import com.jfrog.bintray.gradle.BintrayExtension
+import com.jfrog.bintray.gradle.BintrayUploadTask
 import hoopoe.gradle.buildscript.*
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.internal.scan.config.BuildScanConfig
+import org.gradle.kotlin.dsl.`build-scan`
+import org.gradle.kotlin.dsl.the
+import org.zeroturnaround.jrebel.gradle.RebelGenerateTask
 import pl.allegro.tech.build.axion.release.domain.ChecksConfig
 import pl.allegro.tech.build.axion.release.domain.TagNameSerializationConfig
 import pl.allegro.tech.build.axion.release.domain.VersionConfig
@@ -18,8 +23,8 @@ buildscript {
 
     dependencies {
         classpath("org.zeroturnaround:gradle-jrebel-plugin:1.1.7")
-        classpath("pl.allegro.tech.build:axion-release-plugin:1.8.1")
         classpath("com.github.ben-manes:gradle-versions-plugin:0.15.0")
+        classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3")
     }
 }
 
@@ -28,38 +33,17 @@ plugins {
 }
 
 apply {
-    plugin("pl.allegro.tech.build.axion-release")
     plugin("com.github.ben-manes.versions")
 }
+
+prepareReleaseManagement()
+val scmVersion: VersionConfig by project.extensions
 
 buildScan {
     setLicenseAgreementUrl("https://gradle.com/terms-of-service")
     setLicenseAgree("yes")
     publishAlwaysIf(System.getenv("CI") == "true")
 }
-
-configure<VersionConfig> {
-    tag(closureOf<TagNameSerializationConfig> {
-        prefix = "hoopoe-profiler"
-        initialVersion = KotlinClosure2<TagProperties, ScmPosition, String>({ _, _ ->
-            "0.1.0-alpha1"
-        })
-    })
-    versionIncrementer("incrementPrerelease")
-    hooks(closureOf<HooksConfig> {
-        pre(delegateClosureOf<HookContext> {
-            project.ext.set("releaseVersion", version)
-            println("Releasing $version")
-        })
-    })
-    checks(closureOf<ChecksConfig> {
-        uncommittedChanges = true
-        aheadOfRemote = false
-    })
-}
-
-val scmVersion: VersionConfig by project.extensions
-val releasing = gradle.startParameter.taskNames.contains("release")
 
 allprojects {
     group = "hoopoe-profiler"
@@ -103,6 +87,25 @@ subprojects {
 
             withType(JavaCompile::class.java) {
                 sourceCompatibility = "1.8"
+            }
+
+            withType(RebelGenerateTask::class.java) {
+                onlyIf{ !releasing }
+            }
+
+            withType(BintrayUploadTask::class.java) {
+                the<BintrayExtension>().apply {
+                    user = System.getenv("BINTRAY_USER")
+                    key = System.getenv("BINTRAY_KEY")
+                    pkg(closureOf<BintrayExtension.PackageConfig> {
+                        repo = "hoopoe-profiler"
+                        version(closureOf<BintrayExtension.VersionConfig> {
+                            name = "${project.version}"
+                            vcsTag = "hoopoe-profiler-${project.version}"
+                            released = java.util.Date().toString()
+                        })
+                    })
+                }
             }
         }
     })
