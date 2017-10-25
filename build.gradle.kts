@@ -106,6 +106,7 @@ subprojects {
                         })
                     })
                 }
+                dependsOn("build")
             }
         }
     })
