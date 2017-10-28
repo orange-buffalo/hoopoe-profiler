@@ -10,6 +10,14 @@ services:
 
 install: true
 
+stages:
+  - build
+  - integration tests
+  - name: docs
+    if: fork = false AND branch = master
+  - name: deploy
+    if: fork = false AND tag =~ ^hoopoe-profiler-
+
 jobs:
   include:
     - stage: build
@@ -70,6 +78,7 @@ jobs:
     - stage: docs
       language: ruby
       rvm: 2.4.1
+      jdk:
       cache: bundler
       before_install:
         # deploy keys for github pages
@@ -80,3 +89,14 @@ jobs:
         - gem install jekyll bundler
       script:
         - cd ./docs/ && bundle && bundle exec rake deploy
+
+    - stage: deploy
+      script:
+        - ./gradlew bintrayUpload
+      before_cache:
+        - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+      cache:
+        directories:
+          - $HOME/.gradle/caches/
+          - $HOME/.gradle/wrapper/
