@@ -3,7 +3,10 @@ package hoopoe.tests;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.representer.Representer;
 
 class AgentConfig {
 
@@ -24,7 +27,13 @@ class AgentConfig {
         writeComponents(extensionsRoot, extensions);
         configRoot.put("extensions", extensionsRoot);
 
-        Yaml yaml = new Yaml();
+        Map<String, Object> coreRoots = new HashMap<>();
+        coreRoots.put("minimum-tracked-invocation-time", 1000000L);
+        configRoot.put("core", coreRoots);
+
+        Representer represent = new Representer();
+        represent.addClassTag(Long.class, new Tag("!!java.lang.Long"));
+        Yaml yaml = new Yaml(represent, new DumperOptions());
         return yaml.dump(configRoot);
     }
 
