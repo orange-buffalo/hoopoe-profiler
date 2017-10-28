@@ -1,0 +1,44 @@
+== Releasing hoopoe
+
+We follow the approach of deriving project version from SCM tags information.
+See https://github.com/allegro/axion-release-plugin[axion-release-plugin] for some more details.
+
+Releasing a new version of hoopoe-profiler is a two-step procedure.
+
+=== Creating a release tag
+
+To see current snapshot version, run the following command:
+
+[source,sh]
+ ./gradlew currentVersion
+
+And you'll get output like this:
+[source,sh]
+----
+> Task :currentVersion
+
+Project version: 0.1.0-alpha2-SNAPSHOT
+----
+
+If you are fine with releasing this version, run:
+[source,sh]
+ ./gradlew tagRelease
+
+This will add a new Git tag of current version without snapshot.
+
+In case another version is desired, run the command:
+
+[source,sh]
+ ./gradlew tagRelease -Prelease.forceVersion=0.0.0
+
+In any case, after tag is created, it should be pushed manually.
+
+=== Deploying binaries
+
+Travis build automatically deploys the artifacts when tag is created in the repository.
+
+In case there is a need to manually deploy the artifacts, please run:
+[source,sh]
+ ./gradlew bintrayUpload
+
+Environment variables `BINTRAY_USER` and `BINTRAY_KEY` must be set to complete upload successfully. 

@@ -35,7 +35,7 @@ configure<BintrayExtension> {
         name = "hoopoe-profiler"
     })
     filesSpec(closureOf<RecordingCopyTask> {
-        from("build/libs")
-        into(".")
+        from(tasks.findByName("jar"))
+        into("${project.version}")
     })
 }
