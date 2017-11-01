@@ -17,7 +17,7 @@ object Versions {
     val logback = "1.2.3"
     val jetty = "9.4.7.RC0"
     val commonsLang3 = "3.6"
-    val byteBuddy = "1.7.6"
+    val byteBuddy = "1.7.7"
     val guava = "23.2-jre"
     val kotlin = "1.1.51"
     val jrebelPlugin = "1.1.7"
