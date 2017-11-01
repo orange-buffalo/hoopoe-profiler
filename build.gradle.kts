@@ -4,7 +4,10 @@ import hoopoe.gradle.buildscript.*
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.internal.scan.config.BuildScanConfig
 import org.gradle.kotlin.dsl.`build-scan`
+import org.gradle.kotlin.dsl.closureOf
+import org.gradle.kotlin.dsl.kotlin
 import org.gradle.kotlin.dsl.the
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.zeroturnaround.jrebel.gradle.RebelGenerateTask
 import pl.allegro.tech.build.axion.release.domain.ChecksConfig
 import pl.allegro.tech.build.axion.release.domain.TagNameSerializationConfig
@@ -22,9 +25,10 @@ buildscript {
     }
 
     dependencies {
-        classpath("org.zeroturnaround:gradle-jrebel-plugin:1.1.7")
-        classpath("com.github.ben-manes:gradle-versions-plugin:0.15.0")
-        classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3")
+        classpath("org.zeroturnaround:gradle-jrebel-plugin:${hoopoe.gradle.buildscript.Versions.jrebelPlugin}")
+        classpath("com.github.ben-manes:gradle-versions-plugin:${hoopoe.gradle.buildscript.Versions.gradleVersionsPlugin}")
+        classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:${hoopoe.gradle.buildscript.Versions.bintrayPlugin}")
+        classpath(kotlin("gradle-plugin", hoopoe.gradle.buildscript.Versions.kotlin))
     }
 }
 
@@ -90,7 +94,7 @@ subprojects {
             }
 
             withType(RebelGenerateTask::class.java) {
-                onlyIf{ !releasing }
+                onlyIf { !releasing }
             }
 
             withType(BintrayUploadTask::class.java) {
@@ -107,6 +111,12 @@ subprojects {
                     })
                 }
                 dependsOn("build")
+            }
+
+            withType(KotlinCompile::class.java) {
+                kotlinOptions {
+                    jvmTarget = "1.8"
+                }
             }
         }
     })

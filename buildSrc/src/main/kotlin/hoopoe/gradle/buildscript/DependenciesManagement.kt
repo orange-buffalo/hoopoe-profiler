@@ -19,6 +19,10 @@ object Versions {
     val commonsLang3 = "3.6"
     val byteBuddy = "1.7.6"
     val guava = "23.2-jre"
+    val kotlin = "1.1.51"
+    val jrebelPlugin = "1.1.7"
+    val gradleVersionsPlugin = "0.15.0"
+    val bintrayPlugin = "1.7.3"
 }
 
 object Libraries {
@@ -43,3 +47,6 @@ object Libraries {
 
 val Project.libraries: Libraries
     get() = Libraries
+
+val Project.librariesVersions: Versions
+    get() = Versions
