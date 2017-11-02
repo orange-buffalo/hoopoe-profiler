@@ -17,8 +17,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.experimental.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j(topic = "hoopoe.profiler")

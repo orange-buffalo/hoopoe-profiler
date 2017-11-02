@@ -28,6 +28,7 @@ public class ConfigurationBeanPropertiesReaderTest {
     public ExpectedException thrownException = ExpectedException.none();
 
     @DataProvider
+    @SuppressWarnings("unchecked")
     public static Object[][] testGetProperties() {
         return new Object[][] {
                 new TestDataItem(ClassWithoutProperties.class)
@@ -159,7 +160,7 @@ public class ConfigurationBeanPropertiesReaderTest {
     }
 
     private static ConfigurationBeanProperty.ConfigurationBeanPropertyBuilder prepareDefaultProperty(
-            Class configurationBeanClass,
+            Class<?> configurationBeanClass,
             String propertyName) {
 
         String nameWithFirstLetterCapitalized = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
@@ -172,7 +173,7 @@ public class ConfigurationBeanPropertiesReaderTest {
     }
 
     private static Method getMethod(
-            Class clazz,
+            Class<?> clazz,
             String name) {
         return Stream.of(clazz.getMethods())
                 .filter(method -> method.getName().equals(name))
@@ -258,12 +259,14 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithoutProperties {
         public String testSomething() {
             return "42";
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithGetterOnly {
         public String getValue() {
             return "42";
@@ -277,6 +280,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithSetterOnly {
         public void setValue(String value) {
         }
@@ -299,6 +303,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithGetterAndSetterWithoutAnnotation {
         public void setValue(String value) {
         }
@@ -308,6 +313,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithDefaultAnnotationAttributesOnSetter {
         @HoopoeConfigurationProperty
         public void setValue(String value) {
@@ -318,6 +324,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithDefaultAnnotationAttributesOnGetter {
         public void setValue(String value) {
         }
@@ -328,6 +335,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithCustomAnnotationValues {
         @HoopoeConfigurationProperty(name = "propertyName", description = "propertyDescription", key = "propertyKey")
         public void setValue(String value) {
@@ -338,6 +346,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithCustomPropertyName {
         @HoopoeConfigurationProperty(name = "propertyName")
         public void setValue(String value) {
@@ -348,6 +357,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithCustomPropertyKey {
         @HoopoeConfigurationProperty(key = "propertyKey")
         public void setValue(String value) {
@@ -358,6 +368,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithCustomPropertyKeyAndName {
         @HoopoeConfigurationProperty(name = "propertyName", key = "propertyKey")
         public void setValue(String value) {
@@ -368,6 +379,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithMultiplesAnnotatedProperties {
         @HoopoeConfigurationProperty
         public void setValue(String value) {
@@ -386,6 +398,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ParentClassWithAnnotatedProperty {
         @HoopoeConfigurationProperty
         public void setValue(String value) {
@@ -396,6 +409,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ChildClassWithAnnotatedProperty extends ParentClassWithAnnotatedProperty {
         @HoopoeConfigurationProperty
         public void setAnswer(int answer) {
@@ -406,6 +420,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithVariousPropertyTypes {
         @HoopoeConfigurationProperty
         public void setStringValue(String value) {
@@ -448,6 +463,7 @@ public class ConfigurationBeanPropertiesReaderTest {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class ClassWithPropertyWithIndexedAccessOnly {
         @HoopoeConfigurationProperty
         public void setValue(

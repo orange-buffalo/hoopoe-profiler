@@ -144,7 +144,7 @@ public class TraceNode {
     private String getGroupingKey() {
         String attributesKey = StringUtils.EMPTY;
         if (attributes != null) {
-            List<HoopoeInvocationAttribute> sortedAttributes = new ArrayList(attributes);
+            List<HoopoeInvocationAttribute> sortedAttributes = new ArrayList<>(attributes);
             sortedAttributes.sort(Comparator.comparing(HoopoeInvocationAttribute::getName));
             for (HoopoeInvocationAttribute attribute : sortedAttributes) {
                 attributesKey += attribute.getName() + attribute.getDetails();

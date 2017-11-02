@@ -4,12 +4,13 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.CoreMatchers;
+import org.junit.Test;
+import overlapped.ClassZ;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import org.junit.Test;
-import overlapped.ClassZ;
 
 public class HoopoeClassLoaderTest {
 
@@ -36,7 +37,7 @@ public class HoopoeClassLoaderTest {
     @Test
     public void testSimpleClassWithoutPackage() throws Exception {
         ClassLoader hoopoeClassLoader = getHoopoeClassLoader("simple-class-without-package.zip");
-        Class classA = hoopoeClassLoader.loadClass("ClassA");
+        Class<?> classA = hoopoeClassLoader.loadClass("ClassA");
 
         assertThat(classA.getClassLoader(), equalTo(hoopoeClassLoader));
 
@@ -48,7 +49,7 @@ public class HoopoeClassLoaderTest {
     @Test
     public void testSimpleClassInPackage() throws Exception {
         ClassLoader hoopoeClassLoader = getHoopoeClassLoader("simple-class-in-package.zip");
-        Class classB = hoopoeClassLoader.loadClass("nested.ClassB");
+        Class<?> classB = hoopoeClassLoader.loadClass("nested.ClassB");
 
         assertThat(classB.getClassLoader(), equalTo(hoopoeClassLoader));
 
@@ -60,7 +61,7 @@ public class HoopoeClassLoaderTest {
     @Test
     public void testSimpleClassInDeepPackage() throws Exception {
         ClassLoader hoopoeClassLoader = getHoopoeClassLoader("simple-class-in-deep-package.zip");
-        Class classD = hoopoeClassLoader.loadClass("nested.deep.ClassD");
+        Class<?> classD = hoopoeClassLoader.loadClass("nested.deep.ClassD");
 
         assertThat(classD.getClassLoader(), equalTo(hoopoeClassLoader));
 
@@ -72,7 +73,7 @@ public class HoopoeClassLoaderTest {
     @Test
     public void testClassWithDependencies() throws Exception {
         ClassLoader hoopoeClassLoader = getHoopoeClassLoader("class-with-dependencies.zip");
-        Class classC = hoopoeClassLoader.loadClass("nested.deep.ClassC");
+        Class<?> classC = hoopoeClassLoader.loadClass("nested.deep.ClassC");
 
         assertThat(classC.getClassLoader(), equalTo(hoopoeClassLoader));
 
@@ -94,7 +95,7 @@ public class HoopoeClassLoaderTest {
     @Test
     public void testJarInLib() throws Exception {
         ClassLoader hoopoeClassLoader = getHoopoeClassLoader("jar-in-lib.zip");
-        Class classB = hoopoeClassLoader.loadClass("nested.ClassB");
+        Class<?> classB = hoopoeClassLoader.loadClass("nested.ClassB");
 
         assertThat(classB.getClassLoader(), equalTo(hoopoeClassLoader));
 
@@ -106,7 +107,7 @@ public class HoopoeClassLoaderTest {
     @Test
     public void testDependencyToJar() throws Exception {
         ClassLoader hoopoeClassLoader = getHoopoeClassLoader("dependency-to-jar.zip");
-        Class classC = hoopoeClassLoader.loadClass("nested.deep.ClassC");
+        Class<?> classC = hoopoeClassLoader.loadClass("nested.deep.ClassC");
 
         assertThat(classC.getClassLoader(), equalTo(hoopoeClassLoader));
 
@@ -142,10 +143,10 @@ public class HoopoeClassLoaderTest {
     @Test
     public void testHierarchyCorrectness() throws Exception {
         ClassLoader hoopoeClassLoader = getHoopoeClassLoader("overlapped-class.zip");
-        Class zippedClassZ = hoopoeClassLoader.loadClass("overlapped.ClassZ");
+        Class<?> zippedClassZ = hoopoeClassLoader.loadClass("overlapped.ClassZ");
 
         assertThat(zippedClassZ.getClassLoader(), equalTo(hoopoeClassLoader));
-        assertThat(zippedClassZ, not(CoreMatchers.<Class>equalTo(ClassZ.class)));
+        assertThat(zippedClassZ, not(CoreMatchers.equalTo(ClassZ.class)));
     }
 
     private HoopoeClassLoader getHoopoeClassLoader(String zipName) {

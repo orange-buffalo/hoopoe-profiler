@@ -24,6 +24,7 @@ class MapsMerger {
      *
      * @return new map, which contains all keys from master and customization, with values of the latter to be superior.
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> mergeMaps(Map<String, Object> master, Map<String, Object> customization) {
         Map<String, Object> mergedMap = new HashMap<>();
 

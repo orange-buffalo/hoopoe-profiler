@@ -46,6 +46,7 @@ class ConfigurationData {
     /**
      * See {@link HoopoeConfiguration#getIncludedClassesPatterns()}
      */
+    @SuppressWarnings("unchecked")
     public Collection<String> getIncludedClassesPatterns() {
         return getConfigurationValue(configurationData,
                 Path.of(CORE_NAMESPACE, INCLUDED_CLASSES_PATTERNS),
@@ -56,6 +57,7 @@ class ConfigurationData {
     /**
      * See {@link HoopoeConfiguration#getExcludedClassesPatterns()}
      */
+    @SuppressWarnings("unchecked")
     public Collection<String> getExcludedClassesPatterns() {
         return getConfigurationValue(configurationData,
                 Path.of(CORE_NAMESPACE, EXCLUDED_CLASSES_PATTERNS),
@@ -122,7 +124,7 @@ class ConfigurationData {
             Collection<ConfigurationBeanProperty> properties) {
 
         try {
-            for (ConfigurationBeanProperty property : properties) {
+            for (ConfigurationBeanProperty<?> property : properties) {
                 Object propertyValue = getConfigurationValue(configurationData,
                         Path.of(componentsNamespace, componentId, property.getKey()),
                         property.getValueType(),
@@ -138,6 +140,7 @@ class ConfigurationData {
     }
 
     private Collection<EnabledComponentData> getEnabledComponentsData(String componentsNamespace) {
+        @SuppressWarnings("unchecked")
         Collection<String> componentsIds = getConfigurationValue(
                 configurationData,
                 Path.of(componentsNamespace),
@@ -182,6 +185,7 @@ class ConfigurationData {
      *
      * @return configuration value, default value or throws an exception.
      */
+    @SuppressWarnings("unchecked")
     private <T> T getConfigurationValue(
             Map<String, Object> root,
             Path path,
@@ -194,7 +198,7 @@ class ConfigurationData {
             return defaultValue;
 
         } else {
-            Class actualValueType = value.getClass();
+            Class<?> actualValueType = value.getClass();
             if (!expectedValueType.isAssignableFrom(actualValueType)) {
                 throw new HoopoeException("Expected type " + expectedValueType + " does not match actual type " +
                         actualValueType + " for value of " + path);
@@ -203,6 +207,7 @@ class ConfigurationData {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Object readPathValue(
             Map<String, Object> root,
             Path path) {

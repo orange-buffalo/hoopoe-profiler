@@ -94,6 +94,7 @@ public class ComponentLoader {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private <T> Class<T> getComponentClass(
             String componentZipPath,
             HoopoeClassLoader pluginClassLoader,
@@ -109,7 +110,7 @@ public class ComponentLoader {
                     " does not contain " + classNameProperty + " property");
         }
 
-        Class actualComponentClazz;
+        Class<?> actualComponentClazz;
         try {
             actualComponentClazz = pluginClassLoader.loadClass(className);
         } catch (ClassNotFoundException e) {
@@ -122,6 +123,6 @@ public class ComponentLoader {
                     expectedComponentClass.getCanonicalName());
         }
 
-        return actualComponentClazz;
+        return (Class<T>) actualComponentClazz;
     }
 }

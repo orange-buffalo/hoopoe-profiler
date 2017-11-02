@@ -18,8 +18,8 @@ import static org.hamcrest.Matchers.greaterThan;
 @Slf4j
 public class ExtensionIT {
 
-    private static final GenericContainer container =
-            new GenericContainer(new ImageFromDockerfile()
+    private static final GenericContainer<?> container =
+            new GenericContainer<>(new ImageFromDockerfile()
                     .withFileFromClasspath("Dockerfile", "/tomcat8.Dockerfile"))
 
                     .withExposedPorts(8080)

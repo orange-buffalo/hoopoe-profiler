@@ -95,6 +95,7 @@ public final class HoopoeClassLoader extends URLClassLoader {
 
     public Enumeration<URL> getResources(String name) throws IOException {
         ClassLoader parent = getParent();
+        @SuppressWarnings("unchecked")
         Enumeration<URL>[] tmp = (Enumeration<URL>[]) new Enumeration<?>[parent == null ? 1 : 2];
         tmp[0] = findResources(name);
         if (parent != null) {

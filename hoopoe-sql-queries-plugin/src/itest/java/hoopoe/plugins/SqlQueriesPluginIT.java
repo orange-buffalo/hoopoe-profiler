@@ -38,12 +38,12 @@ public class SqlQueriesPluginIT {
 
     @ClassRule
     public static HoopoeIntegrationTest integrationTest = new HoopoeIntegrationTest()
-            .withContainer(new GenericContainer(new ImageFromDockerfile()
+            .withContainer(new GenericContainer<>(new ImageFromDockerfile()
                     .withFileFromClasspath("Dockerfile", "/db-images/" + DB_NAME + ".Dockerfile"))
                     .withNetwork(network)
                     .withNetworkAliases("db")
             )
-            .withHoopoeContainer(new GenericContainer("openjdk:8-jre")
+            .withHoopoeContainer(new GenericContainer<>("openjdk:8-jre")
                     .withNetwork(network)
                     .withExposedPorts(ENDPOINT_PORT)
                     .withClasspathResourceMapping(RESOURCES_APP_PATH, CONTAINER_APP_PATH, BindMode.READ_ONLY)

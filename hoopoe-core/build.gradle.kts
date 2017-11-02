@@ -11,6 +11,7 @@ dependencies {
     "compile"(project(":hoopoe-classloader"))
     "compile"(libraries.slf4j)
     "compile"(libraries.commonsLang3)
+    "compile"(libraries.commonsText)
     "compile"(libraries.commonsIo)
     "compile"(libraries.byteBuddy)
     "compile"(libraries.guava)

@@ -1,8 +1,8 @@
 package hoopoe.core.configuration;
 
 import java.lang.reflect.Method;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.experimental.Builder;
 
 /**
  * Describes a property of {@link hoopoe.api.configuration.HoopoeConfigurableComponent}.

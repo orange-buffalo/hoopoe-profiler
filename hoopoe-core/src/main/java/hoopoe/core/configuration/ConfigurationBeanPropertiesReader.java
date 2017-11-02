@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 
 /**
  * Inspects the class for bean properties annotated with {@link HoopoeConfigurationProperty}.
@@ -39,6 +39,7 @@ class ConfigurationBeanPropertiesReader {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private ConfigurationBeanProperty createConfigurationBeanProperty(
             Class configurationBeanClass,
             PropertyDescriptor javaPropertyDescriptor) {

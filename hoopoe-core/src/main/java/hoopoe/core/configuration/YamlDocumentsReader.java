@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -24,9 +24,10 @@ class YamlDocumentsReader {
      *
      * @return collection of maps, every represents a document in YAML source.
      */
+    @SuppressWarnings("unchecked")
     public Collection<Map<String, Object>> readDocuments(InputStream dataStream) {
         Yaml yaml = new Yaml();
-        Iterable rawYamlDocuments = yaml.loadAll(dataStream);
+        Iterable<?> rawYamlDocuments = yaml.loadAll(dataStream);
         Collection<Map<String, Object>> documents = new ArrayList<>();
         for (Map<String, Object> rawYamlDocument : (Iterable<Map<String, Object>>) rawYamlDocuments) {
             Map<String, Object> processedDocument = processRawYamlDocument(rawYamlDocument);
@@ -36,6 +37,7 @@ class YamlDocumentsReader {
         return documents;
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> processRawYamlDocument(Map<String, Object> rawYaml) {
         Map<String, Object> document = new HashMap<>();
         rawYaml.forEach((compositeRawYamlKey, value) -> {
@@ -55,13 +57,14 @@ class YamlDocumentsReader {
         return document;
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> createNestedMapsAndGetTargetMap(Map<String, Object> document, String[] rawYamlKeys) {
         Map<String, Object> targetMap = document;
         for (int i = 0; i < rawYamlKeys.length - 1; i++) {
             String normalizedKey = normalizeYamlKey(rawYamlKeys[i]);
             targetMap = (Map<String, Object>) targetMap.computeIfAbsent(
                     normalizedKey,
-                    key -> new HashMap<String, Object>()
+                    key -> new HashMap<>()
             );
         }
         return targetMap;

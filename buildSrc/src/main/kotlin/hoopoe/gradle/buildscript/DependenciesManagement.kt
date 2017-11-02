@@ -23,6 +23,7 @@ object Versions {
     val jrebelPlugin = "1.1.7"
     val gradleVersionsPlugin = "0.15.0"
     val bintrayPlugin = "1.7.3"
+    val commonsText = "1.1"
 }
 
 object Libraries {
@@ -43,6 +44,7 @@ object Libraries {
     val byteBuddy = "net.bytebuddy:byte-buddy:${Versions.byteBuddy}"
     val byteBuddyAgent = "net.bytebuddy:byte-buddy-agent:${Versions.byteBuddy}"
     val guava = "com.google.guava:guava:${Versions.guava}"
+    val commonsText = "org.apache.commons:commons-text:${Versions.commonsText}"
 }
 
 val Project.libraries: Libraries
