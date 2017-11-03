@@ -55,7 +55,7 @@ tasks {
 
         val webViewRunnerArgs = properties["webViewRunnerArgs"] as String?
         webViewRunnerArgs?.let {
-            jvmArgs = webViewRunnerArgs.split(" ")
+            jvmArgs = it.split(" ")
         }
 
         dependsOn("generateRebel")

@@ -10,5 +10,6 @@
     </root>
 
     <logger name="hoopoe.profiler" level="debug"/>
+    <logger name="com.googlecode.jsonrpc4j" level="warn"/>
 
 </configuration>
