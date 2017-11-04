@@ -22,6 +22,7 @@ class ProfilerMock : HoopoeProfiler {
         // multiple results here to quickly switch in runtime during development of UI
         profiledResult = createEmptyResult()
         profiledResult = createSingleThreadResult()
+        profiledResult = createRandomizedResult()
         return profiledResult
     }
 

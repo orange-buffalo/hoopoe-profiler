@@ -40,6 +40,8 @@ dependencies {
 
     "webViewRunnerCompile"(kotlin("stdlib-jre8", librariesVersions.kotlin))
     "webViewRunnerCompile"(libraries.slf4j)
+    "webViewRunnerCompile"(libraries.fastClasspathScanner)
+    "webViewRunnerCompile"(project(":hoopoe-core"))
     "webViewRunnerRuntime"(project(":hoopoe-api"))
     "webViewRunnerRuntime"(libraries.logback)
 }

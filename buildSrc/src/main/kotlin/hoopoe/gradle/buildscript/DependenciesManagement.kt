@@ -24,6 +24,7 @@ object Versions {
     val gradleVersionsPlugin = "0.15.0"
     val bintrayPlugin = "1.7.3"
     val commonsText = "1.1"
+    val fastClasspathScanner = "2.8.2"
 }
 
 object Libraries {
@@ -45,6 +46,7 @@ object Libraries {
     val byteBuddyAgent = "net.bytebuddy:byte-buddy-agent:${Versions.byteBuddy}"
     val guava = "com.google.guava:guava:${Versions.guava}"
     val commonsText = "org.apache.commons:commons-text:${Versions.commonsText}"
+    val fastClasspathScanner = "io.github.lukehutch:fast-classpath-scanner:${Versions.fastClasspathScanner}"
 }
 
 val Project.libraries: Libraries
