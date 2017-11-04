@@ -10,6 +10,8 @@ md-tooltip .md-content {
 md-icon.small {
     height: 13px;
     width: 13px;
+    min-height: 13px;
+    min-width: 13px;
 }
 
 md-toolbar:not(.md-menu-toolbar) {
