@@ -58,7 +58,7 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
   }
 
   function _consumeProfiledResult(profiledResult) {
-    if (profiledResult.invocations.length == 0) {
+    if (profiledResult.invocations.length === 0) {
       _profilingState = ProfilingState.NOTHING_PROFILED;
     }
     else {
@@ -82,14 +82,14 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
 
   $controller.searchAttributes = function () {
     $controller.currentSearch = new InvocationTreeSearch(
-      $controller.invocationsTree,
-      SearchType.ATTRIBUTES,
-      function (invocation) {
-        return invocation.attributes.length > 0;
-      },
-      function (message) {
-        $scope.$broadcast(message);
-      }
+        $controller.invocationsTree,
+        SearchType.ATTRIBUTES,
+        function (invocation) {
+          return invocation.attributes.length > 0;
+        },
+        function (message) {
+          $scope.$broadcast(message);
+        }
     );
   };
 
@@ -105,12 +105,36 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
     $controller.currentSearch = null;
   };
 
+  function _buildMethodSignature(invocation) {
+    var methodSignature = _.escape(invocation.methodSignature);
+    var className = _.escape(invocation.className);
+    if (methodSignature.endsWith('()') || className.length + methodSignature.length < 80) {
+      return className + '.' + methodSignature;
+    }
+
+    var paramsIndex = methodSignature.indexOf('(');
+    var params = methodSignature.substring(paramsIndex + 1, methodSignature.length - 1)
+        .split(',');
+    var html = '<div class="hp-wrap-words">' + className
+        + '.' + methodSignature.substring(0, paramsIndex + 1)
+        + '</div>';
+    params.forEach(function (param, index) {
+      html += '<div class="hp-method-param-indent hp-wrap-words">' + param
+          + (index === params.length - 1 ? ')' : ',');
+      html += '</div>';
+    });
+    return html;
+  }
+
   $controller.showMethodDetailsPopup = function () {
     $mdDialog.show({
       templateUrl: 'views/method-details.html',
       clickOutsideToClose: true,
       controller: function ($scope, $mdDialog) {
         $scope.invocation = $controller.invocationsTree.selectedNode;
+        if (!$scope.invocation.methodSignatureHtml) {
+          $scope.invocation.methodSignatureHtml = _buildMethodSignature($scope.invocation);
+        }
         $scope.helperService = helperService;
 
         $scope.closeDialog = function () {
@@ -126,26 +150,26 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
     _resetInvocationsTree();
 
     profilerRpc.startProfiling().then(
-      function () {
-        _profilingState = ProfilingState.IN_PROGRESS;
-      },
-      function () {
-        operationsProgressService.finishOperation();
-        _profilingState = ProfilingState.ERROR;
-      }
+        function () {
+          _profilingState = ProfilingState.IN_PROGRESS;
+        },
+        function () {
+          operationsProgressService.finishOperation();
+          _profilingState = ProfilingState.ERROR;
+        }
     )
   };
 
   $controller.stopProfiling = function () {
     _profilingState = ProfilingState.FINALIZING;
     profilerRpc.stopProfiling().then(
-      function (profiledResult) {
-        _consumeProfiledResult(profiledResult);
-      },
-      function () {
-        operationsProgressService.finishOperation();
-        _profilingState = ProfilingState.ERROR;
-      }
+        function (profiledResult) {
+          _consumeProfiledResult(profiledResult);
+        },
+        function () {
+          operationsProgressService.finishOperation();
+          _profilingState = ProfilingState.ERROR;
+        }
     )
   };
 
@@ -179,11 +203,11 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
 
   $controller.startOver = function () {
     var confirm = $mdDialog.confirm()
-      .title('Are you sure?')
-      .textContent('This action will discard current profiled data. It will not be possible to restore it. ' +
-        'Are you sure you want to continue and start new profiling?')
-      .ok('Do it!')
-      .cancel('No.. not now');
+        .title('Are you sure?')
+        .textContent('This action will discard current profiled data. It will not be possible to restore it. ' +
+            'Are you sure you want to continue and start new profiling?')
+        .ok('Do it!')
+        .cancel('No.. not now');
     $mdDialog.show(confirm).then(function () {
       $controller.startProfiling();
     });
@@ -193,33 +217,33 @@ function ProfilerCtrl(profilerRpc, operationsProgressService, $scope, $mdDialog,
   operationsProgressService.startOperation();
 
   profilerRpc.isProfiling().then(
-    function (profiling) {
-      if (profiling) {
-        _profilingState = ProfilingState.IN_PROGRESS;
-      }
-      else {
-        profilerRpc.getLastProfiledResult().then(
-          function (profiledResult) {
-            if (profiledResult && profiledResult.invocations.length > 0) {
-              _consumeProfiledResult(profiledResult);
-            }
-            else {
-              operationsProgressService.finishOperation();
-              _profilingState = ProfilingState.NOT_YET_PROFILED;
-            }
+      function (profiling) {
+        if (profiling) {
+          _profilingState = ProfilingState.IN_PROGRESS;
+        }
+        else {
+          profilerRpc.getLastProfiledResult().then(
+              function (profiledResult) {
+                if (profiledResult && profiledResult.invocations.length > 0) {
+                  _consumeProfiledResult(profiledResult);
+                }
+                else {
+                  operationsProgressService.finishOperation();
+                  _profilingState = ProfilingState.NOT_YET_PROFILED;
+                }
 
-          },
-          function () {
-            operationsProgressService.finishOperation();
-            _profilingState = ProfilingState.ERROR;
-          }
-        )
+              },
+              function () {
+                operationsProgressService.finishOperation();
+                _profilingState = ProfilingState.ERROR;
+              }
+          )
+        }
+      },
+      function () {
+        operationsProgressService.finishOperation();
+        _profilingState = ProfilingState.ERROR;
       }
-    },
-    function () {
-      operationsProgressService.finishOperation();
-      _profilingState = ProfilingState.ERROR;
-    }
   );
 
 }

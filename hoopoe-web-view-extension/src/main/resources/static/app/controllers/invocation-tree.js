@@ -26,7 +26,7 @@ var InvocationsTree = function (expandDirectPaths) {
   };
 
   this.expandNode = function (node) {
-    if (node && this.expandedNodes.indexOf(node) == -1) {
+    if (node && this.expandedNodes.indexOf(node) === -1) {
       this.expandedNodes.push(node);
       this.expandNode(node.parent);
     }
@@ -35,7 +35,7 @@ var InvocationsTree = function (expandDirectPaths) {
   this.expandDirectPaths = function (node) {
     if (expandDirectPaths) {
       this.expandNode(node);
-      if (node.children.length == 1) {
+      if (node.children.length === 1) {
         this.expandDirectPaths(node.children[0]);
       }
     }

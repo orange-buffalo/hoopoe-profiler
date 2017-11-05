@@ -13,7 +13,7 @@
       <md-list-item class="md-2-line" >
         <div class="md-list-item-text">
           <span class="hp-details-label">Method signature</span>
-          <span class="hp-small-font" ng-bind="invocation.className + '.' + invocation.methodSignature"></span>
+          <span class="hp-small-font" ng-bind-html="invocation.methodSignatureHtml"></span>
           <md-divider></md-divider>
         </div>
       </md-list-item>

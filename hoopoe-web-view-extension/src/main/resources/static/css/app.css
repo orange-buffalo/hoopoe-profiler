@@ -1,161 +1,169 @@
 body, html, md-content {
-    color: #d2d1d1;
+  color: #d2d1d1;
 }
 
 /*todo currently not in use, remove?*/
 md-tooltip .md-content {
-    height: auto;
+  height: auto;
 }
 
 md-icon.small {
-    height: 13px;
-    width: 13px;
-    min-height: 13px;
-    min-width: 13px;
+  height: 13px;
+  width: 13px;
+  min-height: 13px;
+  min-width: 13px;
 }
 
 md-toolbar:not(.md-menu-toolbar) {
-    color: #e7e7e7;
+  color: #e7e7e7;
 }
 
 md-toolbar:not(.md-menu-toolbar) md-icon {
-    color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 treecontrol {
-    -moz-user-select: -moz-none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+  -moz-user-select: -moz-none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 
-    font-family: 'Source Code Pro', monospace;
-    font-size: 13px;
-    text-decoration: none;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 13px;
+  text-decoration: none;
 }
 
 treecontrol ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: none;
 }
 
 treecontrol li {
-    position: relative;
-    padding: 0 0 0 10px;
-    line-height: 19px;
-    white-space: nowrap;
+  position: relative;
+  padding: 0 0 0 10px;
+  line-height: 19px;
+  white-space: nowrap;
 }
 
 treecontrol li span {
-    outline: none;
+  outline: none;
 }
 
 treecontrol li.tree-expanded i.tree-branch-head, treecontrol li.tree-collapsed i.tree-branch-head {
-    display: inline;
+  display: inline;
 }
 
 treecontrol li .hp-tree-handle {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 treecontrol li .tree-label {
-    cursor: pointer;
-    display: inline;
-    white-space: nowrap;
-    outline: none;
+  cursor: pointer;
+  display: inline;
+  white-space: nowrap;
+  outline: none;
 }
 
 treecontrol li .tree-selected {
-    font-weight: bold;
-    background-color: rgba(255, 255, 255, 0.2)
+  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.2)
 }
 
 treecontrol .tree-label:hover {
-    background-color: rgba(255, 255, 255, 0.2)
+  background-color: rgba(255, 255, 255, 0.2)
 }
 
 .hp-badge {
-    display: inline-block;
-    padding: 1px 3px;
-    box-sizing: border-box;
-    line-height: 13px;
-    color: rgb(47, 45, 45);
-    border-radius: 1px;
-    font-family: 'Source Code Pro', monospace;
-    font-size: 13px;
+  display: inline-block;
+  padding: 1px 3px;
+  box-sizing: border-box;
+  line-height: 13px;
+  color: rgb(47, 45, 45);
+  border-radius: 1px;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 13px;
 }
 
 .hp-thread-name {
-    background-color: #5d5b61;
+  background-color: #5d5b61;
 }
 
 .hp-duration {
-    background-color: #698788;
+  background-color: #698788;
 }
 
 .hp-invocations-count {
-    background-color: #6c8672;
+  background-color: #6c8672;
 }
 
 .hp-attribute {
-    background-color: #c4b34b;
+  background-color: #c4b34b;
 }
 
 .hp-child-attribute {
-    background-color: #d2bf93;
+  background-color: #d2bf93;
 }
 
 .hp-monospaced {
-    font-family: 'Source Code Pro', monospace;
+  font-family: 'Source Code Pro', monospace;
 }
 
 .hp-small-font {
-    font-size: 13px;
+  font-size: 13px;
 }
 
 .hp-details-label {
-    display: block;
-    font-weight: bold;
-    color: #b5b1b1;
-    font-size: 12px;
+  display: block;
+  font-weight: bold;
+  color: #b5b1b1;
+  font-size: 12px;
 }
 
 .hp-center-banner {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    text-align: center;
-    width: 100%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+  width: 100%;
 }
 
 .hp-center-banner div {
-    margin-bottom: 20px;
-    color: rgba(138, 138, 138, 0.4);
-    font-size: 22px;
-    font-family: 'Source Code Pro', monospace;
+  margin-bottom: 20px;
+  color: rgba(138, 138, 138, 0.4);
+  font-size: 22px;
+  font-family: 'Source Code Pro', monospace;
 }
 
 .hp-center-banner div a {
-    color: #867472;
+  color: #867472;
 }
 
 .hp-progress-indicator {
-    position: fixed;
-    width: 100%;
-    left: 0;
-    top: 59px;
-    z-index: 1000;
+  position: fixed;
+  width: 100%;
+  left: 0;
+  top: 59px;
+  z-index: 1000;
 }
 
 .hp-invocations-tree-container {
-    overflow-x: auto;
-    padding: 10px 0;
+  overflow-x: auto;
+  padding: 10px 0;
 }
 
 .hp-search-panel {
-    margin-right: 20px;
-    font-size: 12px;
-    font-family: 'Source Code Pro', monospace;
+  margin-right: 20px;
+  font-size: 12px;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.hp-method-param-indent {
+  padding-left: 8em;
+}
+
+.hp-wrap-words {
+  word-wrap: break-word;
 }

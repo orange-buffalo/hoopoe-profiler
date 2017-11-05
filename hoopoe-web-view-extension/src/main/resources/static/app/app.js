@@ -1,6 +1,6 @@
 angular
   .module('HoopoeApp', [
-    'ngMaterial', 'ngRoute', 'treeControl', 'angular-jsonrpc-client'
+    'ngMaterial', 'ngRoute', 'treeControl', 'angular-jsonrpc-client', 'ngSanitize'
   ])
   .config([
     '$routeProvider', '$locationProvider', '$mdThemingProvider', '$mdIconProvider', 'jsonrpcConfigProvider',
