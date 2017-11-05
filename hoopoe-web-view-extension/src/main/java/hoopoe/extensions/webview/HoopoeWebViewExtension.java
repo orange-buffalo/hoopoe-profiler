@@ -12,6 +12,7 @@ import hoopoe.api.extensions.HoopoeProfilerExtension;
 import hoopoe.extensions.webview.controllers.JsonRpcServletHolder;
 import hoopoe.extensions.webview.controllers.ProfilerService;
 import hoopoe.extensions.webview.controllers.ProfilerServiceImpl;
+import io.grpc.ServerBuilder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -122,6 +123,11 @@ public class HoopoeWebViewExtension
                 new JsonRpcServletHolder(objectMapper, new ProfilerServiceImpl(profiler), ProfilerService.class),
                 "/profiler");
         servletContextHandler.setClassLoader(HoopoeWebViewExtension.class.getClassLoader());
+
+        ServerBuilder.forPort(port)
+        .addService(new GreeterImpl())
+        .build()
+        .start();
 
         return servletContextHandler;
     }

@@ -26,6 +26,9 @@ object Versions {
     val commonsText = "1.1"
     val fastClasspathScanner = "2.8.2"
     val springBoot = "2.0.0.M5"
+    val protobufPlugin = "0.8.3"
+    val protobuf = "3.4.0"
+    val grpc = "1.7.0"
 }
 
 object Libraries {
@@ -48,6 +51,10 @@ object Libraries {
     val guava = "com.google.guava:guava:${Versions.guava}"
     val commonsText = "org.apache.commons:commons-text:${Versions.commonsText}"
     val fastClasspathScanner = "io.github.lukehutch:fast-classpath-scanner:${Versions.fastClasspathScanner}"
+    val protobuf = "com.google.protobuf:protobuf-java:${Versions.protobuf}"
+    val grpcNetty = "io.grpc:grpc-netty:${Versions.grpc}"
+    val grpcProtobuf = "io.grpc:grpc-protobuf:${Versions.grpc}"
+    val grpcStub = "io.grpc:grpc-stub:${Versions.grpc}"
 }
 
 object Plugins {
@@ -55,6 +62,7 @@ object Plugins {
     val gradleVersions = "com.github.ben-manes:gradle-versions-plugin:${Versions.gradleVersionsPlugin}"
     val bintray = "com.jfrog.bintray.gradle:gradle-bintray-plugin:${Versions.bintrayPlugin}"
     val springBoot = "org.springframework.boot:spring-boot-gradle-plugin:${Versions.springBoot}"
+    val protobuf = "com.google.protobuf:protobuf-gradle-plugin:${Versions.protobufPlugin}"
 }
 
 val Project.libraries: Libraries

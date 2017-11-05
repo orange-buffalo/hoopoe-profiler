@@ -29,6 +29,7 @@ buildscript {
         classpath(hoopoe.gradle.buildscript.Plugins.gradleVersions)
         classpath(hoopoe.gradle.buildscript.Plugins.bintray)
         classpath(kotlin("gradle-plugin", hoopoe.gradle.buildscript.Versions.kotlin))
+        classpath(hoopoe.gradle.buildscript.Plugins.protobuf)
     }
 }
 
