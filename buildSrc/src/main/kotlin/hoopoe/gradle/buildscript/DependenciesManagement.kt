@@ -25,6 +25,7 @@ object Versions {
     val bintrayPlugin = "1.7.3"
     val commonsText = "1.1"
     val fastClasspathScanner = "2.8.2"
+    val springBoot = "2.0.0.M5"
 }
 
 object Libraries {
@@ -47,6 +48,13 @@ object Libraries {
     val guava = "com.google.guava:guava:${Versions.guava}"
     val commonsText = "org.apache.commons:commons-text:${Versions.commonsText}"
     val fastClasspathScanner = "io.github.lukehutch:fast-classpath-scanner:${Versions.fastClasspathScanner}"
+}
+
+object Plugins {
+    val jrebel = "org.zeroturnaround:gradle-jrebel-plugin:${Versions.jrebelPlugin}"
+    val gradleVersions = "com.github.ben-manes:gradle-versions-plugin:${Versions.gradleVersionsPlugin}"
+    val bintray = "com.jfrog.bintray.gradle:gradle-bintray-plugin:${Versions.bintrayPlugin}"
+    val springBoot = "org.springframework.boot:spring-boot-gradle-plugin:${Versions.springBoot}"
 }
 
 val Project.libraries: Libraries

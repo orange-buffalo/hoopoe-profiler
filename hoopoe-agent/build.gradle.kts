@@ -1,15 +1,6 @@
 import org.gradle.api.tasks.bundling.Jar
 import com.jfrog.bintray.gradle.*
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3")
-    }
-}
-
 apply {
     plugin("hoopoe-dependency-plugin")
     plugin("com.jfrog.bintray")  //todo verify if this is a proper place to use this plugin

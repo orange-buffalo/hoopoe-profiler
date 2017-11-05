@@ -13,7 +13,7 @@ buildscript {
         maven("https://repo.spring.io/libs-milestone")
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.0.M5")
+        classpath(hoopoe.gradle.buildscript.Plugins.springBoot)
     }
 }
 
@@ -39,7 +39,7 @@ configurations {
 
 configure<DependencyManagementConfigurer> {
     imports {
-        mavenBom("org.springframework.boot:spring-boot-dependencies:2.0.0.M5")
+        mavenBom("org.springframework.boot:spring-boot-dependencies:${Versions.springBoot}")
     }
 }
 

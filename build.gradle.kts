@@ -25,9 +25,9 @@ buildscript {
     }
 
     dependencies {
-        classpath("org.zeroturnaround:gradle-jrebel-plugin:${hoopoe.gradle.buildscript.Versions.jrebelPlugin}")
-        classpath("com.github.ben-manes:gradle-versions-plugin:${hoopoe.gradle.buildscript.Versions.gradleVersionsPlugin}")
-        classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:${hoopoe.gradle.buildscript.Versions.bintrayPlugin}")
+        classpath(hoopoe.gradle.buildscript.Plugins.jrebel)
+        classpath(hoopoe.gradle.buildscript.Plugins.gradleVersions)
+        classpath(hoopoe.gradle.buildscript.Plugins.bintray)
         classpath(kotlin("gradle-plugin", hoopoe.gradle.buildscript.Versions.kotlin))
     }
 }
