@@ -26,6 +26,7 @@ object Versions {
     val commonsText = "1.1"
     val fastClasspathScanner = "2.8.2"
     val springBoot = "2.0.0.M5"
+    val nodePlugin = "1.2.0"
 }
 
 object Libraries {
@@ -55,6 +56,7 @@ object Plugins {
     val gradleVersions = "com.github.ben-manes:gradle-versions-plugin:${Versions.gradleVersionsPlugin}"
     val bintray = "com.jfrog.bintray.gradle:gradle-bintray-plugin:${Versions.bintrayPlugin}"
     val springBoot = "org.springframework.boot:spring-boot-gradle-plugin:${Versions.springBoot}"
+    val node = "com.moowork.gradle:gradle-node-plugin:${Versions.nodePlugin}"
 }
 
 val Project.libraries: Libraries

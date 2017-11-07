@@ -1,6 +1,9 @@
+import com.moowork.gradle.node.NodeExtension
+import com.moowork.gradle.node.npm.NpmTask
 import org.gradle.kotlin.dsl.*
 import hoopoe.gradle.plugin.*
 import hoopoe.gradle.buildscript.*
+import org.gradle.api.tasks.JavaExec
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
@@ -10,10 +13,20 @@ object LibrariesVersions {
     val portletApi = "2.0"
 }
 
+buildscript {
+    repositories {
+        maven("https://plugins.gradle.org/m2/")
+    }
+    dependencies {
+        classpath(hoopoe.gradle.buildscript.Plugins.node)
+    }
+}
+
 apply {
     plugin("hoopoe-assemble-plugin")
     plugin("kotlin")
     plugin("org.zeroturnaround.gradle.jrebel")
+    plugin("com.moowork.node")
 }
 
 sourceSets {
@@ -50,6 +63,12 @@ configure<HoopoeAssemblyConfig> {
     extensionClass = "hoopoe.extensions.webview.HoopoeWebViewExtension"
 }
 
+configure<NodeExtension> {
+    version = "8.9.0"
+    download = true
+    nodeModulesDir = file("${project.projectDir}/src/main/web")
+}
+
 tasks {
     task<JavaExec>("runWebViewExtension") {
         main = "hoopoe.extensions.webview.WebViewRunnerKt"
@@ -61,5 +80,20 @@ tasks {
         }
 
         dependsOn("generateRebel")
+    }
+
+    task<NpmTask>("npm") {
+        val npmArgs = properties["npmArgs"] as String?
+        npmArgs?.let {
+            setArgs(it.split(" "))
+        }
+    }
+
+    task<NpmTask>("buildWebResources") {
+        setArgs(listOf("run", "build"))
+    }
+
+    "processResources" {
+        dependsOn("buildWebResources")
     }
 }
