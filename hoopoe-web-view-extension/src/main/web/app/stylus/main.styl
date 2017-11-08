@@ -10,4 +10,15 @@ $theme := {
   success: $green.lighten-2
 }
 
+@require '~vuetify/src/stylus/settings/_theme'
+
+$material-dark['app-bar'] = #2e3535
+$material-dark['background'] = #202525
+
 @require '~vuetify/src/stylus/main'
+
+toolbar($material)
+  .btn:not(.btn--disabled)
+    color: #525555
+
+theme(toolbar, "toolbar")
