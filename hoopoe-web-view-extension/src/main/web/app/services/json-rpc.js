@@ -177,9 +177,6 @@ import _ from 'lodash'
       }
 
       let promise = $http(req);
-      console.log($http);
-      console.log(promise);
-      console.log(req);
 
       if (jsonrpcConfig.returnHttpPromise) {
         return promise;
