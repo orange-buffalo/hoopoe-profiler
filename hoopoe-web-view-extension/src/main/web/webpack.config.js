@@ -19,13 +19,6 @@ module.exports = {
         ],
       },
       {
-        test: /\.css$/,
-        use: [
-          'vue-style-loader',
-          'css-loader'
-        ],
-      },
-      {
         test: /\.scss$/,
         use: [
           'vue-style-loader',
@@ -73,9 +66,13 @@ module.exports = {
         loader: 'file-loader',
         options: {
           name: '[name].[ext]?[hash]',
-          publicPath: 'assets/',
+          publicPath: '/',
           outputPath: 'assets/'
         }
+      },
+      {
+        test: /\.styl$/,
+        loader: ['style-loader', 'css-loader', 'stylus-loader']
       }
     ]
   },
