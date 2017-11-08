@@ -17,10 +17,23 @@
 <script>
   export default {
     name: 'app',
+    dependencies: ['jsonrpc', 'jsonrpcConfig'],
     data() {
-      return {
-        
-      }
+      return {}
+    },
+    created() {
+      this.jsonrpcConfig.set({
+        servers: [{
+          name: 'profiler',
+          url: '/rpc/profiler'
+        }]
+      });
+
+      this.jsonrpc.request('profiler', 'startProfiling', {})
+          .then(function (result) {
+            console.log("success " + result)
+          })
+          .catch((reason) => console.log("problem " + reason));
     }
   }
 </script>
