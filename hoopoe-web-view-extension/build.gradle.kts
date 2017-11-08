@@ -91,6 +91,7 @@ tasks {
 
     task<NpmTask>("buildWebResources") {
         setArgs(listOf("run", "build"))
+        dependsOn("npmInstall")
     }
 
     "processResources" {
