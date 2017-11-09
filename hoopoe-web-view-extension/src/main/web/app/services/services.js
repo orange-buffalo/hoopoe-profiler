@@ -5,3 +5,4 @@ injector.constant('$http', axios);
 
 require('./json-rpc');
 require('./event-bus');
+require('./profiler-rpc');
