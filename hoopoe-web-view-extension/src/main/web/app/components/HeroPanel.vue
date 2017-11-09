@@ -1,8 +1,8 @@
 <template>
-  <v-layout row align-center v-if="message || error">
+  <v-layout row align-center v-if="model.isVisible()">
     <v-flex class="text-xs-center">
-      <span class="hero-message" v-if="message">{{message}}</span>
-      <span class="hero-message" v-if="error">
+      <span class="hero-message" v-if="model.message">{{model.message}}</span>
+      <span class="hero-message" v-if="model.error">
         Oops, something went wrong... We would appreciate if you could report a problem
         at <a href="https://github.com/orange-buffalo/hoopoe-profiler/issues" target="_blank">our issue tracker</a>.
         Please provide the output of JS console and exception from your app console.
@@ -10,8 +10,8 @@
       <br/>
       <v-btn class="hero-button"
              color="accent"
-             v-if="buttonText"
-             v-on:click="invokeAction">{{buttonText}}
+             v-if="model.buttonText"
+             v-on:click="invokeAction">{{model.buttonText}}
       </v-btn>
     </v-flex>
   </v-layout>
@@ -20,7 +20,7 @@
 <script>
   export default {
     name: 'hero-panel',
-    props: ['message', 'error', 'buttonText'],
+    props: ['model'],
     methods: {
       invokeAction: function () {
         this.$emit('action-invoked')

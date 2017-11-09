@@ -17,9 +17,7 @@
     <main>
       <v-content>
         <v-container fluid fill-height>
-          <hero-panel :message="heroMessage"
-                      :button-text="heroButtonText"
-                      :error="heroError"
+          <hero-panel :model="heroModel"
                       v-on:action-invoked="heroButtonAction"></hero-panel>
         </v-container>
       </v-content>
@@ -29,6 +27,7 @@
 
 <script>
   import HeroPanel from './components/HeroPanel.vue'
+  import {HeroModel} from './components/hero-model'
 
   export default {
     name: 'app',
@@ -36,9 +35,7 @@
     data() {
       return {
         apiCallInProgress: true,
-        heroMessage: 'Initializing...',
-        heroError: false,
-        heroButtonText: null,
+        heroModel: HeroModel.forMessage('Initializing...'),
         heroButtonAction: () => null,
         profiledInvocations: null
       }
@@ -48,49 +45,50 @@
     },
     methods: {
       _setupProfilingInProgress: function () {
-        this.heroMessage = 'We are recording application activity. Stop us when you are done';
-        this.heroButtonText = 'Finish profiling';
+        this.heroModel = HeroModel.forMessage('We are recording application activity. Stop us when you are done')
+            .withButton('Finish profiling');
         this.apiCallInProgress = true;
-        this.heroButtonAction = () => {
-          this.heroMessage = 'Finalizing..';
-          this.heroButtonText = null;
-          this._executeRpc(this.profilerRpc.stopProfiling).then(this._setupProfiledResult);
-        }
+        this.heroButtonAction = this.stopProfiling;
       },
 
       _setupProfiledResult: function (profiledResult) {
         this.profiledInvocations = profiledResult;
         this.apiCallInProgress = false;
+        this.heroModel = HeroModel.empty();
+
         console.log(profiledResult);
+
+        if (!profiledResult || !profiledResult.invocations || !profiledResult.invocations.length) {
+          this.heroModel = HeroModel.forMessage(
+              'It looks like nothing is profiled, methods were either too fast or not called..')
+              .withButton('Start anew');
+          this.heroButtonAction = this.startNewSession;
+        }
       },
 
       _executeRpc: function (rpcCall) {
-        let resetHeroAndLoader = () => {
-          this.heroMessage = null;
-          this.heroError = false;
-          this.apiCallInProgress = false;
-        };
-
-        this.heroMessage = 'Processing...';
+        this.heroModel = HeroModel.forMessage('Processing, wait a sec...');
         this.apiCallInProgress = true;
-        this.profiledInvocations = null;
-        this.heroError = false;
 
         return new Promise(resolve => {
           rpcCall().then(result => {
             resolve(result);
-            resetHeroAndLoader();
+            this.apiCallInProgress = false;
 
           }).catch(error => {
-            resetHeroAndLoader();
-            this.heroError = true;
+            this.heroModel = HeroModel.error();
 
             console.error(error);
           });
         });
       },
 
+      stopProfiling: function () {
+        this._executeRpc(this.profilerRpc.stopProfiling).then(this._setupProfiledResult);
+      },
+
       startNewSession: function () {
+        this.profiledInvocations = null;
         this._executeRpc(this.profilerRpc.startProfiling)
             .then(this._setupProfilingInProgress)
       }
