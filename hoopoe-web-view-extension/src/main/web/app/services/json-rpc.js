@@ -1,54 +1,119 @@
 import injector from 'vue-inject'
 import _ from 'lodash'
 
-(function () {
-  'use strict';
+const ERROR_TYPE_SERVER = 'JsonRpcServerError';
+const ERROR_TYPE_TRANSPORT = 'JsonRpcTransportError';
+const ERROR_TYPE_CONFIG = 'JsonRpcConfigError';
+const DEFAULT_SERVER_NAME = 'main';
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+};
 
-  let id = 0;
-  const ERROR_TYPE_SERVER = 'JsonRpcServerError';
-  const ERROR_TYPE_TRANSPORT = 'JsonRpcTransportError';
-  const ERROR_TYPE_CONFIG = 'JsonRpcConfigError';
-  const DEFAULT_SERVER_NAME = 'main';
-  const DEFAULT_HEADERS = {
-    'Content-Type': 'application/json',
-  };
+function JsonRpcTransportError(error) {
+  this.name = ERROR_TYPE_TRANSPORT;
+  this.message = error;
+}
 
-  function JsonRpcTransportError(error) {
-    this.name = ERROR_TYPE_TRANSPORT;
-    this.message = error;
-  }
+JsonRpcTransportError.prototype = Error.prototype;
 
-  JsonRpcTransportError.prototype = Error.prototype;
+function JsonRpcServerError(error) {
+  this.name = ERROR_TYPE_SERVER;
+  this.message = error.message;
+  this.error = error;
+  this.data = error.data;
+}
 
-  function JsonRpcServerError(error) {
-    this.name = ERROR_TYPE_SERVER;
-    this.message = error.message;
-    this.error = error;
-    this.data = error.data;
-  }
+JsonRpcServerError.prototype = Error.prototype;
 
-  JsonRpcServerError.prototype = Error.prototype;
+function JsonRpcConfigError(error) {
+  this.name = ERROR_TYPE_CONFIG;
+  this.message = error;
+}
 
-  function JsonRpcConfigError(error) {
-    this.name = ERROR_TYPE_CONFIG;
-    this.message = error;
-  }
+JsonRpcConfigError.prototype = Error.prototype;
 
-  JsonRpcConfigError.prototype = Error.prototype;
+class JsonRpcConfig {
+  constructor() {
+    this.servers = [];
 
-  function jsonrpc($http, jsonrpcConfig) {
-    let extraHeaders = {};
+    let config = this;
 
-    return {
-      request: request,
-      setHeaders: setHeaders,
-      ERROR_TYPE_SERVER: ERROR_TYPE_SERVER,
-      ERROR_TYPE_TRANSPORT: ERROR_TYPE_TRANSPORT,
-      ERROR_TYPE_CONFIG: ERROR_TYPE_CONFIG,
-      JsonRpcTransportError: JsonRpcTransportError,
-      JsonRpcServerError: JsonRpcServerError,
-      JsonRpcConfigError: JsonRpcConfigError
+    this.set = function (args) {
+      if (typeof(args) !== 'object') {
+        throw new Error('Argument of "set" must be an object.');
+      }
+
+      let allowedKeys = ['url', 'servers'];
+      let keys = Object.keys(args);
+      keys.forEach(function (key) {
+        if (allowedKeys.indexOf(key) < 0) {
+          throw new JsonRpcConfigError(
+              'Invalid configuration key "' + key + '". Allowed keys are: ' + allowedKeys.join(', '));
+        }
+
+        if (key === 'url') {
+          config.servers = [{
+            name: DEFAULT_SERVER_NAME,
+            url: args[key],
+            headers: {}
+          }];
+        }
+        else if (key === 'servers') {
+          config.servers = _getServers(args[key]);
+        }
+        else {
+          config[key] = args[key];
+        }
+      });
     };
+
+    function _getServers(data) {
+      if (!(data instanceof Array)) {
+        throw new JsonRpcConfigError('Argument "servers" must be an array.');
+      }
+      let servers = [];
+
+      data.forEach(function (d) {
+        if (!d.name) {
+          throw new JsonRpcConfigError('Item in "servers" argument must contain "name" field.');
+        }
+        if (!d.url) {
+          throw new JsonRpcConfigError('Item in "servers" argument must contain "url" field.');
+        }
+        let server = {
+          name: d.name,
+          url: d.url,
+        };
+        if (d.hasOwnProperty('headers')) {
+          server.headers = d.headers;
+        }
+        else {
+          server.headers = {};
+        }
+        servers.push(server);
+      });
+
+      return servers;
+    }
+  }
+}
+
+injector.service('jsonrpcConfig', JsonRpcConfig);
+
+class JsonRpc {
+  constructor($http, jsonrpcConfig) {
+    this.ERROR_TYPE_SERVER = ERROR_TYPE_SERVER;
+    this.ERROR_TYPE_TRANSPORT = ERROR_TYPE_TRANSPORT;
+    this.ERROR_TYPE_CONFIG = ERROR_TYPE_CONFIG;
+
+    this.JsonRpcTransportError = JsonRpcTransportError;
+    this.JsonRpcServerError = JsonRpcServerError;
+    this.JsonRpcConfigError = JsonRpcConfigError;
+
+    this.extraHeaders = [];
+    let jsonRpc = this;
+
+    let id = 0;
 
     function _getInputData(methodName, args) {
       id += 1;
@@ -97,36 +162,28 @@ import _ from 'lodash'
     }
 
     function _determineHeaders(serverName) {
-      let extra = extraHeaders[serverName] ? extraHeaders[serverName] : {};
+      let extra = jsonRpc.extraHeaders[serverName] ? jsonRpc.extraHeaders[serverName] : {};
       const server = _findServer(serverName);
       const headers = _.extend(server.headers, extra);
       return _.extend(headers, DEFAULT_HEADERS);
     }
 
     function _determineErrorDetails(data, status, url) {
-      // 2. Call was received by the server. Server returned an error.
-      // 3. Call did not arrive at the server.
       let errorType = ERROR_TYPE_TRANSPORT;
       let errorMessage;
 
       if (status === 0) {
-        // Situation 3
         errorMessage = 'Connection refused at ' + url;
       }
       else if (status === 404) {
-        // Situation 3
         errorMessage = '404 not found at ' + url;
       }
       else if (status === 500) {
-        // This could be either 2 or 3. We have to look at the returned data
-        // to determine which one.
         if (data.jsonrpc && data.jsonrpc === '2.0') {
-          // Situation 2
           errorType = ERROR_TYPE_SERVER;
           errorMessage = data.error;
         }
         else {
-          // Situation 3
           errorMessage = '500 internal server error at ' + url + ': ' + data;
         }
       }
@@ -134,7 +191,6 @@ import _ from 'lodash'
         errorMessage = 'Timeout or cancelled';
       }
       else {
-        // Situation 3
         errorMessage = 'Unknown error. HTTP status: ' + status + ', data: ' + data;
       }
 
@@ -144,12 +200,7 @@ import _ from 'lodash'
       };
     }
 
-    function setHeaders(serverName, headers) {
-      let server = _findServer(serverName);
-      extraHeaders[server.name] = headers;
-    }
-
-    function request(arg1, arg2, arg3) {
+    this.request = function (arg1, arg2, arg3) {
       let args = _determineArguments(arguments);
 
       let server;
@@ -178,42 +229,18 @@ import _ from 'lodash'
 
       let promise = $http(req);
 
-      if (jsonrpcConfig.returnHttpPromise) {
-        return promise;
-      }
-
-      // Here, we determine which situation we are in:
-      // 1. Call was a success.
-      // 2. Call was received by the server. Server returned an error.
-      // 3. Call did not arrive at the server.
-      //
-      // 2 is a JsonRpcServerError, 3 is a JsonRpcTransportError.
-      //
-      // We are assuming that the server can use either 200 or 500 as
-      // http return code in situation 2. That depends on the server
-      // implementation and is not determined by the JSON-RPC spec.
       return promise.then(function (response) {
-        // In some cases, it is unfortunately possible to end up in
-        // promise.then with data being undefined.
-        // This is likely caused either by a bug in the $http service
-        // or by incorrect usage of $http interceptors.
         if (!response.data) {
-          return Promise.reject(
-              'Unknown error, possibly caused by incorrectly configured $http interceptor. ' +
-              'See https://github.com/joostvunderink/angular-jsonrpc-client/issues/16 for ' +
-              'more information.');
+          return Promise.reject('Unknown error');
         }
         else if (response.data.result !== undefined) {
-          // Situation 1
           return Promise.resolve(response.data.result);
         }
         else {
-          // Situation 2
           return Promise.reject(new JsonRpcServerError(response.data.error));
         }
       }).catch(function (error) {
         if (error.response) {
-          // Situation 2 or 3.
           const errorDetails = _determineErrorDetails(error.response.data, error.response.status, server.url);
 
           if (errorDetails.type === ERROR_TYPE_TRANSPORT) {
@@ -228,76 +255,13 @@ import _ from 'lodash'
           return Promise.reject(new JsonRpcTransportError("Error while creating request: " + error.message));
         }
       });
-    }
-  }
-
-  function jsonrpcConfig() {
-    let config = {
-      servers: [],
-      returnHttpPromise: false
     };
 
-    config.set = function (args) {
-      if (typeof(args) !== 'object') {
-        throw new Error('Argument of "set" must be an object.');
-      }
-
-      let allowedKeys = ['url', 'servers', 'returnHttpPromise'];
-      let keys = Object.keys(args);
-      keys.forEach(function (key) {
-        if (allowedKeys.indexOf(key) < 0) {
-          throw new JsonRpcConfigError('Invalid configuration key "' + key + '". Allowed keys are: ' +
-              allowedKeys.join(', '));
-        }
-
-        if (key === 'url') {
-          config.servers = [{
-            name: DEFAULT_SERVER_NAME,
-            url: args[key],
-            headers: {}
-          }];
-        }
-        else if (key === 'servers') {
-          config.servers = getServers(args[key]);
-        }
-        else {
-          config[key] = args[key];
-        }
-      });
-    };
-
-    function getServers(data) {
-      if (!(data instanceof Array)) {
-        throw new JsonRpcConfigError('Argument "servers" must be an array.');
-      }
-      let servers = [];
-
-      data.forEach(function (d) {
-        if (!d.name) {
-          throw new JsonRpcConfigError('Item in "servers" argument must contain "name" field.');
-        }
-        if (!d.url) {
-          throw new JsonRpcConfigError('Item in "servers" argument must contain "url" field.');
-        }
-        let server = {
-          name: d.name,
-          url: d.url,
-        };
-        if (d.hasOwnProperty('headers')) {
-          server.headers = d.headers;
-        }
-        else {
-          server.headers = {};
-        }
-        servers.push(server);
-      });
-
-      return servers;
+    this.setHeaders = function (serverName, headers) {
+      let server = _findServer(serverName);
+      this.extraHeaders[server.name] = headers;
     }
-
-    return config;
   }
+}
 
-  injector.constant('jsonrpcConfig', jsonrpcConfig());
-  injector.factory('jsonrpc', ['$http', 'jsonrpcConfig'], jsonrpc);
-})();
+injector.service('jsonrpc', ['$http', 'jsonrpcConfig'], JsonRpc);
