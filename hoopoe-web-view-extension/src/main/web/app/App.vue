@@ -1,7 +1,14 @@
 <template>
   <v-app dark>
     <v-toolbar app flat>
-      <v-progress-linear v-bind:indeterminate="true"
+      <v-layout row align-center>
+        <v-flex class="text-xs-left">
+          <v-btn flat v-if="!apiCallInProgress && profiledInvocations"
+                 @click="startNewSession">New Profiling Session
+          </v-btn>
+        </v-flex>
+      </v-layout>
+      <v-progress-linear :indeterminate="true"
                          v-if="apiCallInProgress"
                          class="hp-progress-bar"
                          height="2"></v-progress-linear>
@@ -10,9 +17,9 @@
     <main>
       <v-content>
         <v-container fluid fill-height>
-          <hero-panel v-if="apiCallInProgress"
-                      :message="heroMessage"
+          <hero-panel :message="heroMessage"
                       :button-text="heroButtonText"
+                      :error="heroError"
                       v-on:action-invoked="heroButtonAction"></hero-panel>
         </v-container>
       </v-content>
@@ -30,8 +37,10 @@
       return {
         apiCallInProgress: true,
         heroMessage: 'Initializing...',
-        heroButtonText: '',
+        heroError: false,
+        heroButtonText: null,
         heroButtonAction: () => null,
+        profiledInvocations: null
       }
     },
     components: {
@@ -42,28 +51,49 @@
         this.heroMessage = 'We are recording application activity. Stop us when you are done';
         this.heroButtonText = 'Finish profiling';
         this.apiCallInProgress = true;
+        this.heroButtonAction = () => {
+          this.heroMessage = 'Finalizing..';
+          this.heroButtonText = null;
+          this._executeRpc(this.profilerRpc.stopProfiling).then(this._setupProfiledResult);
+        }
       },
 
       _setupProfiledResult: function (profiledResult) {
-        this.heroMessage = 'Profiled';
-        this.heroButtonText = null;
-        this.apiCallInProgress = true;
+        this.profiledInvocations = profiledResult;
+        this.apiCallInProgress = false;
         console.log(profiledResult);
       },
 
       _executeRpc: function (rpcCall) {
+        let resetHeroAndLoader = () => {
+          this.heroMessage = null;
+          this.heroError = false;
+          this.apiCallInProgress = false;
+        };
+
         this.heroMessage = 'Processing...';
         this.apiCallInProgress = true;
+        this.profiledInvocations = null;
+        this.heroError = false;
 
-        return rpcCall().then(result => new Promise(resolve => {
-          resolve(result);
-          this.apiCallInProgress = false;
+        return new Promise(resolve => {
+          rpcCall().then(result => {
+            resolve(result);
+            resetHeroAndLoader();
 
-        })).catch(error => {
-          this.heroMessage = "OOOps"
+          }).catch(error => {
+            resetHeroAndLoader();
+            this.heroError = true;
 
-        })
+            console.error(error);
+          });
+        });
       },
+
+      startNewSession: function () {
+        this._executeRpc(this.profilerRpc.startProfiling)
+            .then(this._setupProfilingInProgress)
+      }
 
     },
     created() {
