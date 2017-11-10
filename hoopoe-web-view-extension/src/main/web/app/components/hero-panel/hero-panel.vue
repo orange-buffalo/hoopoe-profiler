@@ -1,5 +1,5 @@
 <template>
-  <v-layout row align-center v-if="model.isVisible()">
+  <v-layout row align-center>
     <v-flex class="text-xs-center">
       <span class="hero-message" v-if="model.message">{{model.message}}</span>
       <span class="hero-message" v-if="model.error">

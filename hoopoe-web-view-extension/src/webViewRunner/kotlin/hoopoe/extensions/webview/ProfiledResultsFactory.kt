@@ -37,6 +37,15 @@ fun createRandomizedResult() = profiledResult {
     }
 }
 
+fun createRandomizedMinimalResult() = profiledResult {
+    for (i in 1..random.nextInt(2) + 1) {
+        root {
+            threadName = "http-8080-$i"
+            invocation = randomInvocation(5, random.nextInt())
+        }
+    }
+}
+
 private class ClassPathElement(
         val className: String,
         val methods: List<String>

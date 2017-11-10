@@ -1,6 +1,6 @@
 <template>
-  <v-app dark>
-    <v-toolbar app flat>
+  <v-app dark class="hp-full-height">
+    <v-toolbar app flat fixed>
       <v-layout row align-center>
         <v-flex class="text-xs-left">
           <v-btn flat v-if="!apiCallInProgress && !heroModel.isVisible()"
@@ -14,11 +14,17 @@
                          height="2"></v-progress-linear>
     </v-toolbar>
 
-    <main>
-      <v-content>
+    <main class="hp-full-height">
+      <v-content class="scroll-y hp-main-content">
         <v-container fluid fill-height>
           <hero-panel :model="heroModel"
+                      v-if="heroModel.isVisible()"
                       v-on:action-invoked="heroButtonAction"></hero-panel>
+
+          <tree :root-nodes="profiledInvocations.treeNodes"
+                v-if="!heroModel.isVisible()">
+            <span slot="node-content" slot-scope="props">{{ props.data.className }}</span>
+          </tree>
         </v-container>
       </v-content>
     </main>
@@ -26,8 +32,10 @@
 </template>
 
 <script>
-  import HeroPanel from './components/hero-panel.vue'
-  import HeroModel from './components/hero-model'
+  import HeroPanel from './components/hero-panel/hero-panel.vue'
+  import HeroModel from './components/hero-panel/hero-model'
+  import Tree from './components/tree/tree.vue'
+  import TreeNode from './components/tree/tree-node'
   import ProfiledInvocations from './domain/profiled-invocations'
   import _ from 'lodash'
 
@@ -43,8 +51,10 @@
       }
     },
     components: {
-      HeroPanel
+      HeroPanel,
+      Tree
     },
+    computed: {},
     methods: {
       _setupProfilingInProgress: function () {
         this._setHeroModel(HeroModel.forMessage('We are recording application activity. Stop us when you are done')
@@ -57,6 +67,7 @@
         this.apiCallInProgress = false;
         this._setHeroModel(HeroModel.empty());
         this.profiledInvocations = new ProfiledInvocations(apiResponse);
+        this.$set(this.profiledInvocations, 'treeNodes', TreeNode.of(this.profiledInvocations.roots));
 
         if (this.profiledInvocations.isEmpty()) {
           if (firstRun) {
@@ -119,6 +130,19 @@
 </script>
 
 <style lang="scss">
+  html {
+    overflow: auto;
+  }
+
+  .hp-full-height {
+    height: 100%;
+  }
+
+  .hp-main-content {
+    padding: 0 !important;
+    margin-top: 64px;
+  }
+
   .hp-progress-bar {
     position: absolute;
     left: 0;
