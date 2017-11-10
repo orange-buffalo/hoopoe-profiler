@@ -28,4 +28,4 @@ class HeroModel {
 
 }
 
-module.exports.HeroModel = HeroModel;
+export default HeroModel;

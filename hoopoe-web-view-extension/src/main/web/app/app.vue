@@ -3,7 +3,7 @@
     <v-toolbar app flat>
       <v-layout row align-center>
         <v-flex class="text-xs-left">
-          <v-btn flat v-if="!apiCallInProgress && profiledInvocations"
+          <v-btn flat v-if="!apiCallInProgress && !heroModel.isVisible()"
                  @click="startNewSession">New Profiling Session
           </v-btn>
         </v-flex>
@@ -26,8 +26,10 @@
 </template>
 
 <script>
-  import HeroPanel from './components/HeroPanel.vue'
-  import {HeroModel} from './components/hero-model'
+  import HeroPanel from './components/hero-panel.vue'
+  import HeroModel from './components/hero-model'
+  import ProfiledInvocations from './domain/profiled-invocations'
+  import _ from 'lodash'
 
   export default {
     name: 'app',
@@ -37,7 +39,7 @@
         apiCallInProgress: true,
         heroModel: HeroModel.forMessage('Initializing...'),
         heroButtonAction: () => null,
-        profiledInvocations: null
+        profiledInvocations: ProfiledInvocations.empty()
       }
     },
     components: {
@@ -45,29 +47,33 @@
     },
     methods: {
       _setupProfilingInProgress: function () {
-        this.heroModel = HeroModel.forMessage('We are recording application activity. Stop us when you are done')
-            .withButton('Finish profiling');
+        this._setHeroModel(HeroModel.forMessage('We are recording application activity. Stop us when you are done')
+            .withButton('Finish profiling'));
         this.apiCallInProgress = true;
         this.heroButtonAction = this.stopProfiling;
       },
 
-      _setupProfiledResult: function (profiledResult) {
-        this.profiledInvocations = profiledResult;
+      _setupProfiledResult: function (apiResponse, firstRun) {
         this.apiCallInProgress = false;
-        this.heroModel = HeroModel.empty();
+        this._setHeroModel(HeroModel.empty());
+        this.profiledInvocations = new ProfiledInvocations(apiResponse);
 
-        console.log(profiledResult);
-
-        if (!profiledResult || !profiledResult.invocations || !profiledResult.invocations.length) {
-          this.heroModel = HeroModel.forMessage(
-              'It looks like nothing is profiled, methods were either too fast or not called..')
-              .withButton('Start anew');
+        if (this.profiledInvocations.isEmpty()) {
+          if (firstRun) {
+            this._setHeroModel(HeroModel.forMessage('We haven\'t profiled anything yet')
+                .withButton('Start profiling'))
+          }
+          else {
+            this._setHeroModel(HeroModel.forMessage(
+                'It looks like nothing is profiled, methods were either too fast or not called..')
+                .withButton('Start anew'));
+          }
           this.heroButtonAction = this.startNewSession;
         }
       },
 
       _executeRpc: function (rpcCall) {
-        this.heroModel = HeroModel.forMessage('Processing, wait a sec...');
+        this._setHeroModel(HeroModel.forMessage('Processing, wait a sec...'));
         this.apiCallInProgress = true;
 
         return new Promise(resolve => {
@@ -76,7 +82,7 @@
             this.apiCallInProgress = false;
 
           }).catch(error => {
-            this.heroModel = HeroModel.error();
+            this._setHeroModel(HeroModel.error());
 
             console.error(error);
           });
@@ -84,17 +90,20 @@
       },
 
       stopProfiling: function () {
-        this._executeRpc(this.profilerRpc.stopProfiling).then(this._setupProfiledResult);
+        this._executeRpc(this.profilerRpc.stopProfiling)
+            .then(apiResponse => this._setupProfiledResult(apiResponse, false));
       },
 
       startNewSession: function () {
-        this.profiledInvocations = null;
+        this.profiledInvocations = ProfiledInvocations.empty();
         this._executeRpc(this.profilerRpc.startProfiling)
             .then(this._setupProfilingInProgress)
       }
 
     },
     created() {
+      this._setHeroModel = _.debounce((model) => this.heroModel = model, 200);
+
       this._executeRpc(this.profilerRpc.isProfiling)
           .then(profiling => {
             if (profiling) {
@@ -102,7 +111,7 @@
             }
             else {
               this._executeRpc(this.profilerRpc.getLastProfiledResult)
-                  .then(this._setupProfiledResult)
+                  .then(apiResponse => this._setupProfiledResult(apiResponse, true))
             }
           });
     }

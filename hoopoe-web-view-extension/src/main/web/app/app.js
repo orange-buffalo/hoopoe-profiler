@@ -11,7 +11,7 @@ require('./stylus/main.styl');
 require('file-loader?name=[name].[ext]!../index.html');
 require('./services/services');
 
-import App from './App.vue'
+import App from './app.vue'
 
 new Vue({
   el: '#app',
