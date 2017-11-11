@@ -23,10 +23,17 @@ class TreeNode {
       this.$childrenProcessed = true;
     }
     this.expanded = true;
+
+    if (this.children.length === 1) {
+      this.children.forEach(childNode => childNode.expand())
+    }
   }
 
   collapse() {
     this.expanded = false;
+    if (this.$childrenProcessed) {
+      this.children.forEach(childNode => childNode.collapse())
+    }
   }
 
   toggle() {
