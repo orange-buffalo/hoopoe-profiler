@@ -86,6 +86,7 @@
     .hp-tree-node-content {
       display: inline-block;
       background-color: transparent;
+      padding: 0 0.2em;
 
       @include transition(background-color 0.1s ease-in-out);
 

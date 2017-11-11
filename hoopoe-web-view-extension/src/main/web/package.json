@@ -12,7 +12,8 @@
     "lodash": "^4.17.4",
     "vue": "^2.4.4",
     "vue2-animate": "^1.0.4",
-    "vuetify": "^0.16.9"
+    "vuetify": "^0.16.9",
+    "wnumb": "^1.1.0"
   },
   "browserslist": [
     "> 1%",
