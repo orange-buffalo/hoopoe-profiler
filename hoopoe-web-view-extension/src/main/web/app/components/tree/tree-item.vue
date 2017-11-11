@@ -1,8 +1,7 @@
 <template>
   <li class="hp-tree-item">
-    <v-icon class="hp-tree-handle"
-            @click="node.toggle()">
-      {{ node.expanded ? 'fa-minus-square-o' : 'fa-plus-square-o' }}
+    <v-icon class="hp-tree-handle" @click="node.toggle()">
+      {{ treeHandleIcon }}
     </v-icon>
     <slot name="node-content" :data="node.data"></slot>
 
@@ -32,7 +31,12 @@
         this.$emit('action-invoked')
       }
     },
-    computed: {},
+    computed: {
+      treeHandleIcon: function () {
+        return this.node.isLeaf() ? 'fa-square-o'
+            : (this.node.expanded ? 'fa-minus-square-o' : 'fa-plus-square-o')
+      }
+    },
     created: function () {
     }
   }

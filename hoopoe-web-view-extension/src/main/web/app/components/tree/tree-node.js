@@ -14,7 +14,7 @@ class TreeNode {
   }
 
   isLeaf() {
-    return this.children.length === 0
+    return !this.data.children || this.data.children.length === 0
   }
 
   expand() {
