@@ -21,10 +21,8 @@
                       v-if="heroModel.isVisible()"
                       v-on:action-invoked="heroButtonAction"></hero-panel>
 
-          <tree :root-nodes="profiledInvocations.treeNodes"
-                v-if="!heroModel.isVisible()">
-            <span slot="node-content" slot-scope="props">{{ props.data.className }}</span>
-          </tree>
+          <invocations-tree :invocations="profiledInvocations.roots"
+                            v-if="!heroModel.isVisible()"></invocations-tree>
         </v-container>
       </v-content>
     </main>
@@ -34,8 +32,7 @@
 <script>
   import HeroPanel from './components/hero-panel/hero-panel.vue'
   import HeroModel from './components/hero-panel/hero-model'
-  import Tree from './components/tree/tree.vue'
-  import TreeNode from './components/tree/tree-node'
+  import InvocationsTree from './components/invocations-tree.vue'
   import ProfiledInvocations from './domain/profiled-invocations'
   import _ from 'lodash'
 
@@ -52,7 +49,7 @@
     },
     components: {
       HeroPanel,
-      Tree
+      InvocationsTree
     },
     computed: {},
     methods: {
@@ -67,7 +64,6 @@
         this.apiCallInProgress = false;
         this._setHeroModel(HeroModel.empty());
         this.profiledInvocations = new ProfiledInvocations(apiResponse);
-        this.$set(this.profiledInvocations, 'treeNodes', TreeNode.of(this.profiledInvocations.roots));
 
         if (this.profiledInvocations.isEmpty()) {
           if (firstRun) {

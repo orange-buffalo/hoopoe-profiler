@@ -10,8 +10,8 @@
         <tree-item v-for="childNode in node.children"
                    :key="childNode.id"
                    :node="childNode">
-          <template slot-scope="props" slot="node-content">
-            <slot name="node-content" :data="props.data"></slot>
+          <template slot-scope="{ data }" slot="node-content">
+            <slot name="node-content" :data="data"></slot>
           </template>
         </tree-item>
       </ul>
