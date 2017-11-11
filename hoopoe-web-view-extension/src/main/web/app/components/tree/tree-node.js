@@ -7,6 +7,7 @@ class TreeNode {
     this.children = [];
     this.id = nodeId++;
     this.$childrenProcessed = !this.data.children;
+    this.selected = false;
   }
 
   static of(data) {
@@ -43,6 +44,10 @@ class TreeNode {
     else {
       this.expand();
     }
+  }
+
+  toggleSelection() {
+    this.selected = !this.selected;
   }
 }
 

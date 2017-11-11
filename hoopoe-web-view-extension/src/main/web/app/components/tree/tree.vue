@@ -2,31 +2,46 @@
   <v-layout column align-top class="hp-tree">
     <v-flex>
       <ul>
-        <tree-item v-for="node in rootNodes"
+        <tree-node v-for="node in rootNodes"
                    :key="node.id"
-                   :node="node">
+                   :node="node"
+                   @node-select="selectNode">
           <template slot-scope="{ data }" slot="node-content">
             <slot name="node-content" :data="data"></slot>
           </template>
-        </tree-item>
+        </tree-node>
       </ul>
     </v-flex>
   </v-layout>
 </template>
 
 <script>
-  import TreeItem from './tree-item.vue'
+  import TreeNode from './tree-node.vue'
 
   export default {
     name: 'tree',
     props: ['rootNodes'],
+    data: function () {
+      return {
+        selectedNode: null,
+      }
+    },
     components: {
-      TreeItem
+      TreeNode
     },
     methods: {
-      invokeAction: function () {
-        this.$emit('action-invoked')
-      }
+      selectNode: function (node) {
+        node.toggleSelection();
+        if (!node.selected) {
+          this.selectedNode = null;
+        }
+        else {
+          if (this.selectedNode) {
+            this.selectedNode.toggleSelection();
+          }
+          this.selectedNode = node
+        }
+      },
     }
   }
 </script>

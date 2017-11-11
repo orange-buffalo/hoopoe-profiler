@@ -1,6 +1,8 @@
 <template>
   <tree :root-nodes="treeNodes">
-    <span slot="node-content" slot-scope="{ data: invocation }">{{ invocation.className }}</span>
+    <template slot="node-content" slot-scope="{ data: invocation }">
+      <span>{{ invocation.className }}</span>
+    </template>
   </tree>
 </template>
 
