@@ -71,6 +71,7 @@
 </script>
 
 <style lang="scss">
+  @import "~compass-mixins/lib/compass";
 
   .hp-tree-node {
     .hp-tree-handle {
@@ -84,10 +85,12 @@
 
     .hp-tree-node-content {
       display: inline-block;
+      background-color: transparent;
+
+      @include transition(background-color 0.1s ease-in-out);
 
       &.selected {
         background-color: rgba(171, 169, 169, 0.25);
-
       }
     }
   }

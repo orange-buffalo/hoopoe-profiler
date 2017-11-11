@@ -11,6 +11,7 @@
     "axios": "^0.17.0",
     "lodash": "^4.17.4",
     "vue": "^2.4.4",
+    "vue2-animate": "^1.0.4",
     "vuetify": "^0.16.9"
   },
   "browserslist": [
@@ -23,6 +24,7 @@
     "babel-loader": "^7.1.2",
     "babel-preset-env": "^1.6.0",
     "babel-preset-stage-3": "^6.24.1",
+    "compass-mixins": "^0.12.10",
     "cross-env": "^5.0.5",
     "css-loader": "^0.28.7",
     "file-loader": "^1.1.4",

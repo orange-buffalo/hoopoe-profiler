@@ -47,12 +47,10 @@
 </script>
 
 <style lang="scss">
+  @import "~compass-mixins/lib/compass";
+
   .hp-tree {
-    -moz-user-select: -moz-none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    @include user-select(none);
 
     font-family: 'Source Code Pro', monospace;
     text-decoration: none;

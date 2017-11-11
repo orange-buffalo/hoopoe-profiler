@@ -17,12 +17,14 @@
     <main class="hp-full-height">
       <v-content class="scroll-y hp-main-content">
         <v-container fluid fill-height>
-          <hero-panel :model="heroModel"
-                      v-if="heroModel.isVisible()"
-                      v-on:action-invoked="heroButtonAction"></hero-panel>
+          <transition name="slideLeft" :duration="20" mode="out-in">
+            <hero-panel :model="heroModel"
+                        v-if="heroModel.isVisible()"
+                        v-on:action-invoked="heroButtonAction"></hero-panel>
 
-          <invocations-tree :invocations="profiledInvocations.roots"
-                            v-if="!heroModel.isVisible()"></invocations-tree>
+            <invocations-tree :invocations="profiledInvocations.roots"
+                              v-if="!heroModel.isVisible()"></invocations-tree>
+          </transition>
         </v-container>
       </v-content>
     </main>
