@@ -31,6 +31,8 @@
     },
     methods: {
       selectNode: function (node) {
+        let prevSelectedNode = this.selectedNode;
+
         node.toggleSelection();
         if (!node.selected) {
           this.selectedNode = null;
@@ -41,6 +43,8 @@
           }
           this.selectedNode = node
         }
+
+        this.$emit('node-select', this.selectedNode, prevSelectedNode);
       },
     }
   }
@@ -50,6 +54,7 @@
   @import "~compass-mixins/lib/compass";
 
   .hp-tree {
+    position: relative;
     @include user-select(none);
 
     font-family: 'Source Code Pro', monospace;
@@ -71,31 +76,4 @@
 
   }
 
-  /*.hp-tree li span {*/
-  /*outline: none;*/
-  /*}*/
-
-  /*treecontrol li.tree-expanded i.tree-branch-head, treecontrol li.tree-collapsed i.tree-branch-head {*/
-  /*display: inline;*/
-  /*}*/
-
-  /*treecontrol li .hp-tree-handle {*/
-  /*cursor: pointer;*/
-  /*}*/
-
-  /*treecontrol li .tree-label {*/
-  /*cursor: pointer;*/
-  /*display: inline;*/
-  /*white-space: nowrap;*/
-  /*outline: none;*/
-  /*}*/
-
-  /*treecontrol li .tree-selected {*/
-  /*font-weight: bold;*/
-  /*background-color: rgba(255, 255, 255, 0.2)*/
-  /*}*/
-
-  /*treecontrol .tree-label:hover {*/
-  /*background-color: rgba(255, 255, 255, 0.2)*/
-  /*}*/
 </style>

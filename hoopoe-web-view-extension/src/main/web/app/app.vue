@@ -132,6 +132,14 @@
     overflow: auto;
   }
 
+  .hp-monospaced {
+    font-family: 'Source Code Pro', monospace;
+  }
+
+  .hp-wrap-words {
+    word-wrap: break-word;
+  }
+
   .hp-full-height {
     height: 100%;
   }
@@ -147,5 +155,9 @@
     bottom: 0;
     right: 0;
     margin: 0 !important;
+  }
+
+  .hp-small-font {
+    font-size: 0.9em;
   }
 </style>

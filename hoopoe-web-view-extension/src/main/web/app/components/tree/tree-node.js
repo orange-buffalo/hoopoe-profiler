@@ -8,6 +8,7 @@ class TreeNode {
     this.id = nodeId++;
     this.$childrenProcessed = !this.data.children;
     this.selected = false;
+    data.$treeNode = this;
   }
 
   static of(data) {

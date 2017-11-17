@@ -1,54 +1,70 @@
 <template>
-  <tree :root-nodes="treeNodes">
-    <template slot="node-content" slot-scope="{ data: invocation }">
+  <v-layout row align-top>
+    <v-flex>
+      <tree :root-nodes="treeNodes"
+            @node-select="selectNode">
+        <template slot="node-content" slot-scope="{ data: invocation }">
 
-      <span class="hp-badge hp-thread-name"
-            v-if="invocation.threadName">{{invocation.threadName}}</span>
-      <span>{{invocation.className}}.{{invocation.methodSignature}}</span>
+          <span class="hp-badge hp-thread-name"
+                v-if="invocation.threadName">{{invocation.threadName}}</span>
+          <span>{{invocation.className}}.{{invocation.methodSignature}}</span>
 
-      <smart-duration class="hp-badge hp-duration" :duration-in-ns="invocation.totalTimeInNs"></smart-duration>
+          <smart-duration class="hp-badge hp-duration" :duration-in-ns="invocation.totalTimeInNs"></smart-duration>
 
-      <smart-duration class="hp-badge hp-duration" :duration-in-ns="invocation.ownTimeInNs"></smart-duration>
+          <smart-duration class="hp-badge hp-duration" :duration-in-ns="invocation.ownTimeInNs"></smart-duration>
 
-      <span class="hp-badge hp-invocations-count">{{ invocation.invocationsCount }} inv</span>
+          <span class="hp-badge hp-invocations-count">{{ invocation.invocationsCount }} inv</span>
 
-      <span class="hp-badge hp-attribute"
-            v-for="attr in invocation.attributes">
-          {{attr.name}}
-      </span>
-      <span class="hp-badge hp-child-attribute"
-            v-for="summary in invocation.childrenAttributesSummary">
-          {{summary.count}} {{summary.name}}
-      </span>
+          <span class="hp-badge hp-attribute"
+                v-for="attr in invocation.attributes">
+              {{attr.name}}
+          </span>
+          <span class="hp-badge hp-child-attribute"
+                v-for="summary in invocation.childrenAttributesSummary">
+              {{summary.count}} {{summary.name}}
+          </span>
+        </template>
+      </tree>
 
-    </template>
-  </tree>
+      <invocation-details-bar v-if="selectedNode" :invocation="selectedNode.data"></invocation-details-bar>
+
+    </v-flex>
+  </v-layout>
 </template>
 
 <script>
   import Tree from './tree/tree.vue'
   import TreeNode from './tree/tree-node'
   import SmartDuration from './smart-duration.vue'
+  import InvocationDetailsBar from './invocation-details-bar.vue'
 
   export default {
     name: 'invocations-tree',
     props: ['invocations'],
     data: function () {
       return {
-        treeNodes: []
+        treeNodes: [],
+        selectedNode: null
       }
     },
     components: {
       Tree,
-      SmartDuration
+      SmartDuration,
+      InvocationDetailsBar
     },
     created: function () {
       this.treeNodes = TreeNode.of(this.invocations);
+    },
+    methods: {
+      selectNode: function (node) {
+        this.selectedNode = node
+      }
+
     }
   }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
   @import "~compass-mixins/lib/compass";
 
   .hp-badge {
