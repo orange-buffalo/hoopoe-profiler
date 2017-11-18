@@ -89,8 +89,12 @@ tasks {
         }
     }
 
-    task<NpmTask>("buildWebResources") {
-        setArgs(listOf("run", "build"))
+    task<AdvancedNpmTask>("buildWebResources") {
+        inputs = project.files("${project.projectDir}/src/main/web")
+        output = project.files("${project.buildDir}/resources/main/static")
+        npm {
+            setArgs(listOf("run", "build"))
+        }
         dependsOn("npmInstall")
     }
 
