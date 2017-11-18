@@ -11,7 +11,7 @@ require('./stylus/main.styl');
 require('file-loader?name=[name].[ext]!../index.html');
 require('./services/services');
 
-require('vue2-animate/dist/vue2-animate.min.css')
+require('vue2-animate/dist/vue2-animate.min.css');
 
 import App from './app.vue'
 

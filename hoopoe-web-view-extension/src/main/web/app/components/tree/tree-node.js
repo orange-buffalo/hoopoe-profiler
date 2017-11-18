@@ -50,6 +50,11 @@ class TreeNode {
   toggleSelection() {
     this.selected = !this.selected;
   }
+
+  expandAll() {
+    this.expand();
+    this.children.forEach(childNode => childNode.expandAll())
+  }
 }
 
 export default TreeNode;
