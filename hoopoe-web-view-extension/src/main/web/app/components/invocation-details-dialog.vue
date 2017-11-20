@@ -48,6 +48,16 @@
         <v-divider></v-divider>
       </div>
 
+      <template v-if="nestedAttributes.length">
+        <div class="hp-details-item">
+          <span>Down the call stack</span>
+          <template v-for="attribute in nestedAttributes">
+            <div class="hp-tile">{{ attribute.name }}</div>
+            <div class="hp-monospaced">{{ attribute.details }}</div>
+            <v-divider></v-divider>
+          </template>
+        </div>
+      </template>
     </v-card>
   </hp-dialog>
 </template>
@@ -66,8 +76,7 @@
       HpDialog
     },
     data: function () {
-      return {
-      }
+      return {}
     },
     computed: {
       methodSignatureHtml: function () {
@@ -89,9 +98,20 @@
           html += '</div>';
         });
         return html;
+      },
+
+      nestedAttributes: function () {
+        let nestedAttributes = [];
+        let collectAttributes = (invocation) => {
+          if (invocation.attributes) {
+            invocation.attributes.forEach((attribute) => nestedAttributes.push(attribute));
+          }
+          invocation.children.forEach(collectAttributes);
+        };
+        this.invocation.children.forEach(collectAttributes);
+        return nestedAttributes;
       }
     }
-
   }
 </script>
 
