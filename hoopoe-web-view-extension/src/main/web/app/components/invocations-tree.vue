@@ -55,11 +55,15 @@
     created: function () {
       this.treeNodes = TreeNode.of(this.invocations);
     },
+    watch: {
+      invocations: function (val) {
+        this.treeNodes = TreeNode.of(val);
+      }
+    },
     methods: {
       selectNode: function (node) {
         this.selectedNode = node
       }
-
     }
   }
 </script>

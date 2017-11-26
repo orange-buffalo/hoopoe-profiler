@@ -67,7 +67,6 @@ class ProfiledInvocations {
   isEmpty() {
     return this.roots.length === 0;
   }
-
 }
 
 export default ProfiledInvocations;

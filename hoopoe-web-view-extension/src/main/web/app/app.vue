@@ -2,10 +2,10 @@
   <v-app dark class="hp-full-height">
     <v-toolbar app flat fixed>
       <v-layout row align-center>
-        <v-flex class="text-xs-left">
-          <v-btn flat v-if="!apiCallInProgress && !heroModel.isVisible()"
-                 @click="startNewSession">New Profiling Session
-          </v-btn>
+        <v-flex xs6 md3 lg2 xl1>
+          <hp-roots-selector v-if="!apiCallInProgress && !heroModel.isVisible()"
+                               :roots="profiledInvocations.roots">
+          </hp-roots-selector>
         </v-flex>
       </v-layout>
       <v-progress-linear :indeterminate="true"
@@ -13,6 +13,17 @@
                          class="hp-progress-bar"
                          height="2"></v-progress-linear>
     </v-toolbar>
+
+    <v-btn
+        v-if="!apiCallInProgress && !heroModel.isVisible()"
+        fab
+        bottom
+        right
+        fixed
+        color="accent"
+        @click="startNewSession">
+      <v-icon>replay</v-icon>
+    </v-btn>
 
     <main class="hp-full-height">
       <v-content class="scroll-y hp-main-content">
@@ -22,7 +33,7 @@
                         v-if="heroModel.isVisible()"
                         v-on:action-invoked="heroButtonAction"></hero-panel>
 
-            <invocations-tree :invocations="profiledInvocations.roots"
+            <invocations-tree :invocations="visibleRoots"
                               v-if="!heroModel.isVisible()"></invocations-tree>
           </transition>
         </v-container>
@@ -36,6 +47,7 @@
   import HeroModel from './components/hero-panel/hero-model'
   import InvocationsTree from './components/invocations-tree.vue'
   import ProfiledInvocations from './domain/profiled-invocations'
+  import HpRootsSelector from './components/hp-roots-selector.vue'
   import _ from 'lodash'
 
   export default {
@@ -51,9 +63,14 @@
     },
     components: {
       HeroPanel,
-      InvocationsTree
+      InvocationsTree,
+      HpRootsSelector
     },
-    computed: {},
+    computed: {
+      visibleRoots: function () {
+        return this.profiledInvocations.roots.filter(root => root.visible);
+      }
+    },
     methods: {
       _setupProfilingInProgress: function () {
         this._setHeroModel(HeroModel.forMessage('We are recording application activity. Stop us when you are done')
@@ -78,6 +95,13 @@
                 .withButton('Start anew'));
           }
           this.heroButtonAction = this.startNewSession;
+        }
+        else {
+          this.profiledInvocations.roots.forEach(root => {
+            // enable reactivity on new property
+            this.$set(root, 'visible', false);
+          });
+          this.profiledInvocations.roots[0].visible = true;
         }
       },
 
