@@ -18,7 +18,7 @@ object Versions {
     val jrebelPlugin = "1.1.8"
     val junit = "4.12"
     val junitDataProvider = "1.13.1"
-    val kotlin = "1.1.61"
+    val kotlin = "1.2.0"
     val logback = "1.2.3"
     val lombok = "1.16.18"
     val mockito = "2.12.0"
