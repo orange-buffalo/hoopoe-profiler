@@ -11,6 +11,12 @@ fun profiledResult(builderConfig: InvocationsListBuilder.() -> Unit): HoopoeProf
     return HoopoeProfiledResult(builder.roots)
 }
 
+fun profiledInvocationRoot(rootConfig: InvocationRootBuilder.() -> Unit): HoopoeProfiledInvocationRoot {
+    val builder = InvocationRootBuilder()
+    builder.rootConfig()
+    return builder.build()
+}
+
 fun configureInvocation(invocationConfig: InvocationBuilder.() -> Unit): HoopoeProfiledInvocation {
     val builder = InvocationBuilder()
     builder.invocationConfig()
@@ -21,9 +27,7 @@ class InvocationsListBuilder {
     val roots = ArrayList<HoopoeProfiledInvocationRoot>()
 
     fun root(rootConfig: InvocationRootBuilder.() -> Unit) {
-        val builder = InvocationRootBuilder()
-        builder.rootConfig()
-        roots.add(builder.build())
+        roots.add(profiledInvocationRoot(rootConfig))
     }
 
 }
