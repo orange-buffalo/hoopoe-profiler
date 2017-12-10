@@ -24,7 +24,11 @@ function ProfilerRpc(jsonrpc, jsonrpcConfig) {
 
     getLastProfiledResult: function () {
       return jsonrpc.request('profiler', 'getLastProfiledResult', {})
-    }
+    },
+
+    calculateHotSpots: function (hotSpotsCountPerRoot) {
+      return jsonrpc.request('profiler', 'calculateHotSpots', [hotSpotsCountPerRoot])
+    },
   }
 }
 

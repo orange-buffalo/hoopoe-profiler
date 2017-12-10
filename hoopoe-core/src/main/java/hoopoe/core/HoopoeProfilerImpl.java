@@ -8,6 +8,7 @@ import hoopoe.core.components.ExtensionsManager;
 import hoopoe.core.components.PluginsManager;
 import hoopoe.core.configuration.Configuration;
 import hoopoe.core.instrumentation.CodeInstrumentation;
+import hoopoe.core.tracer.HotSpotCalculator;
 import hoopoe.core.tracer.TraceNormalizer;
 import hoopoe.core.tracer.TraceNode;
 import hoopoe.core.tracer.ThreadTracer;
@@ -42,16 +43,20 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
 
     private PluginsManager pluginsManager;
 
+    private HotSpotCalculator hotSpotCalculator;
+
     @Builder
     private HoopoeProfilerImpl(
             Configuration configuration,
             PluginsManager pluginsManager,
             CodeInstrumentation codeInstrumentation,
             TraceNormalizer traceNormalizer,
-            ExtensionsManager extensionsManager) {
+            ExtensionsManager extensionsManager,
+            HotSpotCalculator hotSpotCalculator) {
 
         log.info("starting profiler");
 
+        this.hotSpotCalculator = hotSpotCalculator;
         this.configuration = configuration;
         this.traceNormalizer = traceNormalizer;
         this.pluginsManager = pluginsManager;
@@ -85,6 +90,11 @@ public class HoopoeProfilerImpl implements HoopoeProfiler {
     @Override
     public boolean isProfiling() {
         return HoopoeProfilerFacade.enabled;
+    }
+
+    @Override
+    public HoopoeProfiledResult calculateHotSpots(int hotSpotsCountPerRoot) {
+        return hotSpotCalculator.calculateHotSpots(this.lastProfiledResult, hotSpotsCountPerRoot);
     }
 
     private void profileMethodInvocation(

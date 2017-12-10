@@ -3,6 +3,7 @@ package hoopoe.extensions.webview
 import hoopoe.api.HoopoeProfiledResult
 import hoopoe.api.HoopoeProfiler
 import hoopoe.api.configuration.HoopoeConfiguration
+import hoopoe.core.tracer.HotSpotCalculator
 
 fun main(args: Array<String>) {
     val hoopoeWebViewExtension = HoopoeWebViewExtension()
@@ -12,6 +13,10 @@ fun main(args: Array<String>) {
 class ProfilerMock : HoopoeProfiler {
     private var profiling: Boolean = false
     private var profiledResult = createEmptyResult()
+    
+    override fun calculateHotSpots(hotSpotsCountPerRoot: Int): HoopoeProfiledResult? {
+        return HotSpotCalculator().calculateHotSpots(lastProfiledResult, hotSpotsCountPerRoot)
+    }
 
     override fun startProfiling() {
         profiling = true

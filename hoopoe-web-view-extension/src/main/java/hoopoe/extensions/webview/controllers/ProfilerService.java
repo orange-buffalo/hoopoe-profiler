@@ -12,4 +12,6 @@ public interface ProfilerService {
 
     boolean isProfiling();
 
+    HoopoeProfiledResult calculateHotSpots(int hotSpotsCountPerRoot);
+
 }

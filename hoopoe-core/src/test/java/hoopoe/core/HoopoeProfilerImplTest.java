@@ -1,12 +1,13 @@
 package hoopoe.core;
 
-import hoopoe.api.HoopoeProfiledResult;
 import hoopoe.api.HoopoeInvocationAttribute;
+import hoopoe.api.HoopoeProfiledResult;
 import hoopoe.api.plugins.HoopoeInvocationRecorder;
 import hoopoe.core.components.ExtensionsManager;
 import hoopoe.core.components.PluginsManager;
 import hoopoe.core.configuration.Configuration;
 import hoopoe.core.instrumentation.CodeInstrumentation;
+import hoopoe.core.tracer.HotSpotCalculator;
 import hoopoe.core.tracer.ThreadTracer;
 import hoopoe.core.tracer.TraceNode;
 import hoopoe.core.tracer.TraceNormalizer;
@@ -35,6 +36,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -60,6 +62,9 @@ public class HoopoeProfilerImplTest {
 
     @Mock
     private ExtensionsManager extensionsManagerMock;
+
+    @Mock
+    private HotSpotCalculator hotSpotCalculatorMock;
 
     @InjectMocks
     private HoopoeProfilerImpl profiler;
@@ -340,5 +345,14 @@ public class HoopoeProfilerImplTest {
     @Test
     public void testGetConfiguration() {
         assertThat("Proper configuration should be returned", profiler.getConfiguration(), equalTo(configurationMock));
+    }
+
+    @Test
+    public void testHotSpotCalculatorIntegration() {
+        HoopoeProfiledResult hotSpots = new HoopoeProfiledResult(Collections.emptyList());
+        when(hotSpotCalculatorMock.calculateHotSpots(any(), eq(42))).thenReturn(hotSpots);
+
+        HoopoeProfiledResult actualHotSpots = profiler.calculateHotSpots(42);
+        assertThat("Calculator should be invoked", actualHotSpots, is(hotSpots));
     }
 }

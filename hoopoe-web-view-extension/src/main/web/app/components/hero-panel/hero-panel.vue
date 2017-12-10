@@ -2,7 +2,7 @@
   <v-layout row align-center>
     <v-flex class="text-xs-center">
       <span class="hero-message" v-if="model.message">{{model.message}}</span>
-      <span class="hero-message" v-if="model.error">
+      <span class="hero-message" v-if="model.hasError">
         Oops, something went wrong... We would appreciate if you could report a problem
         at <a href="https://github.com/orange-buffalo/hoopoe-profiler/issues" target="_blank">our issue tracker</a>.
         Please provide the output of JS console and exception from your app console.

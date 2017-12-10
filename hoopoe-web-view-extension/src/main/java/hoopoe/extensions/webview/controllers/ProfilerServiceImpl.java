@@ -32,4 +32,9 @@ public class ProfilerServiceImpl implements ProfilerService {
         return profiler.isProfiling();
     }
 
+    @Override
+    public HoopoeProfiledResult calculateHotSpots(int hotSpotsCountPerRoot) {
+        return profiler.calculateHotSpots(hotSpotsCountPerRoot);
+    }
+
 }

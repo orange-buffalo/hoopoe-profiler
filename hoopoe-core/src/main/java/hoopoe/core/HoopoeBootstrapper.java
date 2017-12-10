@@ -7,6 +7,7 @@ import hoopoe.core.configuration.Configuration;
 import hoopoe.core.configuration.ConfigurationFactory;
 import hoopoe.core.instrumentation.ClassMetadataReader;
 import hoopoe.core.instrumentation.CodeInstrumentation;
+import hoopoe.core.tracer.HotSpotCalculator;
 import hoopoe.core.tracer.TraceNormalizer;
 import java.io.File;
 import java.io.IOException;
@@ -64,6 +65,7 @@ public class HoopoeBootstrapper {
                 .extensionsManager(extensionsManager)
                 .codeInstrumentation(codeInstrumentation)
                 .traceNormalizer(traceNormalizer)
+                .hotSpotCalculator(new HotSpotCalculator())
                 .build();
 
         profiler.instrument(instrumentation);

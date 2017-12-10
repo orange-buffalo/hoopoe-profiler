@@ -1,13 +1,17 @@
 <template>
   <v-app dark class="hp-full-height">
     <v-toolbar app flat fixed>
-      <v-layout row align-center>
-        <v-flex xs6 md3 lg2 xl1>
-          <hp-roots-selector v-if="!apiCallInProgress && !heroModel.isVisible()"
-                               :roots="profiledInvocations.roots">
-          </hp-roots-selector>
-        </v-flex>
-      </v-layout>
+      <v-toolbar-items>
+        <hp-roots-selector v-if="!apiCallInProgress && !heroModel.isVisible()"
+                           :roots="treeRoots">
+        </hp-roots-selector>
+
+        <v-btn v-if="!apiCallInProgress && !heroModel.isVisible()"
+               flat
+               @click="switchHotSpots">
+          {{ hotSpotsVisible ? 'Invocations' : 'Hot Spots' }}
+        </v-btn>
+      </v-toolbar-items>
       <v-progress-linear :indeterminate="true"
                          v-if="apiCallInProgress"
                          class="hp-progress-bar"
@@ -58,7 +62,10 @@
         apiCallInProgress: true,
         heroModel: HeroModel.forMessage('Initializing...'),
         heroButtonAction: () => null,
-        profiledInvocations: ProfiledInvocations.empty()
+        profiledInvocations: ProfiledInvocations.empty(),
+        hotSpotsVisible: false,
+        hotSpots: ProfiledInvocations.empty(),
+        hotSpotsRequested: false
       }
     },
     components: {
@@ -67,8 +74,12 @@
       HpRootsSelector
     },
     computed: {
+      treeRoots: function () {
+         return this.hotSpotsVisible ? this.hotSpots.roots : this.profiledInvocations.roots;
+      },
+
       visibleRoots: function () {
-        return this.profiledInvocations.roots.filter(root => root.visible);
+        return this.treeRoots.filter(root => root.visible);
       }
     },
     methods: {
@@ -83,6 +94,8 @@
         this.apiCallInProgress = false;
         this._setHeroModel(HeroModel.empty());
         this.profiledInvocations = new ProfiledInvocations(apiResponse);
+        this.hotSpots = ProfiledInvocations.empty();
+        this.hotSpotsRequested = false;
 
         if (this.profiledInvocations.isEmpty()) {
           if (firstRun) {
@@ -115,6 +128,7 @@
             this.apiCallInProgress = false;
 
           }).catch(error => {
+            this.apiCallInProgress = false;
             this._setHeroModel(HeroModel.error());
 
             console.error(error);
@@ -123,27 +137,46 @@
       },
 
       stopProfiling: function () {
-        this._executeRpc(this.profilerRpc.stopProfiling)
+        this._executeRpc(() => this.profilerRpc.stopProfiling())
             .then(apiResponse => this._setupProfiledResult(apiResponse, false));
       },
 
       startNewSession: function () {
         this.profiledInvocations = ProfiledInvocations.empty();
-        this._executeRpc(this.profilerRpc.startProfiling)
+        this.hotSpots = ProfiledInvocations.empty();
+        this.hotSpotsVisible = false;
+        this.hotSpotsRequested = false;
+        this._executeRpc(() => this.profilerRpc.startProfiling())
             .then(this._setupProfilingInProgress)
+      },
+
+      switchHotSpots: function () {
+        this.hotSpotsVisible = !this.hotSpotsVisible;
+        if (this.hotSpotsVisible && !this.hotSpotsRequested) {
+          this._executeRpc(() => this.profilerRpc.calculateHotSpots(5))
+              .then(apiResponse => {
+                this.hotSpots = new ProfiledInvocations(apiResponse);
+                this.hotSpots.roots.forEach(root => {
+                  // enable reactivity on new property
+                  this.$set(root, 'visible', true);
+                });
+                this.hotSpotsRequested = true;
+                this._setHeroModel(HeroModel.empty());
+              });
+        }
       }
 
     },
     created() {
       this._setHeroModel = _.debounce((model) => this.heroModel = model, 200);
 
-      this._executeRpc(this.profilerRpc.isProfiling)
+      this._executeRpc(() => this.profilerRpc.isProfiling())
           .then(profiling => {
             if (profiling) {
               this._setupProfilingInProgress();
             }
             else {
-              this._executeRpc(this.profilerRpc.getLastProfiledResult)
+              this._executeRpc(() => this.profilerRpc.getLastProfiledResult())
                   .then(apiResponse => this._setupProfiledResult(apiResponse, true))
             }
           });
