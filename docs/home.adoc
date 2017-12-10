@@ -40,9 +40,10 @@ NOTE: We instrument a lot of code to give the best profiling results we can.
 It means the time to load any class will increase, as well as the total startup time of the application.
 
 == Full list of features
-* Track code execution
-* Track SQL queries
+* Code execution tracking
+* SQL queries tracking
 * Web-UI to display profiling results
+* Hot Spots calculation and display in Web-UI
 * More to come soon!
 
 == Credits
