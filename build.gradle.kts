@@ -124,6 +124,6 @@ subprojects {
 
 tasks {
     task<Wrapper>("wrapper") {
-        distributionUrl = "https://services.gradle.org/distributions/gradle-4.3-all.zip"
+        distributionUrl = "https://services.gradle.org/distributions/gradle-4.4-all.zip"
     }
 }
