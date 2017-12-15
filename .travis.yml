@@ -18,6 +18,15 @@ stages:
   - name: deploy
     if: fork = false AND tag =~ ^hoopoe-profiler-
 
+_cache_gradle: &_cache_gradle
+  before_cache:
+    - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+    - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+  cache:
+    directories:
+      - $HOME/.gradle/caches/
+      - $HOME/.gradle/wrapper/
+
 jobs:
   include:
     - stage: build
@@ -27,13 +36,7 @@ jobs:
         - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
       script:
         - ./gradlew clean build
-      before_cache:
-        - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-      cache:
-        directories:
-          - $HOME/.gradle/caches/
-          - $HOME/.gradle/wrapper/
+      <<: *_cache_gradle
       after_success:
         # codecov coverage
         - bash <(curl -s https://codecov.io/bash)
@@ -45,35 +48,17 @@ jobs:
     - stage: integration tests
       script:
         - ./gradlew clean integration-tests
-      before_cache:
-        - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-      cache:
-        directories:
-          - $HOME/.gradle/caches/
-          - $HOME/.gradle/wrapper/
+      <<: *_cache_gradle
 
     - env: ITEST_DB=postgres
       script:
         - ./gradlew hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integration-tests
-      before_cache:
-        - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-      cache:
-        directories:
-          - $HOME/.gradle/caches/
-          - $HOME/.gradle/wrapper/
+      <<: *_cache_gradle
 
     - env: ITEST_DB=mysql
       script:
         - ./gradlew hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integration-tests
-      before_cache:
-        - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-      cache:
-        directories:
-          - $HOME/.gradle/caches/
-          - $HOME/.gradle/wrapper/
+      <<: *_cache_gradle
 
     - stage: docs
       language: ruby
@@ -91,12 +76,7 @@ jobs:
         - cd ./docs/ && bundle && bundle exec rake deploy
 
     - stage: deploy
+      jdk:
       script:
         - ./gradlew bintrayUpload
-      before_cache:
-        - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-        - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-      cache:
-        directories:
-          - $HOME/.gradle/caches/
-          - $HOME/.gradle/wrapper/
+      <<: *_cache_gradle
