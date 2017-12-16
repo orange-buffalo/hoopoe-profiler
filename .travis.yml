@@ -18,6 +18,7 @@ stages:
   - name: deploy
     if: fork = false AND tag =~ ^hoopoe-profiler-
 
+# template for caching the gradle
 _cache_gradle: &_cache_gradle
   before_cache:
     - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
@@ -26,6 +27,12 @@ _cache_gradle: &_cache_gradle
     directories:
       - $HOME/.gradle/caches/
       - $HOME/.gradle/wrapper/
+
+# template for integration tests for sql plugin
+_sql_integration_tests: &_sql_integration_tests
+  script:
+    - ./gradlew hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integration-tests
+  <<: *_cache_gradle
 
 jobs:
   include:
@@ -50,15 +57,11 @@ jobs:
         - ./gradlew clean integration-tests
       <<: *_cache_gradle
 
-    - env: ITEST_DB=postgres
-      script:
-        - ./gradlew hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integration-tests
-      <<: *_cache_gradle
+    - <<: *_sql_integration_tests
+      env: ITEST_DB=postgres
 
-    - env: ITEST_DB=mysql
-      script:
-        - ./gradlew hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integration-tests
-      <<: *_cache_gradle
+    - <<: *_sql_integration_tests
+      env: ITEST_DB=mysql
 
     - stage: docs
       language: ruby
@@ -76,7 +79,6 @@ jobs:
         - cd ./docs/ && bundle && bundle exec rake deploy
 
     - stage: deploy
-      jdk:
       script:
         - ./gradlew bintrayUpload
       <<: *_cache_gradle
