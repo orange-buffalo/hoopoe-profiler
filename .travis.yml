@@ -31,7 +31,7 @@ _cache_gradle: &_cache_gradle
 # template for integration tests for sql plugin
 _sql_integration_tests: &_sql_integration_tests
   script:
-    - ./gradlew hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integration-tests
+    - ./gradlew hoopoe-sql-queries-plugin:clean hoopoe-sql-queries-plugin:integrationTests
   <<: *_cache_gradle
 
 jobs:
@@ -54,7 +54,7 @@ jobs:
 
     - stage: integration tests
       script:
-        - ./gradlew clean integration-tests
+        - ./gradlew clean integrationTests
       <<: *_cache_gradle
 
     - <<: *_sql_integration_tests

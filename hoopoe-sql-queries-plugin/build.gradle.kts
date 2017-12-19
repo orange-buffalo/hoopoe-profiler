@@ -87,7 +87,7 @@ tasks {
         dependsOn("copyItestApp", "copyPlugin")
     }
 
-    "integration-tests" {
+    "integrationTests" {
         onlyIf { System.getenv("ITEST_DB") != null }
     }
 }

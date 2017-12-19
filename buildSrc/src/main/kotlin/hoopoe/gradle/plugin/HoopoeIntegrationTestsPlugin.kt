@@ -23,7 +23,7 @@ open class HoopoeIntegrationTestsPlugin : Plugin<Project> {
 
         project.configurations.findByName("itestRuntime")!!.extendsFrom(project.configurations.getByName("testRuntime"))
 
-        project.tasks.create("integration-tests", Test::class.java) {
+        project.tasks.create("integrationTests", Test::class.java) {
             testClassesDirs = itest.output.classesDirs
             classpath = itest.runtimeClasspath
         }
