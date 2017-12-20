@@ -29,6 +29,7 @@ buildscript {
         classpath(hoopoe.gradle.buildscript.Plugins.gradleVersions)
         classpath(hoopoe.gradle.buildscript.Plugins.bintray)
         classpath(kotlin("gradle-plugin", hoopoe.gradle.buildscript.Versions.kotlin))
+        classpath(hoopoe.gradle.buildscript.Plugins.sonar)
     }
 }
 
@@ -38,6 +39,7 @@ plugins {
 
 apply {
     plugin("com.github.ben-manes.versions")
+    plugin("org.sonarqube")
 }
 
 prepareReleaseManagement()
