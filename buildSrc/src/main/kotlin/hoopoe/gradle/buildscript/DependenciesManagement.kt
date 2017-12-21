@@ -27,6 +27,7 @@ object Versions {
     val snakeYaml = "1.19"
     val springBoot = "2.0.0.M5"
     val testContainers = "1.4.3"
+    val sonar = "2.6.1"
 }
 
 object Libraries {
@@ -57,6 +58,7 @@ object Plugins {
     val bintray = "com.jfrog.bintray.gradle:gradle-bintray-plugin:${Versions.bintrayPlugin}"
     val springBoot = "org.springframework.boot:spring-boot-gradle-plugin:${Versions.springBoot}"
     val node = "com.moowork.gradle:gradle-node-plugin:${Versions.nodePlugin}"
+    val sonar = "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:${Versions.sonar}"
 }
 
 val Project.libraries: Libraries

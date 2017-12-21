@@ -1,5 +1,11 @@
 sudo: required
 
+addons:
+  sonarcloud:
+    organization: "hoopoe-profiler"
+    token:
+      secure: "tPlLEmhKuoBYjyOD3TMPUVx/ohnCqj/tFhZJri9X4gm5EzpkgpbQZqzXPN+HHUZ+L1doSVf6/HQUAWMvYa1SOWOwVb9wfll945AClcpKeMSkaU2FQpdvwptmNdoWZKLCJOJ3iQsk/BIO6MdrFGjkM8jvl6Ym453qwLAQ2+hqtoZ2iRAemK/qvfQ6lObOFAxWGAqqh6UkjBUELb2yg6Qkkvr7BlYUgCc4RrlaCq3zpuglTFMUC/CyUx2PJJJ36daT2KAwesQTRPjK1FTnsr03IOkXjUyWXSgp+XWl8j2mX+IOrkDCxfIgFPP0+9PIyC1s/66IXFboNysQUadvKmXoxJeaytR6PIzF5mEt8LVOwS/ahsnMWUx4DbzVeh14nYfqd9EtE4gFFJvRxJgDPkHofzVAYlmTD9JzCHge0HeXYeXwq3g5rWSldTe6mD6mbJcdmu+gww+kqfqyc5cEP8aRyb4huzm0LJxO3mKQz6Qtc8WcosDsm2iW9qdaJDkHfs2zKKvsXU3VNaM7CwoXYIULgy5wUGvZovsNO1xOT+1DqJgd3ysTiQdQWQ3wlwNI7AUZA7AqxhfLhTPYvRVwHjWz8uJW9jYeW3nDnjT2Ep7blDMMVuKF36+CelbZbIKAzM4qSEJC8HDYfY+ftNIps+D8WEINNRsouQ1y37FSjAZ28Kc="
+
 language: java
 
 jdk:
@@ -52,6 +58,13 @@ jobs:
         - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r hoopoe-sql-queries-plugin/build/reports/jacoco/test/jacocoTestReport.xml
         - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r hoopoe-classloader/build/reports/jacoco/test/jacocoTestReport.xml
 
+    - script:
+        - ./gradlew sonarqube
+      <<: *_cache_gradle
+      cache:
+        directories:
+          - '$HOME/.sonar/cache'
+          
     - stage: integration tests
       script:
         - ./gradlew clean integrationTests
