@@ -1,3 +1,11 @@
+# hoopoe-profiler is no longer under development
+
+We believe that profilers like [AsyncProfiler](https://github.com/jvm-profiling-tools/async-profiler) cover most
+if not all use cases hoopoe-profiler was intended to address. They are free, easy to use, convenient, fast and
+powerful.
+
+---
+
 # hoopoe-profiler [![Build Status](https://travis-ci.org/orange-buffalo/hoopoe-profiler.svg)](https://travis-ci.org/orange-buffalo/hoopoe-profiler)  [![Code Coverage](https://img.shields.io/codecov/c/github/orange-buffalo/hoopoe-profiler.svg)](https://codecov.io/gh/orange-buffalo/hoopoe-profiler) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/8fe89e83a40d41a38677a997f1167261)](https://www.codacy.com/app/orange-buffalo/hoopoe-profiler?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=orange-buffalo/hoopoe-profiler&amp;utm_campaign=Badge_Grade)  [ ![Download](https://api.bintray.com/packages/orange-buffalo/hoopoe-profiler/hoopoe-profiler/images/download.svg) ](https://bintray.com/orange-buffalo/hoopoe-profiler/hoopoe-profiler/_latestVersion) [![Issues to be done in next release](https://badge.waffle.io/orange-buffalo/hoopoe-profiler.svg?label=todo%20next%20release&title=Todo%20Next%20Release)](https://waffle.io/orange-buffalo/hoopoe-profiler) [![Issues in progress](https://badge.waffle.io/orange-buffalo/hoopoe-profiler.svg?label=in%20progress&title=In%20Progress)](https://waffle.io/orange-buffalo/hoopoe-profiler)  
 
 ![hoopoe in action](https://orange-buffalo.github.io/hoopoe-profiler/assets/img/hoopoe-in-action.gif)
