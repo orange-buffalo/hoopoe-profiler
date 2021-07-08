@@ -33,8 +33,8 @@ public class TraceNormalizer {
                 boolean isRoot = true;
                 for (int parentCandidateIndex = currentNodeIndex + 1; parentCandidateIndex < traceNodes.size(); parentCandidateIndex++) {
                     TraceNode parentCandidate = traceNodes.get(parentCandidateIndex);
-                    if (parentCandidate.getStartTimeInNs() <= currentNode.getStartTimeInNs() &&
-                            parentCandidate.getEndTimeInNs() >= currentNode.getEndTimeInNs()) {
+                    if (parentCandidate.getStartTimeInNs() <= currentNode.getStartTimeInNs()
+                            && parentCandidate.getEndTimeInNs() >= currentNode.getEndTimeInNs()) {
                         parentCandidate.addChild(currentNode);
                         isRoot = false;
                         break;
